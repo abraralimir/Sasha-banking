@@ -26,6 +26,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { generateImageFromText } from '@/ai/flows/generate-image-from-text';
 
 const formSchema = z.object({
   prompt: z.string().min(3, 'Prompt must be at least 3 characters.'),
@@ -49,28 +50,23 @@ export function ImageGenerationDialog({ open, onOpenChange, onImageGenerated }: 
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     setGeneratedImage(null);
-    const encodedPrompt = encodeURIComponent(values.prompt);
-    const imageUrl = `https://images.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true`;
     
-    // We'll use a little trick to know when the image is loaded
-    const img = new window.Image();
-    img.src = imageUrl;
-    img.onload = () => {
-      setGeneratedImage(imageUrl);
-      setIsLoading(false);
-    };
-    img.onerror = () => {
-      console.error('Failed to load image from Pollinations.ai');
+    try {
+      const result = await generateImageFromText({ prompt: values.prompt });
+      setGeneratedImage(result.imageUrl);
+    } catch (error) {
+      console.error('Failed to generate image with Genkit', error);
       toast({
         variant: 'destructive',
         title: 'Image Generation Failed',
         description: "Sasha couldn't conjure an image for that prompt. Please try a different one.",
       });
+    } finally {
       setIsLoading(false);
-    };
+    }
   };
   
   const handleOpenChange = (isOpen: boolean) => {
@@ -149,7 +145,7 @@ export function ImageGenerationDialog({ open, onOpenChange, onImageGenerated }: 
               Generate Another
             </Button>
             <div className="flex-grow" />
-            <a href={generatedImage} download>
+            <a href={generatedImage} download="sasha-magic.png">
               <Button variant="secondary">
                 <Download className="mr-2" />
                 Download
