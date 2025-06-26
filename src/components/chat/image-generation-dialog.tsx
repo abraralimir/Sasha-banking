@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   prompt: z.string().min(3, 'Prompt must be at least 3 characters.'),
@@ -39,6 +40,7 @@ interface ImageGenerationDialogProps {
 export function ImageGenerationDialog({ open, onOpenChange, onImageGenerated }: ImageGenerationDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -51,7 +53,7 @@ export function ImageGenerationDialog({ open, onOpenChange, onImageGenerated }: 
     setIsLoading(true);
     setGeneratedImage(null);
     const encodedPrompt = encodeURIComponent(values.prompt);
-    const imageUrl = `https://images.pollinations.ai/prompt/${encodedPrompt}`;
+    const imageUrl = `https://images.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true`;
     
     // We'll use a little trick to know when the image is loaded
     const img = new window.Image();
@@ -62,7 +64,11 @@ export function ImageGenerationDialog({ open, onOpenChange, onImageGenerated }: 
     };
     img.onerror = () => {
       console.error('Failed to load image from Pollinations.ai');
-      // In a real app, you might want a toast notification here
+      toast({
+        variant: 'destructive',
+        title: 'Image Generation Failed',
+        description: "Sasha couldn't conjure an image for that prompt. Please try a different one.",
+      });
       setIsLoading(false);
     };
   };
