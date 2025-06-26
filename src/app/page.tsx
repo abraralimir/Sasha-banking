@@ -31,11 +31,9 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-      const historyString = newMessages
-        .map(m => `${m.role === 'user' ? 'User' : 'Sasha'}: ${m.content}`)
-        .join('\n');
+      const historyForApi = newMessages.map(({ id, imageUrl, ...rest }) => rest);
 
-      const response = await chat({ history: historyString });
+      const response = await chat({ history: historyForApi });
       
       const botResponse: Message = {
         id: Date.now().toString(),

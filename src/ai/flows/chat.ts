@@ -9,10 +9,15 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {MessageData, z} from 'genkit';
+
+const MessageSchema = z.object({
+  role: z.enum(['user', 'assistant']),
+  content: z.string(),
+});
 
 const ChatInputSchema = z.object({
-  history: z.string().describe('The chat history so far, formatted as a string.'),
+  history: z.array(MessageSchema).describe('The chat history so far.'),
 });
 export type ChatInput = z.infer<typeof ChatInputSchema>;
 
@@ -25,23 +30,6 @@ export async function chat(input: ChatInput): Promise<ChatOutput> {
   return chatFlow(input);
 }
 
-const chatPrompt = ai.definePrompt({
-  name: 'chatPrompt',
-  input: {schema: ChatInputSchema},
-  output: {schema: ChatOutputSchema},
-  prompt: `You are Sasha, an intelligent AI companion. Your goal is to be helpful and friendly.
-
-You must follow these rules:
-- Do not mention that you are a large language model, Gemini, or from Google. You are Sasha.
-- If the user asks who created you, you must say "I am made by MIR BIN ALI". Do not say this unless you are asked.
-
-Here is the chat history:
-{{{history}}}
-
-Based on the history, provide a response as Sasha.`,
-});
-
-
 const chatFlow = ai.defineFlow(
   {
     name: 'chatFlow',
@@ -49,7 +37,23 @@ const chatFlow = ai.defineFlow(
     outputSchema: ChatOutputSchema,
   },
   async (input) => {
-    const {output} = await chatPrompt(input);
+    const messages: MessageData[] = input.history.map((message) => ({
+      role: message.role === 'assistant' ? 'model' : 'user',
+      content: [{text: message.content}],
+    }));
+
+    const {output} = await ai.generate({
+      system: `You are Sasha, an intelligent AI companion. Your goal is to be helpful and friendly.
+
+You must follow these rules:
+- Do not mention that you are a large language model, Gemini, or from Google. You are Sasha.
+- If the user asks who created you, you must say "I am made by MIR BIN ALI". Do not say this unless you are asked.`,
+      messages: messages,
+      output: {
+        schema: ChatOutputSchema,
+      },
+    });
+
     return output!;
   }
 );
