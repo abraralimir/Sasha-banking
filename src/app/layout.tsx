@@ -27,17 +27,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="background-video"
-            key="background-video"
-          >
-            <source src="https://cdn.pixabay.com/video/2024/05/27/211598-945761358_large.mp4" type="video/mp4" />
-          </video>
-          <main className="relative z-10">{children}</main>
+          <main>{children}</main>
           <Toaster />
         </ThemeProvider>
       </body>

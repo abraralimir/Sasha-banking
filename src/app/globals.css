@@ -14,19 +14,19 @@ body {
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 0 72.2% 50.6%;
+    --primary: 340.9 83.2% 62%; /* Pink */
     --primary-foreground: 0 85.7% 97.3%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 340.9 83.2% 62%;
+    --accent: 0 84.2% 60.2%; /* Red */
     --accent-foreground: 342.9 100% 97.1%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 0 72.2% 50.6%;
+    --ring: 340.9 83.2% 62%; /* Pink */
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -43,25 +43,25 @@ body {
     --sidebar-ring: 0 72.2% 50.6%;
   }
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 224 71.4% 4.1%; /* Near Black */
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+    --card: 224 71.4% 4.1%;
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+    --popover: 224 71.4% 4.1%;
     --popover-foreground: 210 40% 98%;
-    --primary: 142.1 76.2% 36.3%;
-    --primary-foreground: 144.9 80.4% 97.1%;
+    --primary: 27 82% 53%; /* Brown */
+    --primary-foreground: 20 14.3% 95.9%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 40.7 93.4% 53.5%;
-    --accent-foreground: 35.5 91.7% 37.8%;
+    --accent: 120 40% 40%; /* Dark Green */
+    --accent-foreground: 120 95% 96%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 142.1 76.2% 36.3%;
+    --ring: 27 82% 53%; /* Brown */
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -83,22 +83,29 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background-attachment: fixed;
+    animation: gradient 15s ease infinite;
+    background-size: 200% 200%;
+  }
+
+  html.light body {
+    background-image: linear-gradient(135deg, hsl(0 0% 100%), hsl(340 100% 85%), hsl(0 100% 70%));
+  }
+
+  html.dark body {
+    background-image: linear-gradient(135deg, hsl(240 10% 4%), hsl(27 82% 30%), hsl(120 40% 20%));
   }
 }
 
-.background-video {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: -1;
-  opacity: 0.15;
-  background-color: hsl(var(--background));
-}
-
-.dark .background-video {
-  opacity: 0.1;
+@keyframes gradient {
+	0% {
+		background-position: 0% 50%;
+	}
+	50% {
+		background-position: 100% 50%;
+	}
+	100% {
+		background-position: 0% 50%;
+	}
 }
