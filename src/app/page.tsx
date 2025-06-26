@@ -8,6 +8,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { ImageGenerationDialog } from '@/components/chat/image-generation-dialog';
 import { MessageList, type Message } from '@/components/chat/message-list';
 import { SashaAvatar } from '@/components/sasha-avatar';
+import { chat } from '@/ai/flows/chat';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([
@@ -16,33 +18,42 @@ export default function Home() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isImageGenerationOpen, setImageGenerationOpen] = useState(false);
+  const { toast } = useToast();
   
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
     const newUserMessage: Message = { id: Date.now().toString(), role: 'user', content: input };
-    setMessages(prev => [...prev, newUserMessage]);
+    const newMessages = [...messages, newUserMessage];
+    setMessages(newMessages);
     setInput('');
     setIsLoading(true);
 
-    // Mock AI response
-    setTimeout(() => {
-      let botResponseContent = "I'm not yet fully connected to my brain, but my developer is working on it! For now, how about we create an image? Use the button below.";
-      if (newUserMessage.content.toLowerCase().includes('hello') || newUserMessage.content.toLowerCase().includes('hi')) {
-        botResponseContent = "Hello there! How can I help you create something amazing today?";
-      } else if (newUserMessage.content.toLowerCase().includes('image')) {
-        botResponseContent = "It looks like you want to generate an image. You can use the image icon button below to open the generator!";
-      }
+    try {
+      const historyString = newMessages
+        .map(m => `${m.role === 'user' ? 'User' : 'Sasha'}: ${m.content}`)
+        .join('\n');
 
+      const response = await chat({ history: historyString });
+      
       const botResponse: Message = {
         id: Date.now().toString(),
         role: 'assistant',
-        content: botResponseContent,
+        content: response.content,
       };
       setMessages(prev => [...prev, botResponse]);
+
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'Oh no! Something went wrong.',
+        description: 'Failed to get a response from Sasha. Please try again.',
+      });
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
   
   const handleImageGenerated = (imageUrl: string, prompt: string) => {
