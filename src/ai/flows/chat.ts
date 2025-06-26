@@ -37,10 +37,23 @@ const chatFlow = ai.defineFlow(
     outputSchema: ChatOutputSchema,
   },
   async (input) => {
-    const messages: MessageData[] = input.history.map((message) => ({
-      role: message.role === 'assistant' ? 'model' : 'user',
-      content: [{text: message.content}],
-    }));
+    // The Gemini API requires the first message in the history to be from the user.
+    const firstUserMessageIndex = input.history.findIndex(
+      (m) => m.role === 'user'
+    );
+
+    if (firstUserMessageIndex === -1) {
+      // This case should ideally not be reached if the UI is working correctly,
+      // as it sends a user message. We'll return a default response as a fallback.
+      return { content: "I'm here to help. What would you like to talk about?" };
+    }
+    
+    const messages: MessageData[] = input.history
+      .slice(firstUserMessageIndex)
+      .map((message) => ({
+        role: message.role === 'assistant' ? 'model' : 'user',
+        content: [{text: message.content}],
+      }));
 
     const {output} = await ai.generate({
       system: `You are Sasha, an intelligent AI companion. Your goal is to be helpful and friendly.
