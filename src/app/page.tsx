@@ -10,6 +10,7 @@ import { MessageList, type Message } from '@/components/chat/message-list';
 import { SashaAvatar } from '@/components/sasha-avatar';
 import { chat } from '@/ai/flows/chat';
 import { useToast } from '@/hooks/use-toast';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([
@@ -66,10 +67,13 @@ export default function Home() {
 
   return (
     <TooltipProvider delayDuration={0}>
-      <div className="flex flex-col h-screen bg-background text-foreground animate-in fade-in-50 duration-500">
-        <header className="flex items-center justify-center p-4 border-b shrink-0">
-          <SashaAvatar className="w-8 h-8 mr-3" />
-          <h1 className="text-xl font-semibold tracking-tight">Sasha AI</h1>
+      <div className="flex flex-col h-screen text-foreground animate-in fade-in-50 duration-500">
+        <header className="flex items-center justify-between p-4 border-b shrink-0 bg-background/80 backdrop-blur-sm">
+          <div className="flex items-center">
+            <SashaAvatar className="w-8 h-8 mr-3" />
+            <h1 className="text-xl font-semibold tracking-tight">Sasha AI</h1>
+          </div>
+          <ThemeToggle />
         </header>
         
         <main className="flex-1 overflow-y-auto">
