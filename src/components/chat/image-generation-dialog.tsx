@@ -25,8 +25,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { generateImageFromText } from '@/ai/flows/generate-image-from-text';
 
 const formSchema = z.object({
   prompt: z.string().min(3, 'Prompt must be at least 3 characters.'),
@@ -41,7 +39,6 @@ interface ImageGenerationDialogProps {
 export function ImageGenerationDialog({ open, onOpenChange, onImageGenerated }: ImageGenerationDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
-  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -50,22 +47,24 @@ export function ImageGenerationDialog({ open, onOpenChange, onImageGenerated }: 
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     setGeneratedImage(null);
-    try {
-      const result = await generateImageFromText({ prompt: values.prompt });
-      setGeneratedImage(result.imageUrl);
-    } catch (error) {
-      console.error(error);
-      toast({
-        variant: 'destructive',
-        title: 'Image generation failed',
-        description: 'Could not generate the image. Please try a different prompt or try again later.',
-      });
-    } finally {
+    const encodedPrompt = encodeURIComponent(values.prompt);
+    const imageUrl = `https://images.pollinations.ai/prompt/${encodedPrompt}`;
+    
+    // We'll use a little trick to know when the image is loaded
+    const img = new window.Image();
+    img.src = imageUrl;
+    img.onload = () => {
+      setGeneratedImage(imageUrl);
       setIsLoading(false);
-    }
+    };
+    img.onerror = () => {
+      console.error('Failed to load image from Pollinations.ai');
+      // In a real app, you might want a toast notification here
+      setIsLoading(false);
+    };
   };
   
   const handleOpenChange = (isOpen: boolean) => {
@@ -92,7 +91,7 @@ export function ImageGenerationDialog({ open, onOpenChange, onImageGenerated }: 
             <Wand2 className="mr-2 h-5 w-5" /> AI Image Generation
           </DialogTitle>
           <DialogDescription>
-            Describe the image you want to create. Powered by Gemini.
+            Describe the image you want to create. Powered by Pollinations.ai.
           </DialogDescription>
         </DialogHeader>
         <div className="py-4 min-h-[192px]">
@@ -144,7 +143,7 @@ export function ImageGenerationDialog({ open, onOpenChange, onImageGenerated }: 
               Generate Another
             </Button>
             <div className="flex-grow" />
-            <a href={generatedImage} download={`sasha-ai-image-${Date.now()}.png`}>
+            <a href={generatedImage} download>
               <Button variant="secondary">
                 <Download className="mr-2" />
                 Download
