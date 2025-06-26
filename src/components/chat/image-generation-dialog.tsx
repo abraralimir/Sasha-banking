@@ -91,7 +91,7 @@ export function ImageGenerationDialog({ open, onOpenChange, onImageGenerated }: 
             <Wand2 className="mr-2 h-5 w-5" /> AI Image Generation
           </DialogTitle>
           <DialogDescription>
-            Describe the image you want to create. Powered by Pollinations.ai.
+            Describe the image you want to create. Let Sasha work her magic.
           </DialogDescription>
         </DialogHeader>
         <div className="py-4 min-h-[192px]">
