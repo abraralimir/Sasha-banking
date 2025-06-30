@@ -65,6 +65,10 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     generatingTranslatedPdf: 'Generating translated PDF...',
     trendsAndGraphsTitle: "Trends & Visualizations",
     identifiedFlawsTitle: "Identified Flaws & Risks",
+    financialPerformanceTitle: "Financial Performance",
+    revenue: "Revenue",
+    netIncome: "Net Income",
+    pdfGenerationError: "Could not generate the PDF report.",
   },
   ar: {
     pageTitle: 'ساشا المصرفية',
@@ -119,6 +123,10 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     generatingTranslatedPdf: 'جاري إنشاء ملف PDF مترجم...',
     trendsAndGraphsTitle: "الاتجاهات والتصورات",
     identifiedFlawsTitle: "العيوب والمخاطر المحددة",
+    financialPerformanceTitle: "الأداء المالي",
+    revenue: "الإيرادات",
+    netIncome: "صافي الدخل",
+    pdfGenerationError: "تعذر إنشاء تقرير PDF.",
   },
 };
 
