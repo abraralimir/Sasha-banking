@@ -35,16 +35,14 @@ interface MessageListProps {
 }
 
 export function MessageList({ messages, isLoading, onDownloadLoanPdf, onDownloadFinancialReportPdf }: MessageListProps) {
-  const viewportRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (viewportRef.current) {
-      viewportRef.current.scrollTop = viewportRef.current.scrollHeight;
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
   return (
-    <ScrollArea className="h-full" viewportRef={viewportRef}>
+    <ScrollArea className="h-full">
       <div className="p-4 md:p-6 space-y-6 max-w-3xl mx-auto">
         {messages.map((message) => (
           <ChatMessage 
@@ -55,6 +53,7 @@ export function MessageList({ messages, isLoading, onDownloadLoanPdf, onDownload
           />
         ))}
         {isLoading && <TypingIndicator />}
+        <div ref={messagesEndRef} />
       </div>
     </ScrollArea>
   );
