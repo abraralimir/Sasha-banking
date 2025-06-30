@@ -52,7 +52,10 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     creditScoreAssessment: "Credit Score Assessment",
     downloadPdf: "Download PDF",
     english: 'English',
-    arabic: 'Arabic'
+    arabic: 'Arabic',
+    choosePdfLanguageTitle: "Choose PDF Language",
+    choosePdfLanguageDesc: "In which language would you like to download the report?",
+    cancel: "Cancel",
   },
   ar: {
     pageTitle: 'ساشا المصرفية',
@@ -94,7 +97,10 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     creditScoreAssessment: "تقييم الجدارة الائتمانية",
     downloadPdf: "تحميل PDF",
     english: 'الإنجليزية',
-    arabic: 'العربية'
+    arabic: 'العربية',
+    choosePdfLanguageTitle: "اختر لغة التقرير",
+    choosePdfLanguageDesc: "بأي لغة تود تحميل التقرير؟",
+    cancel: "إلغاء",
   },
 };
 
