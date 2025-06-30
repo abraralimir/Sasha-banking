@@ -12,17 +12,14 @@ import { chat } from '@/ai/flows/chat';
 import { analyzeLoan } from '@/ai/flows/analyze-loan';
 import { analyzeFinancialStatement } from '@/ai/flows/analyze-financial-statement';
 import { useToast } from '@/hooks/use-toast';
-import { ThemeToggle } from '@/components/theme-toggle';
+import { LanguageToggle } from '@/components/language-toggle';
+import { useLanguage } from '@/context/language-context';
 import jsPDF from 'jspdf';
 
 export default function Home() {
-  const [messages, setMessages] = useState<Message[]>([
-    { 
-      id: '1', 
-      role: 'assistant', 
-      content: "Hello! I'm Sasha, your personal banking assistant. You can upload a CSV for loan analysis (e.g., 'analyze loan LP001002') or a PDF for an instant financial statement analysis." 
-    }
-  ]);
+  const { t, language, dir } = useLanguage();
+
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isImageGenerationOpen, setImageGenerationOpen] = useState(false);
@@ -34,6 +31,10 @@ export default function Home() {
   const { toast } = useToast();
 
   useEffect(() => {
+    setMessages([{ id: '1', role: 'assistant', content: t('initialMessage') }]);
+  }, [t]);
+
+  useEffect(() => {
     try {
       const savedPdfData = localStorage.getItem('sasha-pdf-data');
       const savedPdfFileName = localStorage.getItem('sasha-pdf-filename');
@@ -41,14 +42,14 @@ export default function Home() {
         setPdfData(savedPdfData);
         setPdfFileName(savedPdfFileName);
         toast({
-          title: 'Document Loaded',
-          description: `Continuing session with ${savedPdfFileName}.`,
+          title: t('documentLoadedTitle'),
+          description: t('documentLoadedDesc', { fileName: savedPdfFileName }),
         });
       }
     } catch (error) {
       console.error("Failed to access localStorage:", error);
     }
-  }, [toast]);
+  }, [t, toast]);
   
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,15 +71,15 @@ export default function Home() {
         const botResponse: Message = {
           id: Date.now().toString(),
           role: 'assistant',
-          content: `Here is the analysis for Loan ID **${loanId}**:`,
+          content: t('loanAnalysisHeader', { loanId }),
           analysisReport: { ...response, loanId },
         };
         setMessages(prev => [...prev, botResponse]);
       } else if (loanMatch && !csvData) {
-        setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: 'Please upload a CSV file first.' }]);
+        setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: t('uploadCsvFirst') }]);
       } else {
         const historyForApi = newMessages.map(({ id, imageUrl, analysisReport, financialReport, ...rest }) => rest);
-        const response = await chat({ history: historyForApi, pdfDataUri: pdfData });
+        const response = await chat({ history: historyForApi, pdfDataUri: pdfData, language });
         const botResponse: Message = {
           id: Date.now().toString(),
           role: 'assistant',
@@ -90,8 +91,8 @@ export default function Home() {
       console.error(error);
       toast({
         variant: 'destructive',
-        title: 'Oh no! Something went wrong.',
-        description: 'Failed to get a response from Sasha. Please try again.',
+        title: t('genericErrorTitle'),
+        description: t('genericErrorDesc'),
       });
     } finally {
       setIsLoading(false);
@@ -116,8 +117,8 @@ export default function Home() {
         const text = e.target?.result as string;
         setCsvData(text);
         toast({
-          title: 'CSV File Uploaded',
-          description: `${file.name} is ready for loan analysis.`,
+          title: t('csvUploadTitle'),
+          description: t('csvUploadDesc', { fileName: file.name }),
         });
       };
       reader.readAsText(file);
@@ -129,8 +130,8 @@ export default function Home() {
     if (!file || file.type !== 'application/pdf') {
       toast({
         variant: 'destructive',
-        title: 'Invalid File Type',
-        description: 'Please upload a PDF file.',
+        title: t('invalidPdfTitle'),
+        description: t('invalidPdfDesc'),
       });
       return;
     }
@@ -150,25 +151,25 @@ export default function Home() {
         console.error("Failed to save PDF to localStorage:", error);
         toast({
           variant: 'destructive',
-          title: 'Could not save session',
-          description: 'Your browser may be out of space or in private mode.'
+          title: t('sessionSaveErrorTitle'),
+          description: t('sessionSaveErrorDesc')
         });
       }
 
       toast({
-        title: 'PDF File Uploaded',
-        description: `${fileName} is ready. Starting analysis...`,
+        title: t('pdfUploadTitle'),
+        description: t('pdfUploadDesc', { fileName }),
       });
 
       setIsLoading(true);
-      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: `Analyzing the financial statement: ${fileName}...` }]);
+      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: t('analyzingPdfMessage', { fileName }) }]);
       
       try {
         const response = await analyzeFinancialStatement({ pdfDataUri: dataUri });
         const botResponse: Message = {
           id: Date.now().toString(),
           role: 'assistant',
-          content: `Here is the analysis of the financial statement:`,
+          content: t('financialAnalysisHeader'),
           financialReport: response,
         };
         setMessages(prev => [...prev, botResponse]);
@@ -176,10 +177,10 @@ export default function Home() {
         console.error("Financial statement analysis failed:", error);
         toast({
           variant: 'destructive',
-          title: 'Analysis Failed',
-          description: 'Sasha could not analyze the financial statement. Please try again.',
+          title: t('analysisFailedTitle'),
+          description: t('analysisFailedDesc'),
         });
-        setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: 'Sorry, I was unable to analyze that document.' }]);
+        setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: t('unableToAnalyzeMessage') }]);
       } finally {
         setIsLoading(false);
       }
@@ -196,13 +197,13 @@ export default function Home() {
       console.error("Failed to clear localStorage:", error);
     }
     toast({
-      title: 'PDF Cleared',
-      description: 'The document has been removed from the session.',
+      title: t('pdfClearedTitle'),
+      description: t('pdfClearedDesc'),
     });
     setMessages(prev => [...prev, {
       id: Date.now().toString(),
       role: 'assistant',
-      content: 'I have cleared the previous document. How can I assist you now?'
+      content: t('clearedPdfMessage')
     }]);
   };
 
@@ -226,9 +227,9 @@ export default function Home() {
       yPos += (splitContent.length * 5) + 10;
     };
 
-    addSection('Summary', report.summary);
-    addSection('Prediction', report.prediction);
-    addSection('Eligibility', report.eligibility);
+    addSection(t('summary'), report.summary);
+    addSection(t('prediction'), report.prediction);
+    addSection(t('eligibility'), report.eligibility);
     
     const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
     doc.setFontSize(8);
@@ -244,7 +245,7 @@ export default function Home() {
     let yPos = 22;
 
     doc.setFontSize(18);
-    doc.text('Financial Statement Analysis', 14, yPos);
+    doc.text(t('financialAnalysisReportTitle'), 14, yPos);
     yPos += 18;
 
     const addSection = (title: string, content: string) => {
@@ -257,8 +258,8 @@ export default function Home() {
       yPos += (splitContent.length * 5) + 10;
     };
 
-    addSection('Summary', report.summary);
-    addSection('Prediction', report.prediction);
+    addSection(t('summary'), report.summary);
+    addSection(t('prediction'), report.prediction);
 
     const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
     doc.setFontSize(8);
@@ -269,13 +270,13 @@ export default function Home() {
 
   return (
     <TooltipProvider delayDuration={0}>
-      <div className="flex flex-col h-screen text-foreground animate-in fade-in-50 duration-500">
+      <div className="flex flex-col h-screen text-foreground animate-in fade-in-50 duration-500" dir={dir}>
         <header className="flex items-center justify-between p-4 border-b shrink-0 bg-background/80 backdrop-blur-sm">
           <div className="flex items-center">
             <SashaAvatar className="w-8 h-8 mr-3" />
-            <h1 className="text-xl font-semibold tracking-tight">Sasha Banking</h1>
+            <h1 className="text-xl font-semibold tracking-tight">{t('pageTitle')}</h1>
           </div>
-          <ThemeToggle />
+          <LanguageToggle />
         </header>
         
         <main className="flex-1 overflow-y-auto">
@@ -293,16 +294,16 @@ export default function Home() {
               <div className="flex items-center justify-between p-2 mb-2 text-sm rounded-md bg-muted text-muted-foreground">
                 <div className="flex items-center gap-2 truncate">
                   <FileText className="w-4 h-4 shrink-0" />
-                  <span className="font-medium truncate">Analyzing: {pdfFileName}</span>
+                  <span className="font-medium truncate">{t('analyzingFile', { fileName: pdfFileName })}</span>
                 </div>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button type="button" variant="ghost" size="icon" onClick={handleClearPdf} className="w-6 h-6 shrink-0">
                       <XCircle className="w-4 h-4" />
-                      <span className="sr-only">Clear PDF</span>
+                      <span className="sr-only">{t('clearPdfTooltip')}</span>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Clear PDF from session</TooltipContent>
+                  <TooltipContent>{t('clearPdfTooltip')}</TooltipContent>
                 </Tooltip>
               </div>
             )}
@@ -310,7 +311,7 @@ export default function Home() {
               <Textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Message Sasha..."
+                placeholder={t('placeholder')}
                 className="pr-48 py-3 text-base resize-none"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
@@ -328,45 +329,45 @@ export default function Home() {
                   <TooltipTrigger asChild>
                     <Button type="button" variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()}>
                       <FileUp className="w-5 h-5" />
-                      <span className="sr-only">Upload CSV</span>
+                      <span className="sr-only">{t('uploadCsvTooltip')}</span>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Upload Loan CSV</TooltipContent>
+                  <TooltipContent>{t('uploadCsvTooltip')}</TooltipContent>
                 </Tooltip>
 
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button type="button" variant="ghost" size="icon" onClick={() => pdfInputRef.current?.click()}>
                       <FileText className="w-5 h-5" />
-                      <span className="sr-only">Upload PDF</span>
+                      <span className="sr-only">{t('uploadPdfTooltip')}</span>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Upload Financial PDF</TooltipContent>
+                  <TooltipContent>{t('uploadPdfTooltip')}</TooltipContent>
                 </Tooltip>
 
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button type="button" variant="ghost" size="icon" onClick={() => setImageGenerationOpen(true)}>
                       <ImageIcon className="w-5 h-5" />
-                      <span className="sr-only">Generate Image</span>
+                      <span className="sr-only">{t('generateImageTooltip')}</span>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Generate Image</TooltipContent>
+                  <TooltipContent>{t('generateImageTooltip')}</TooltipContent>
                 </Tooltip>
                 
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button type="button" variant="ghost" size="icon" disabled>
                       <Mic className="w-5 h-5" />
-                      <span className="sr-only">Use Microphone</span>
+                      <span className="sr-only">{t('micTooltip')}</span>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Use Microphone</TooltipContent>
+                  <TooltipContent>{t('micTooltip')}</TooltipContent>
                 </Tooltip>
                 
                 <Button type="submit" size="sm" disabled={isLoading || !input.trim()}>
                   <CornerDownLeft className="w-5 h-5" />
-                  <span className="sr-only">Send</span>
+                  <span className="sr-only">{t('sendSr')}</span>
                 </Button>
               </div>
             </form>

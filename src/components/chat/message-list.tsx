@@ -9,6 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useLanguage } from '@/context/language-context';
 
 export type Message = {
   id: string;
@@ -69,7 +70,9 @@ function ChatMessage({
   onDownloadLoanPdf: (report: Message['analysisReport']) => void; 
   onDownloadFinancialReportPdf: (report: Message['financialReport']) => void; 
 }) {
+  const { t } = useLanguage();
   const isAssistant = message.role === 'assistant';
+  
   return (
     <div
       className={cn('flex items-start gap-4 animate-in fade-in', {
@@ -98,24 +101,24 @@ function ChatMessage({
         {message.analysisReport && (
           <Card className="bg-card text-card-foreground">
             <CardHeader>
-              <CardTitle className="text-base">Loan Analysis Report</CardTitle>
+              <CardTitle className="text-base">{t('loanAnalysisReportTitle')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-sm">
               <div>
-                <h3 className="font-semibold mb-1">Summary</h3>
+                <h3 className="font-semibold mb-1">{t('summary')}</h3>
                 <p className="text-muted-foreground">{message.analysisReport.summary}</p>
               </div>
               <div>
-                <h3 className="font-semibold mb-1">Prediction</h3>
+                <h3 className="font-semibold mb-1">{t('prediction')}</h3>
                 <p className="text-muted-foreground">{message.analysisReport.prediction}</p>
               </div>
               <div>
-                <h3 className="font-semibold mb-1">Eligibility</h3>
+                <h3 className="font-semibold mb-1">{t('eligibility')}</h3>
                 <p className="text-muted-foreground">{message.analysisReport.eligibility}</p>
               </div>
               <Button onClick={() => onDownloadLoanPdf(message.analysisReport)} variant="secondary" size="sm">
                 <Download className="mr-2 h-4 w-4" />
-                Download PDF
+                {t('downloadPdf')}
               </Button>
             </CardContent>
           </Card>
@@ -124,20 +127,20 @@ function ChatMessage({
         {message.financialReport && (
           <Card className="bg-card text-card-foreground">
             <CardHeader>
-              <CardTitle className="text-base">Financial Statement Analysis</CardTitle>
+              <CardTitle className="text-base">{t('financialAnalysisReportTitle')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-sm">
               <div>
-                <h3 className="font-semibold mb-1">Summary</h3>
+                <h3 className="font-semibold mb-1">{t('summary')}</h3>
                 <p className="text-muted-foreground">{message.financialReport.summary}</p>
               </div>
               <div>
-                <h3 className="font-semibold mb-1">Prediction</h3>
+                <h3 className="font-semibold mb-1">{t('prediction')}</h3>
                 <p className="text-muted-foreground">{message.financialReport.prediction}</p>
               </div>
                <Button onClick={() => onDownloadFinancialReportPdf(message.financialReport)} variant="secondary" size="sm">
                 <Download className="mr-2 h-4 w-4" />
-                Download PDF
+                {t('downloadPdf')}
               </Button>
             </CardContent>
           </Card>
