@@ -34,17 +34,26 @@ const analyzeFinancialStatementPrompt = ai.definePrompt({
   name: 'analyzeFinancialStatementPrompt',
   input: {schema: AnalyzeFinancialStatementInputSchema},
   output: {schema: AnalyzeFinancialStatementOutputSchema},
-  prompt: `You are an expert financial analyst. Your task is to analyze a company's yearly financial statement provided as a PDF document.
+  prompt: `You are a sophisticated AI financial analyst. Your primary task is to analyze a company's yearly financial statement from a provided PDF document, which may contain various sections including marketing and other non-essential information.
 
-Thoroughly review the entire document.
+Your goal is to be precise and focus exclusively on the financial data.
 
-Generate a report with the following sections:
-1.  **Summary:** Provide a detailed summary of the company's financial performance for the year. Highlight key metrics like revenue, net income, profit margins, cash flow from operations, and any significant changes from previous periods mentioned in the document.
-2.  **Prediction:** Based on your analysis, provide a prediction of the company's future financial health and prospects. State it clearly (e.g., "Strong Growth Potential", "Stable but Cautious", "High-Risk"). Justify your prediction with specific data points and trends from the financial statement.
+1.  **Locate Financial Data:** First, scan the document to find the core financial statements. These are typically labeled "Consolidated Statements of Operations," "Income Statement," "Consolidated Balance Sheets," "Balance Sheet," "Consolidated Statements of Cash Flows," or "Cash Flow Statement." Ignore all other sections like marketing fluff, company overview, or letters to shareholders unless they are directly cited in the financial analysis sections.
 
-Here is the financial statement PDF:
-{{media url=pdfDataUri}}
-`,
+2.  **Extract Key Metrics:** From these financial statements, extract and analyze key metrics. Focus on:
+    *   **Revenue / Sales:** Total sales figures.
+    *   **Net Income / Profit:** The bottom-line profit.
+    *   **Profit Margins:** Gross and net profit margins.
+    *   **Cash Flow:** Particularly cash flow from operations.
+    *   **Assets, Liabilities, and Equity:** Key figures from the balance sheet.
+    *   Identify any significant year-over-year changes if data is available.
+
+3.  **Generate Report:** Based on your focused analysis of the numbers, generate a report with the following two sections:
+    *   **Summary:** Provide a detailed summary of the company's financial performance for the year based *only* on the metrics you extracted.
+    *   **Prediction:** Provide a prediction of the company's future financial health and prospects (e.g., "Strong Growth Potential," "Stable but Cautious," "High-Risk"). Justify your prediction with specific data points and trends identified from the financial statements.
+
+Analyze the following PDF document:
+{{media url=pdfDataUri}}`,
 });
 
 const analyzeFinancialStatementFlow = ai.defineFlow(
