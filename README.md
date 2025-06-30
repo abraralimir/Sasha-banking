@@ -31,3 +31,4 @@ When you deploy your application to a hosting provider like Vercel, you need to 
     -   **Name:** `GOOGLE_API_KEY`
     -   **Value:** Paste the API key you got from Google AI Studio.
 5.  Redeploy your application. Your AI features should now work correctly.
+# Sasha-banking
