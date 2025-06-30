@@ -22,8 +22,10 @@ export type Message = {
   };
   financialReport?: {
     summary: string;
+    trendsAndGraphs: string;
     prediction: string;
     creditScorePrediction: string;
+    identifiedFlaws: string[];
   };
 };
 
@@ -99,15 +101,15 @@ function ChatMessage({
             <CardContent className="space-y-4 text-sm">
               <div>
                 <h3 className="font-semibold mb-1">{t('summary')}</h3>
-                <p className="text-muted-foreground">{message.analysisReport.summary}</p>
+                <p className="text-muted-foreground whitespace-pre-wrap">{message.analysisReport.summary}</p>
               </div>
               <div>
                 <h3 className="font-semibold mb-1">{t('prediction')}</h3>
-                <p className="text-muted-foreground">{message.analysisReport.prediction}</p>
+                <p className="text-muted-foreground whitespace-pre-wrap">{message.analysisReport.prediction}</p>
               </div>
               <div>
                 <h3 className="font-semibold mb-1">{t('eligibility')}</h3>
-                <p className="text-muted-foreground">{message.analysisReport.eligibility}</p>
+                <p className="text-muted-foreground whitespace-pre-wrap">{message.analysisReport.eligibility}</p>
               </div>
               <Button onClick={() => onDownloadLoanPdf(message.analysisReport)} variant="secondary" size="sm">
                 <Download className="mr-2 h-4 w-4" />
@@ -125,16 +127,35 @@ function ChatMessage({
             <CardContent className="space-y-4 text-sm">
               <div>
                 <h3 className="font-semibold mb-1">{t('summary')}</h3>
-                <p className="text-muted-foreground">{message.financialReport.summary}</p>
+                <p className="text-muted-foreground whitespace-pre-wrap">{message.financialReport.summary}</p>
               </div>
+              {message.financialReport.trendsAndGraphs && (
+                <div>
+                  <h3 className="font-semibold mb-1">{t('trendsAndGraphsTitle')}</h3>
+                  <p className="text-muted-foreground whitespace-pre-wrap">{message.financialReport.trendsAndGraphs}</p>
+                </div>
+              )}
               <div>
                 <h3 className="font-semibold mb-1">{t('prediction')}</h3>
-                <p className="text-muted-foreground">{message.financialReport.prediction}</p>
+                <p className="text-muted-foreground whitespace-pre-wrap">{message.financialReport.prediction}</p>
               </div>
               <div>
                 <h3 className="font-semibold mb-1">{t('creditScoreAssessment')}</h3>
-                <p className="text-muted-foreground">{message.financialReport.creditScorePrediction}</p>
+                <p className="text-muted-foreground whitespace-pre-wrap">{message.financialReport.creditScorePrediction}</p>
               </div>
+              {message.financialReport.identifiedFlaws && message.financialReport.identifiedFlaws.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-1">{t('identifiedFlawsTitle')}</h3>
+                  <ul className="list-none space-y-2 pl-0">
+                    {message.financialReport.identifiedFlaws.map((flaw, index) => (
+                      <li key={index} className="flex items-start">
+                        <span className="h-2 w-2 mt-1.5 mr-3 shrink-0 rounded-full bg-red-500"></span>
+                        <span className="text-muted-foreground">{flaw}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
                <Button onClick={() => onDownloadFinancialReportPdf(message.financialReport)} variant="secondary" size="sm">
                 <Download className="mr-2 h-4 w-4" />
                 {t('downloadPdf')}

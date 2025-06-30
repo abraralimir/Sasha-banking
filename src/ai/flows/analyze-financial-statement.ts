@@ -22,9 +22,11 @@ const AnalyzeFinancialStatementInputSchema = z.object({
 export type AnalyzeFinancialStatementInput = z.infer<typeof AnalyzeFinancialStatementInputSchema>;
 
 const AnalyzeFinancialStatementOutputSchema = z.object({
-  summary: z.string().describe("An expansive, multi-paragraph summary of the entity's financial health, weaving in KPIs, ratios, and trend analysis into a rich, coherent narrative."),
+  summary: z.string().describe("An expansive, multi-paragraph summary of the entity's financial health, weaving in KPIs and ratios to support the analysis."),
+  trendsAndGraphs: z.string().describe("A description of key financial trends and what relevant graphs (like revenue over time, profit margins) would visually represent. This should be a narrative description."),
   prediction: z.string().describe('A clear, evidence-backed prediction of the company\'s financial trajectory (e.g., "Strong Growth Potential," "Stable but Cautious," "High-Risk").'),
-  creditScorePrediction: z.string().describe('A predicted credit score (as a specific number or a tight range, e.g., 680-720) and a brief justification, framed within the context of Omani and general Middle Eastern credit bureau standards.')
+  creditScorePrediction: z.string().describe('A predicted credit score (as a specific number or a tight range, e.g., 680-720) and a brief justification, framed within the context of Omani and general Middle Eastern credit bureau standards.'),
+  identifiedFlaws: z.array(z.string()).describe("A list of critical financial flaws, risks, or red flags identified in the statements. Each string is a separate point.")
 });
 export type AnalyzeFinancialStatementOutput = z.infer<typeof AnalyzeFinancialStatementOutputSchema>;
 
@@ -52,10 +54,12 @@ Your goal is to be surgically precise, focusing exclusively on the financial dat
         *   **Leverage:** Debt-to-Equity Ratio.
     *   **Trend Analysis:** Identify significant year-over-year (YoY) changes.
 
-3.  **Generate In-Depth Report:** Synthesize your findings into a detailed report with three sections:
-    *   **In-Depth Summary and Trend Analysis:** Provide an expansive, multi-paragraph summary of the entity's financial health. This should be a rich, coherent narrative that explains the story behind the numbers. Critically analyze year-over-year trends, discussing their implications. Weave in the KPIs and ratios to support your analysis of strengths, weaknesses, and opportunities.
-    *   **Evidence-Based Prediction:** Offer a clear, evidence-backed prediction of the company's future financial trajectory (e.g., "Strong Growth Potential," "Stable but Cautious," "High-Risk"). Justify this by citing specific ratios, trends, and cash flow dynamics. Be definitive in your reasoning.
-    *   **Credit Score Assessment:** Based on your analysis, provide a predicted credit score (as a specific number or a tight range, e.g., 680-720). Your assessment must be framed within the context of **Omani and general Middle Eastern credit bureau standards**. Briefly justify the score, explaining which financial factors (e.g., debt levels, profitability, cash flow stability) led to your prediction according to these regional standards.
+3.  **Generate In-Depth Report:** Synthesize your findings into a detailed report with five sections, filling the corresponding output fields:
+    *   **summary:** Provide an expansive, multi-paragraph summary of the entity's financial health. Weave in the KPIs and ratios to support your analysis of strengths and weaknesses.
+    *   **trendsAndGraphs:** Describe the key financial trends (e.g., YoY revenue growth, margin changes). For each trend, describe a graph that would visually represent it (e.g., "A bar chart showing revenue increasing from $5M to $8M over three years").
+    *   **prediction:** Offer a clear, evidence-backed prediction of the company's future financial trajectory (e.g., "Strong Growth Potential," "Stable but Cautious," "High-Risk"). Justify this by citing specific ratios, trends, and cash flow dynamics.
+    *   **creditScorePrediction:** Based on your analysis, provide a predicted credit score (as a specific number or a tight range, e.g., 680-720), framed within **Omani and general Middle Eastern credit bureau standards**. Justify the score.
+    *   **identifiedFlaws:** List any critical financial flaws, risks, or red flags as a list of distinct points. These could include high debt, declining margins, poor cash flow, etc. Each point should be a separate string in the array.
 
 Analyze the following PDF document with utmost precision:
 {{media url=pdfDataUri}}`,

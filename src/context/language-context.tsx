@@ -63,6 +63,8 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     translationErrorTitle: 'Translation Error',
     translationErrorDesc: 'Failed to generate the report in {{lang}}. Please try again.',
     generatingTranslatedPdf: 'Generating translated PDF...',
+    trendsAndGraphsTitle: "Trends & Visualizations",
+    identifiedFlawsTitle: "Identified Flaws & Risks",
   },
   ar: {
     pageTitle: 'ساشا المصرفية',
@@ -115,6 +117,8 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     translationErrorTitle: 'خطأ في الترجمة',
     translationErrorDesc: 'فشل إنشاء التقرير باللغة {{lang}}. يرجى المحاولة مرة أخرى.',
     generatingTranslatedPdf: 'جاري إنشاء ملف PDF مترجم...',
+    trendsAndGraphsTitle: "الاتجاهات والتصورات",
+    identifiedFlawsTitle: "العيوب والمخاطر المحددة",
   },
 };
 
