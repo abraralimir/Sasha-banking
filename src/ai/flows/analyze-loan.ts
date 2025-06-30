@@ -11,13 +11,13 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-export const AnalyzeLoanInputSchema = z.object({
+const AnalyzeLoanInputSchema = z.object({
   csvData: z.string().describe('The loan data in CSV format.'),
   loanId: z.string().describe('The specific Loan ID to analyze from the CSV data.'),
 });
 export type AnalyzeLoanInput = z.infer<typeof AnalyzeLoanInputSchema>;
 
-export const AnalyzeLoanOutputSchema = z.object({
+const AnalyzeLoanOutputSchema = z.object({
   summary: z.string().describe('A detailed AI-generated summary of the loan profile.'),
   prediction: z.string().describe('The prediction of loan approval (e.g., "Approved", "Rejected", "High-Risk").'),
   eligibility: z.string().describe('A statement on the eligibility of the applicant with reasons.'),
