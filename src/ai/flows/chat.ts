@@ -18,7 +18,7 @@ const MessageSchema = z.object({
 
 const ChatInputSchema = z.object({
   history: z.array(MessageSchema).describe('The chat history so far.'),
-  pdfDataUri: z.string().optional().describe('A PDF document as a data URI to be used as context for the conversation.'),
+  pdfDataUri: z.string().nullable().optional().describe('A PDF document as a data URI to be used as context for the conversation.'),
 });
 export type ChatInput = z.infer<typeof ChatInputSchema>;
 
