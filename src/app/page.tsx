@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { CornerDownLeft, Image as ImageIcon, Mic, FileUp, FileText, XCircle } from 'lucide-react';
+import { CornerDownLeft, Mic, FileUp, FileText, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ImageGenerationDialog } from '@/components/chat/image-generation-dialog';
 import { MessageList, type Message } from '@/components/chat/message-list';
 import { SashaAvatar } from '@/components/sasha-avatar';
 import { chat } from '@/ai/flows/chat';
@@ -22,7 +21,6 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isImageGenerationOpen, setImageGenerationOpen] = useState(false);
   const [csvData, setCsvData] = useState<string | null>(null);
   const [pdfData, setPdfData] = useState<string | null>(null);
   const [pdfFileName, setPdfFileName] = useState<string | null>(null);
@@ -78,7 +76,7 @@ export default function Home() {
       } else if (loanMatch && !csvData) {
         setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: t('uploadCsvFirst') }]);
       } else {
-        const historyForApi = newMessages.map(({ id, imageUrl, analysisReport, financialReport, ...rest }) => rest);
+        const historyForApi = newMessages.map(({ id, analysisReport, financialReport, ...rest }) => rest);
         const response = await chat({ history: historyForApi, pdfDataUri: pdfData, language });
         const botResponse: Message = {
           id: Date.now().toString(),
@@ -97,16 +95,6 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  };
-  
-  const handleImageGenerated = (imageUrl: string, prompt: string) => {
-    const newImageMessage: Message = {
-      id: Date.now().toString(),
-      role: 'assistant',
-      content: `Here is the image I generated for the prompt: "${prompt}"`,
-      imageUrl: imageUrl,
-    };
-    setMessages(prev => [...prev, newImageMessage]);
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -347,16 +335,6 @@ export default function Home() {
 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button type="button" variant="ghost" size="icon" onClick={() => setImageGenerationOpen(true)}>
-                      <ImageIcon className="w-5 h-5" />
-                      <span className="sr-only">{t('generateImageTooltip')}</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>{t('generateImageTooltip')}</TooltipContent>
-                </Tooltip>
-                
-                <Tooltip>
-                  <TooltipTrigger asChild>
                     <Button type="button" variant="ghost" size="icon" disabled>
                       <Mic className="w-5 h-5" />
                       <span className="sr-only">{t('micTooltip')}</span>
@@ -373,11 +351,6 @@ export default function Home() {
             </form>
           </div>
         </footer>
-        <ImageGenerationDialog 
-          open={isImageGenerationOpen} 
-          onOpenChange={setImageGenerationOpen}
-          onImageGenerated={handleImageGenerated}
-        />
       </div>
     </TooltipProvider>
   );

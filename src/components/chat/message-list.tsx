@@ -6,7 +6,6 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { SashaAvatar } from '@/components/sasha-avatar';
 import { User, Download } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/context/language-context';
@@ -15,7 +14,6 @@ export type Message = {
   id: string;
   role: 'user' | 'assistant';
   content: string;
-  imageUrl?: string;
   analysisReport?: {
     summary: string;
     prediction: string;
@@ -91,11 +89,6 @@ function ChatMessage({
           )}
         >
           <p className="whitespace-pre-wrap">{message.content}</p>
-          {message.imageUrl && (
-              <div className="mt-2 relative aspect-square max-w-sm">
-                  <Image src={message.imageUrl} alt="Generated image" fill className="rounded-lg object-cover" />
-              </div>
-          )}
         </div>
 
         {message.analysisReport && (
