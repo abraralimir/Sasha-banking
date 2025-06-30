@@ -23,6 +23,7 @@ export type Message = {
   financialReport?: {
     summary: string;
     prediction: string;
+    creditScorePrediction: string;
   };
 };
 
@@ -130,6 +131,10 @@ function ChatMessage({
               <div>
                 <h3 className="font-semibold mb-1">{t('prediction')}</h3>
                 <p className="text-muted-foreground">{message.financialReport.prediction}</p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">{t('creditScoreAssessment')}</h3>
+                <p className="text-muted-foreground">{message.financialReport.creditScorePrediction}</p>
               </div>
                <Button onClick={() => onDownloadFinancialReportPdf(message.financialReport)} variant="secondary" size="sm">
                 <Download className="mr-2 h-4 w-4" />

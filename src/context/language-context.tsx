@@ -49,6 +49,7 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     summary: "Summary",
     prediction: "Prediction",
     eligibility: "Eligibility",
+    creditScoreAssessment: "Credit Score Assessment",
     downloadPdf: "Download PDF",
     english: 'English',
     arabic: 'Arabic'
@@ -90,6 +91,7 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     summary: "ملخص",
     prediction: "توقع",
     eligibility: "الأهلية",
+    creditScoreAssessment: "تقييم الجدارة الائتمانية",
     downloadPdf: "تحميل PDF",
     english: 'الإنجليزية',
     arabic: 'العربية'

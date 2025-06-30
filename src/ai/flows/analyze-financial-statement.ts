@@ -21,8 +21,9 @@ const AnalyzeFinancialStatementInputSchema = z.object({
 export type AnalyzeFinancialStatementInput = z.infer<typeof AnalyzeFinancialStatementInputSchema>;
 
 const AnalyzeFinancialStatementOutputSchema = z.object({
-  summary: z.string().describe('A dense, executive summary of the financial statement, weaving in KPIs and ratios into a coherent narrative.'),
+  summary: z.string().describe("A comprehensive, multi-paragraph summary of the entity's financial health, weaving in KPIs and ratios into a rich, coherent narrative."),
   prediction: z.string().describe('A clear, evidence-backed prediction of the company\'s financial trajectory (e.g., "Strong Growth Potential," "Stable but Cautious," "High-Risk").'),
+  creditScorePrediction: z.string().describe('A predicted credit score (as a specific number or a tight range, e.g., 680-720) and a brief justification, framed within the context of Omani and general Middle Eastern credit bureau standards.')
 });
 export type AnalyzeFinancialStatementOutput = z.infer<typeof AnalyzeFinancialStatementOutputSchema>;
 
@@ -34,25 +35,26 @@ const analyzeFinancialStatementPrompt = ai.definePrompt({
   name: 'analyzeFinancialStatementPrompt',
   input: {schema: AnalyzeFinancialStatementInputSchema},
   output: {schema: AnalyzeFinancialStatementOutputSchema},
-  prompt: `You are a top-tier AI financial analyst, equivalent to a senior analyst at a major investment firm. Your task is to perform a deep, critical analysis of a company's yearly financial statement from a provided PDF. Your analysis must be sharp, data-driven, and insightful, cutting through non-essential information to deliver actionable intelligence.
+  prompt: `You are a top-tier AI financial analyst, equivalent to a senior analyst at a major investment firm, with deep expertise in Middle Eastern financial markets, particularly **Omani credit bureau standards**. Your task is to perform a deep, critical analysis of a company's or individual's financial statement from a provided PDF.
 
 Your goal is to be surgically precise, focusing exclusively on the financial data to produce an institutional-quality report.
 
-1.  **Isolate Financial Core:** Immediately scan the document to locate the primary financial statements (Income Statement, Balance Sheet, Cash Flow Statement). Disregard all marketing material, shareholder letters, and other narrative sections unless they contain specific financial data or footnotes referenced by the core statements.
+1.  **Isolate Financial Core:** Scan the document to locate primary financial statements (Income Statement, Balance Sheet, Cash Flow Statement). Disregard all non-essential narrative sections.
 
-2.  **Comprehensive Metric & Ratio Analysis:** From the core statements, extract and analyze the following:
+2.  **Comprehensive Metric & Ratio Analysis:** From the core statements, extract and analyze:
     *   **Key Performance Indicators (KPIs):** Revenue, Cost of Goods Sold (COGS), Gross Profit, Operating Expenses, Operating Income (EBIT), Net Income.
-    *   **Balance Sheet Items:** Total Assets, Total Liabilities, Shareholders' Equity. Note the composition of assets (current vs. non-current) and liabilities.
+    *   **Balance Sheet Items:** Total Assets, Total Liabilities, Shareholders' Equity. Note the composition of assets and liabilities.
     *   **Cash Flow:** Cash Flow from Operations (CFO), Cash Flow from Investing (CFI), Cash Flow from Financing (CFF).
     *   **Key Financial Ratios:**
         *   **Profitability:** Gross Profit Margin, Net Profit Margin, Return on Equity (ROE).
         *   **Liquidity:** Current Ratio.
         *   **Leverage:** Debt-to-Equity Ratio.
-    *   **Trend Analysis:** Identify significant year-over-year (YoY) changes in these metrics and ratios if the data is available.
+    *   **Trend Analysis:** Identify significant year-over-year (YoY) changes.
 
-3.  **Generate Executive-Level Report:** Synthesize your findings into a concise report with two sections:
-    *   **Summary:** Provide a dense, executive summary of the company's financial performance. Start with a headline statement (e.g., "Robust profitability but rising leverage"). Weave the extracted KPIs and ratios into a coherent narrative.
-    *   **Prediction:** Offer a clear, evidence-backed prediction of the company's financial trajectory (e.g., "Strong Growth Potential," "Stable but Cautious," "High-Risk"). Justify this prediction by citing specific ratios, trends, and cash flow dynamics you identified.
+3.  **Generate In-Depth Report:** Synthesize your findings into a detailed report with three sections:
+    *   **Expansive Summary:** Provide a comprehensive, multi-paragraph summary of the entity's financial health. Go beyond a simple overview; weave the extracted KPIs and ratios into a rich, coherent narrative that explains the story behind the numbers. Discuss strengths and weaknesses revealed by the data.
+    *   **Financial Trajectory Prediction:** Offer a clear, evidence-backed prediction of the financial trajectory (e.g., "Strong Growth Potential," "Stable but Cautious," "High-Risk"). Justify this by citing specific ratios, trends, and cash flow dynamics.
+    *   **Credit Score Assessment:** Based on your analysis, provide a predicted credit score (as a specific number or a tight range, e.g., 680-720). Your assessment must be framed within the context of **Omani and general Middle Eastern credit bureau standards**. Briefly justify the score, explaining which financial factors (e.g., debt levels, profitability, cash flow stability) led to your prediction according to these regional standards.
 
 Analyze the following PDF document with utmost precision:
 {{media url=pdfDataUri}}`,

@@ -243,11 +243,17 @@ export default function Home() {
       doc.setFontSize(10);
       const splitContent = doc.splitTextToSize(content, 180);
       doc.text(splitContent, 14, yPos);
-      yPos += (splitContent.length * 5) + 10;
+      if (yPos + (splitContent.length * 5) + 10 > doc.internal.pageSize.height - 20) {
+        doc.addPage();
+        yPos = 20;
+      } else {
+        yPos += (splitContent.length * 5) + 10;
+      }
     };
 
     addSection(t('summary'), report.summary);
     addSection(t('prediction'), report.prediction);
+    addSection(t('creditScoreAssessment'), report.creditScorePrediction);
 
     const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
     doc.setFontSize(8);
