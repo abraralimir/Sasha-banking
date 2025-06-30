@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { CornerDownLeft, Mic, FileUp, FileText, XCircle } from 'lucide-react';
+import { CornerDownLeft, Mic, FileUp, FileText, XCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -29,13 +29,13 @@ import html2canvas from 'html2canvas';
 type ReportToDownload = NonNullable<Message['analysisReport'] | Message['financialReport']>;
 type ReportType = 'loan' | 'financial';
 
-
 export default function Home() {
   const { t, language, dir } = useLanguage();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [csvData, setCsvData] = useState<string | null>(null);
   const [csvFileName, setCsvFileName] = useState<string | null>(null);
   const [pdfData, setPdfData] = useState<string | null>(null);
@@ -44,8 +44,15 @@ export default function Home() {
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   
-  const [downloadInfo, setDownloadInfo] = useState<{ type: ReportType; report: ReportToDownload } | null>(null);
-
+  const [downloadInfo, setDownloadInfo] = useState<{
+    type: ReportType;
+    report: ReportToDownload;
+    inputs: {
+      pdfDataUri?: string | null;
+      csvData?: string | null;
+      loanId?: string;
+    }
+  } | null>(null);
 
   useEffect(() => {
     setMessages([{ id: '1', role: 'assistant', content: t('initialMessage') }]);
@@ -95,7 +102,7 @@ export default function Home() {
 
       if (loanMatch && csvData) {
         const loanId = loanMatch[1];
-        const response = await analyzeLoan({ csvData, loanId });
+        const response = await analyzeLoan({ csvData, loanId, language });
         const botResponse: Message = {
           id: Date.now().toString(),
           role: 'assistant',
@@ -195,7 +202,7 @@ export default function Home() {
       setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: t('analyzingPdfMessage', { fileName }) }]);
       
       try {
-        const response = await analyzeFinancialStatement({ pdfDataUri: dataUri });
+        const response = await analyzeFinancialStatement({ pdfDataUri: dataUri, language });
         const botResponse: Message = {
           id: Date.now().toString(),
           role: 'assistant',
@@ -259,7 +266,14 @@ export default function Home() {
   
   const promptDownload = (type: ReportType, report: ReportToDownload | undefined) => {
     if (!report) return;
-    setDownloadInfo({ type, report });
+
+    const inputs = {
+        pdfDataUri: type === 'financial' ? pdfData : null,
+        csvData: type === 'loan' ? csvData : null,
+        loanId: (report as Message['analysisReport'])?.loanId
+    };
+
+    setDownloadInfo({ type, report, inputs });
   };
 
   const generatePdfFromHtml = (
@@ -370,12 +384,45 @@ export default function Home() {
     });
   };
 
-  const handleFinalDownload = (lang: 'en' | 'ar') => {
-    if (!downloadInfo) return;
-    
-    generatePdfFromHtml(downloadInfo.report, downloadInfo.type, lang);
-    
-    setDownloadInfo(null);
+  const handleFinalDownload = async (lang: 'en' | 'ar') => {
+    if (!downloadInfo || isDownloading) return;
+
+    setIsDownloading(true);
+    toast({ title: t('generatingTranslatedPdf') });
+
+    try {
+      let translatedReport: ReportToDownload;
+
+      if (downloadInfo.type === 'financial' && downloadInfo.inputs.pdfDataUri) {
+        translatedReport = await analyzeFinancialStatement({
+          pdfDataUri: downloadInfo.inputs.pdfDataUri,
+          language: lang,
+        });
+      } else if (downloadInfo.type === 'loan' && downloadInfo.inputs.csvData && downloadInfo.inputs.loanId) {
+        const report = await analyzeLoan({
+          csvData: downloadInfo.inputs.csvData,
+          loanId: downloadInfo.inputs.loanId,
+          language: lang,
+        });
+        translatedReport = { ...report, loanId: downloadInfo.inputs.loanId };
+      } else {
+        // Fallback to original report if inputs are missing for any reason
+        translatedReport = downloadInfo.report;
+      }
+      
+      generatePdfFromHtml(translatedReport, downloadInfo.type, lang);
+
+    } catch (error) {
+      console.error("Failed to generate translated report:", error);
+      toast({
+        variant: 'destructive',
+        title: t('translationErrorTitle'),
+        description: t('translationErrorDesc', { lang: lang === 'en' ? 'English' : 'Arabic' }),
+      });
+    } finally {
+      setIsDownloading(false);
+      setDownloadInfo(null);
+    }
   };
 
   return (
@@ -498,9 +545,15 @@ export default function Home() {
                     <AlertDialogDescription>{t('choosePdfLanguageDesc')}</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => handleFinalDownload('ar')}>{t('arabic')}</AlertDialogAction>
-                    <AlertDialogAction onClick={() => handleFinalDownload('en')}>{t('english')}</AlertDialogAction>
+                    <AlertDialogCancel disabled={isDownloading}>{t('cancel')}</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => handleFinalDownload('ar')} disabled={isDownloading}>
+                      {isDownloading && <Loader2 className="animate-spin" />}
+                      {t('arabic')}
+                    </AlertDialogAction>
+                    <AlertDialogAction onClick={() => handleFinalDownload('en')} disabled={isDownloading}>
+                      {isDownloading && <Loader2 className="animate-spin" />}
+                      {t('english')}
+                    </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>

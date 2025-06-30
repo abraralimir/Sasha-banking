@@ -14,6 +14,7 @@ import {z} from 'genkit';
 const AnalyzeLoanInputSchema = z.object({
   csvData: z.string().describe('The loan data in CSV format.'),
   loanId: z.string().describe('The specific Loan ID to analyze from the CSV data.'),
+  language: z.enum(['en', 'ar']).default('en').describe('The language for the response, either English (en) or Arabic (ar).'),
 });
 export type AnalyzeLoanInput = z.infer<typeof AnalyzeLoanInputSchema>;
 
@@ -32,7 +33,7 @@ const analyzeLoanPrompt = ai.definePrompt({
   name: 'analyzeLoanPrompt',
   input: {schema: AnalyzeLoanInputSchema},
   output: {schema: AnalyzeLoanOutputSchema},
-  prompt: `You are an expert loan analyst for a bank. Your task is to analyze a specific loan application from a provided CSV dataset.
+  prompt: `You are an expert loan analyst for a bank. Your task is to analyze a specific loan application from a provided CSV dataset. Your entire report MUST be written in the following language: {{{language}}}.
 
 Find the row in the following CSV data that corresponds to the Loan ID: {{{loanId}}}.
 

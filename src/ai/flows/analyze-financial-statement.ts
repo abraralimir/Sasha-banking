@@ -17,6 +17,7 @@ const AnalyzeFinancialStatementInputSchema = z.object({
     .describe(
       "A company's financial statement in PDF format, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:application/pdf;base64,<encoded_data>'."
     ),
+  language: z.enum(['en', 'ar']).default('en').describe('The language for the response, either English (en) or Arabic (ar).'),
 });
 export type AnalyzeFinancialStatementInput = z.infer<typeof AnalyzeFinancialStatementInputSchema>;
 
@@ -37,7 +38,7 @@ const analyzeFinancialStatementPrompt = ai.definePrompt({
   output: {schema: AnalyzeFinancialStatementOutputSchema},
   prompt: `You are a top-tier AI financial analyst, equivalent to a senior analyst at a major investment firm, with deep expertise in Middle Eastern financial markets, particularly **Omani credit bureau standards**. Your task is to perform a deep, critical analysis of a company's or individual's financial statement from a provided PDF.
 
-Your goal is to be surgically precise, focusing exclusively on the financial data to produce an institutional-quality report.
+Your goal is to be surgically precise, focusing exclusively on the financial data to produce an institutional-quality report. Your entire report MUST be written in the following language: {{{language}}}.
 
 1.  **Isolate Financial Core:** Scan the document to locate primary financial statements (Income Statement, Balance Sheet, Cash Flow Statement). Disregard all non-essential narrative sections.
 

@@ -60,6 +60,9 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     csvClearedTitle: "CSV Cleared",
     csvClearedDesc: "The CSV data has been cleared from the session.",
     clearedCsvMessage: "I have cleared the CSV data. How can I help you now?",
+    translationErrorTitle: 'Translation Error',
+    translationErrorDesc: 'Failed to generate the report in {{lang}}. Please try again.',
+    generatingTranslatedPdf: 'Generating translated PDF...',
   },
   ar: {
     pageTitle: 'ساشا المصرفية',
@@ -109,6 +112,9 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     csvClearedTitle: "تم مسح CSV",
     csvClearedDesc: "تمت إزالة بيانات CSV من الجلسة.",
     clearedCsvMessage: "لقد قمت بمسح بيانات CSV. كيف يمكنني مساعدتك الآن؟",
+    translationErrorTitle: 'خطأ في الترجمة',
+    translationErrorDesc: 'فشل إنشاء التقرير باللغة {{lang}}. يرجى المحاولة مرة أخرى.',
+    generatingTranslatedPdf: 'جاري إنشاء ملف PDF مترجم...',
   },
 };
 
