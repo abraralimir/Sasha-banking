@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { CornerDownLeft, Image as ImageIcon, Mic, FileUp } from 'lucide-react';
+import { CornerDownLeft, Image as ImageIcon, Mic, FileUp, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -10,19 +10,26 @@ import { MessageList, type Message } from '@/components/chat/message-list';
 import { SashaAvatar } from '@/components/sasha-avatar';
 import { chat } from '@/ai/flows/chat';
 import { analyzeLoan } from '@/ai/flows/analyze-loan';
+import { analyzeFinancialStatement } from '@/ai/flows/analyze-financial-statement';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/theme-toggle';
 import jsPDF from 'jspdf';
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([
-    { id: '1', role: 'assistant', content: "Hello! I'm Sasha, your personal banking assistant. You can upload a CSV file of loan data and ask me to analyze a specific loan (e.g., 'analyze loan LP001002')." }
+    { 
+      id: '1', 
+      role: 'assistant', 
+      content: "Hello! I'm Sasha, your personal banking assistant. You can upload a CSV for loan analysis (e.g., 'analyze loan LP001002') or a PDF financial statement (e.g., 'analyze statement')." 
+    }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isImageGenerationOpen, setImageGenerationOpen] = useState(false);
   const [csvData, setCsvData] = useState<string | null>(null);
+  const [pdfData, setPdfData] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -37,10 +44,12 @@ export default function Home() {
 
     try {
       const loanAnalysisRegex = /analyze loan (\w+)/i;
-      const match = input.match(loanAnalysisRegex);
+      const statementAnalysisRegex = /analyze statement/i;
+      const loanMatch = input.match(loanAnalysisRegex);
+      const statementMatch = input.match(statementAnalysisRegex);
 
-      if (match && csvData) {
-        const loanId = match[1];
+      if (loanMatch && csvData) {
+        const loanId = loanMatch[1];
         const response = await analyzeLoan({ csvData, loanId });
         const botResponse: Message = {
           id: Date.now().toString(),
@@ -49,15 +58,21 @@ export default function Home() {
           analysisReport: { ...response, loanId },
         };
         setMessages(prev => [...prev, botResponse]);
-      } else if (match && !csvData) {
+      } else if (loanMatch && !csvData) {
+        setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: 'Please upload a CSV file first.' }]);
+      } else if (statementMatch && pdfData) {
+        const response = await analyzeFinancialStatement({ pdfDataUri: pdfData });
         const botResponse: Message = {
           id: Date.now().toString(),
           role: 'assistant',
-          content: 'Please upload a CSV file first before requesting a loan analysis.',
+          content: `Here is the analysis of the financial statement:`,
+          financialReport: response,
         };
         setMessages(prev => [...prev, botResponse]);
+      } else if (statementMatch && !pdfData) {
+        setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: 'Please upload a PDF financial statement first.' }]);
       } else {
-        const historyForApi = newMessages.map(({ id, imageUrl, analysisReport, ...rest }) => rest);
+        const historyForApi = newMessages.map(({ id, imageUrl, analysisReport, financialReport, ...rest }) => rest);
         const response = await chat({ history: historyForApi });
         const botResponse: Message = {
           id: Date.now().toString(),
@@ -96,11 +111,33 @@ export default function Home() {
         const text = e.target?.result as string;
         setCsvData(text);
         toast({
-          title: 'File Uploaded Successfully',
-          description: `${file.name} is ready for analysis.`,
+          title: 'CSV File Uploaded',
+          description: `${file.name} is ready for loan analysis.`,
         });
       };
       reader.readAsText(file);
+    }
+  };
+
+  const handlePdfUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type === 'application/pdf') {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUri = e.target?.result as string;
+        setPdfData(dataUri);
+        toast({
+          title: 'PDF File Uploaded',
+          description: `${file.name} is ready for financial analysis.`,
+        });
+      };
+      reader.readAsDataURL(file);
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Invalid File Type',
+        description: 'Please upload a PDF file.',
+      });
     }
   };
 
@@ -153,7 +190,7 @@ export default function Home() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Message Sasha..."
-                className="pr-40 py-3 text-base resize-none"
+                className="pr-48 py-3 text-base resize-none"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -164,6 +201,8 @@ export default function Home() {
               />
               <div className="absolute top-1/2 right-3 transform -translate-y-1/2 flex items-center space-x-1">
                 <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".csv" className="hidden" />
+                <input type="file" ref={pdfInputRef} onChange={handlePdfUpload} accept="application/pdf" className="hidden" />
+                
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button type="button" variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()}>
@@ -171,7 +210,17 @@ export default function Home() {
                       <span className="sr-only">Upload CSV</span>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Upload CSV</TooltipContent>
+                  <TooltipContent>Upload Loan CSV</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button type="button" variant="ghost" size="icon" onClick={() => pdfInputRef.current?.click()}>
+                      <FileText className="w-5 h-5" />
+                      <span className="sr-only">Upload PDF</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Upload Financial PDF</TooltipContent>
                 </Tooltip>
 
                 <Tooltip>

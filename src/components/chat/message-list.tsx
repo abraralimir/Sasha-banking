@@ -21,6 +21,10 @@ export type Message = {
     eligibility: string;
     loanId: string;
   };
+  financialReport?: {
+    summary: string;
+    prediction: string;
+  };
 };
 
 interface MessageListProps {
@@ -99,6 +103,24 @@ function ChatMessage({ message, onDownloadPdf }: { message: Message, onDownloadP
                 <Download className="mr-2 h-4 w-4" />
                 Download PDF
               </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {message.financialReport && (
+          <Card className="bg-card text-card-foreground">
+            <CardHeader>
+              <CardTitle className="text-base">Financial Statement Analysis</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm">
+              <div>
+                <h3 className="font-semibold mb-1">Summary</h3>
+                <p className="text-muted-foreground">{message.financialReport.summary}</p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">Prediction</h3>
+                <p className="text-muted-foreground">{message.financialReport.prediction}</p>
+              </div>
             </CardContent>
           </Card>
         )}
