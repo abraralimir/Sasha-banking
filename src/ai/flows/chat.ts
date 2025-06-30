@@ -8,7 +8,8 @@
  * - ChatOutput - The return type for the chat function.
  */
 
-import {ai, googleSearch} from '@/ai/genkit';
+import {ai} from '@/ai/genkit';
+import {googleSearch} from '@genkit-ai/googleai/tools';
 import {MessageData, z} from 'genkit';
 
 const MessageSchema = z.object({
