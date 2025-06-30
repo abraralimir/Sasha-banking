@@ -226,7 +226,6 @@ export default function Home() {
     
     // For production applications, you would need to embed a font that supports Arabic characters.
     if (isRtl) {
-      doc.setRtl(true);
       doc.setFont('Helvetica'); // A standard font, perfect rendering isn't guaranteed.
     }
     
@@ -284,7 +283,6 @@ export default function Home() {
     const align = isRtl ? 'right' : 'left';
 
     if (isRtl) {
-        doc.setRtl(true);
         doc.setFont('Helvetica');
     }
 
