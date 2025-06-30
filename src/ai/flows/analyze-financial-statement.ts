@@ -22,7 +22,7 @@ const AnalyzeFinancialStatementInputSchema = z.object({
 export type AnalyzeFinancialStatementInput = z.infer<typeof AnalyzeFinancialStatementInputSchema>;
 
 const AnalyzeFinancialStatementOutputSchema = z.object({
-  summary: z.string().describe("A comprehensive, multi-paragraph summary of the entity's financial health, weaving in KPIs and ratios into a rich, coherent narrative."),
+  summary: z.string().describe("An expansive, multi-paragraph summary of the entity's financial health, weaving in KPIs, ratios, and trend analysis into a rich, coherent narrative."),
   prediction: z.string().describe('A clear, evidence-backed prediction of the company\'s financial trajectory (e.g., "Strong Growth Potential," "Stable but Cautious," "High-Risk").'),
   creditScorePrediction: z.string().describe('A predicted credit score (as a specific number or a tight range, e.g., 680-720) and a brief justification, framed within the context of Omani and general Middle Eastern credit bureau standards.')
 });
@@ -53,8 +53,8 @@ Your goal is to be surgically precise, focusing exclusively on the financial dat
     *   **Trend Analysis:** Identify significant year-over-year (YoY) changes.
 
 3.  **Generate In-Depth Report:** Synthesize your findings into a detailed report with three sections:
-    *   **Expansive Summary:** Provide a comprehensive, multi-paragraph summary of the entity's financial health. Go beyond a simple overview; weave the extracted KPIs and ratios into a rich, coherent narrative that explains the story behind the numbers. Discuss strengths and weaknesses revealed by the data.
-    *   **Financial Trajectory Prediction:** Offer a clear, evidence-backed prediction of the financial trajectory (e.g., "Strong Growth Potential," "Stable but Cautious," "High-Risk"). Justify this by citing specific ratios, trends, and cash flow dynamics.
+    *   **In-Depth Summary and Trend Analysis:** Provide an expansive, multi-paragraph summary of the entity's financial health. This should be a rich, coherent narrative that explains the story behind the numbers. Critically analyze year-over-year trends, discussing their implications. Weave in the KPIs and ratios to support your analysis of strengths, weaknesses, and opportunities.
+    *   **Evidence-Based Prediction:** Offer a clear, evidence-backed prediction of the company's future financial trajectory (e.g., "Strong Growth Potential," "Stable but Cautious," "High-Risk"). Justify this by citing specific ratios, trends, and cash flow dynamics. Be definitive in your reasoning.
     *   **Credit Score Assessment:** Based on your analysis, provide a predicted credit score (as a specific number or a tight range, e.g., 680-720). Your assessment must be framed within the context of **Omani and general Middle Eastern credit bureau standards**. Briefly justify the score, explaining which financial factors (e.g., debt levels, profitability, cash flow stability) led to your prediction according to these regional standards.
 
 Analyze the following PDF document with utmost precision:
