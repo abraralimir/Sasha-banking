@@ -19,6 +19,7 @@ const MessageSchema = z.object({
 const ChatInputSchema = z.object({
   history: z.array(MessageSchema).describe('The chat history so far.'),
   pdfDataUri: z.string().nullable().optional().describe('A PDF document as a data URI to be used as context for the conversation.'),
+  csvData: z.string().nullable().optional().describe('A CSV data string to be used as context for the conversation.'),
   language: z.enum(['en', 'ar']).default('en').describe('The language for the response, either English (en) or Arabic (ar).'),
 });
 export type ChatInput = z.infer<typeof ChatInputSchema>;
@@ -56,6 +57,13 @@ const chatFlow = ai.defineFlow(
         role: message.role === 'assistant' ? 'model' : 'user',
         content: [{text: message.content}],
       }));
+    
+    if (input.csvData) {
+      messages.unshift({
+          role: 'user',
+          content: [{text: `Use the following CSV data as context for our conversation:\n\n\`\`\`csv\n${input.csvData}\n\`\`\``}]
+      })
+    }
 
     if (input.pdfDataUri) {
       const existingPdfMessage = messages.find(m => m.role === 'user' && Array.isArray(m.content) && m.content.some(c => typeof c === 'object' && 'media' in c));

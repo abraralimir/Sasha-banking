@@ -36,6 +36,7 @@ export default function Home() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [csvData, setCsvData] = useState<string | null>(null);
+  const [csvFileName, setCsvFileName] = useState<string | null>(null);
   const [pdfData, setPdfData] = useState<string | null>(null);
   const [pdfFileName, setPdfFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -51,6 +52,17 @@ export default function Home() {
 
   useEffect(() => {
     try {
+      const savedCsvData = localStorage.getItem('sasha-csv-data');
+      const savedCsvFileName = localStorage.getItem('sasha-csv-filename');
+      if (savedCsvData && savedCsvFileName) {
+        setCsvData(savedCsvData);
+        setCsvFileName(savedCsvFileName);
+        toast({
+          title: t('documentLoadedTitle'),
+          description: t('documentLoadedDesc', { fileName: savedCsvFileName }),
+        });
+      }
+
       const savedPdfData = localStorage.getItem('sasha-pdf-data');
       const savedPdfFileName = localStorage.getItem('sasha-pdf-filename');
       if (savedPdfData && savedPdfFileName) {
@@ -94,7 +106,7 @@ export default function Home() {
         setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: t('uploadCsvFirst') }]);
       } else {
         const historyForApi = newMessages.map(({ id, analysisReport, financialReport, ...rest }) => rest);
-        const response = await chat({ history: historyForApi, pdfDataUri: pdfData, language });
+        const response = await chat({ history: historyForApi, pdfDataUri: pdfData, csvData: csvData, language });
         const botResponse: Message = {
           id: Date.now().toString(),
           role: 'assistant',
@@ -121,6 +133,18 @@ export default function Home() {
       reader.onload = (e) => {
         const text = e.target?.result as string;
         setCsvData(text);
+        setCsvFileName(file.name);
+        try {
+          localStorage.setItem('sasha-csv-data', text);
+          localStorage.setItem('sasha-csv-filename', file.name);
+        } catch (error) {
+          console.error("Failed to save CSV to localStorage:", error);
+          toast({
+            variant: 'destructive',
+            title: t('sessionSaveErrorTitle'),
+            description: t('sessionSaveErrorDesc')
+          });
+        }
         toast({
           title: t('csvUploadTitle'),
           description: t('csvUploadDesc', { fileName: file.name }),
@@ -209,6 +233,26 @@ export default function Home() {
       id: Date.now().toString(),
       role: 'assistant',
       content: t('clearedPdfMessage')
+    }]);
+  };
+
+  const handleClearCsv = () => {
+    setCsvData(null);
+    setCsvFileName(null);
+    try {
+      localStorage.removeItem('sasha-csv-data');
+      localStorage.removeItem('sasha-csv-filename');
+    } catch (error) {
+      console.error("Failed to clear localStorage:", error);
+    }
+    toast({
+      title: t('csvClearedTitle'),
+      description: t('csvClearedDesc'),
+    });
+    setMessages(prev => [...prev, {
+      id: Date.now().toString(),
+      role: 'assistant',
+      content: t('clearedCsvMessage')
     }]);
   };
   
@@ -373,6 +417,23 @@ export default function Home() {
         
         <footer className="p-4 border-t shrink-0 bg-background">
           <div className="max-w-3xl mx-auto">
+            {csvFileName && (
+              <div className="flex items-center justify-between p-2 mb-2 text-sm rounded-md bg-muted text-muted-foreground">
+                <div className="flex items-center gap-2 truncate">
+                  <FileUp className="w-4 h-4 shrink-0" />
+                  <span className="font-medium truncate">{t('analyzingFile', { fileName: csvFileName })}</span>
+                </div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button type="button" variant="ghost" size="icon" onClick={handleClearCsv} className="w-6 h-6 shrink-0">
+                      <XCircle className="w-4 h-4" />
+                      <span className="sr-only">{t('clearCsvTooltip')}</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{t('clearCsvTooltip')}</TooltipContent>
+                </Tooltip>
+              </div>
+            )}
             {pdfFileName && (
               <div className="flex items-center justify-between p-2 mb-2 text-sm rounded-md bg-muted text-muted-foreground">
                 <div className="flex items-center gap-2 truncate">

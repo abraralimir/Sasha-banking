@@ -56,6 +56,10 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     choosePdfLanguageTitle: "Choose PDF Language",
     choosePdfLanguageDesc: "In which language would you like to download the report?",
     cancel: "Cancel",
+    clearCsvTooltip: "Clear CSV from session",
+    csvClearedTitle: "CSV Cleared",
+    csvClearedDesc: "The CSV data has been cleared from the session.",
+    clearedCsvMessage: "I have cleared the CSV data. How can I help you now?",
   },
   ar: {
     pageTitle: 'ساشا المصرفية',
@@ -101,6 +105,10 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     choosePdfLanguageTitle: "اختر لغة التقرير",
     choosePdfLanguageDesc: "بأي لغة تود تحميل التقرير؟",
     cancel: "إلغاء",
+    clearCsvTooltip: "مسح ملف CSV من الجلسة",
+    csvClearedTitle: "تم مسح CSV",
+    csvClearedDesc: "تمت إزالة بيانات CSV من الجلسة.",
+    clearedCsvMessage: "لقد قمت بمسح بيانات CSV. كيف يمكنني مساعدتك الآن؟",
   },
 };
 
