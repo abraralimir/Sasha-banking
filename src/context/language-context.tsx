@@ -14,7 +14,7 @@ interface LanguageContextType {
 const translations: { [key in Language]: { [key: string]: string } } = {
   en: {
     pageTitle: 'Sasha Banking',
-    initialMessage: "Hello! I'm Sasha, your expert financial advisor. How can I assist you with your banking needs, loan analysis, or financial statements today?",
+    initialMessage: "Hello! I'm Sasha, your financial advisor. How can I help you today?",
     placeholder: "Message Sasha...",
     uploadCsvTooltip: "Upload Loan CSV",
     uploadPdfTooltip: "Upload Financial PDF",
@@ -59,7 +59,7 @@ const translations: { [key in Language]: { [key: string]: string } } = {
   },
   ar: {
     pageTitle: 'ساشا المصرفية',
-    initialMessage: "مرحباً! أنا ساشا، مستشارك المالي الخبير. كيف يمكنني مساعدتك في احتياجاتك المصرفية، تحليل القروض، أو البيانات المالية اليوم؟",
+    initialMessage: "مرحباً! أنا ساشا، مستشاركتك المالية. كيف يمكنني مساعدتك اليوم؟",
     placeholder: "راسل ساشا...",
     uploadCsvTooltip: "تحميل ملف CSV للقروض",
     uploadPdfTooltip: "تحميل ملف PDF مالي",
