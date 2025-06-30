@@ -20,7 +20,7 @@ export default function Home() {
     { 
       id: '1', 
       role: 'assistant', 
-      content: "Hello! I'm Sasha, your personal banking assistant. You can upload a CSV for loan analysis (e.g., 'analyze loan LP001002') or a PDF financial statement (e.g., 'analyze statement')." 
+      content: "Hello! I'm Sasha, your personal banking assistant. You can upload a CSV for loan analysis (e.g., 'analyze loan LP001002') or a PDF for an instant financial statement analysis." 
     }
   ]);
   const [input, setInput] = useState('');
@@ -44,9 +44,7 @@ export default function Home() {
 
     try {
       const loanAnalysisRegex = /analyze loan (\w+)/i;
-      const statementAnalysisRegex = /analyze statement/i;
       const loanMatch = input.match(loanAnalysisRegex);
-      const statementMatch = input.match(statementAnalysisRegex);
 
       if (loanMatch && csvData) {
         const loanId = loanMatch[1];
@@ -60,20 +58,9 @@ export default function Home() {
         setMessages(prev => [...prev, botResponse]);
       } else if (loanMatch && !csvData) {
         setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: 'Please upload a CSV file first.' }]);
-      } else if (statementMatch && pdfData) {
-        const response = await analyzeFinancialStatement({ pdfDataUri: pdfData });
-        const botResponse: Message = {
-          id: Date.now().toString(),
-          role: 'assistant',
-          content: `Here is the analysis of the financial statement:`,
-          financialReport: response,
-        };
-        setMessages(prev => [...prev, botResponse]);
-      } else if (statementMatch && !pdfData) {
-        setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: 'Please upload a PDF financial statement first.' }]);
       } else {
         const historyForApi = newMessages.map(({ id, imageUrl, analysisReport, financialReport, ...rest }) => rest);
-        const response = await chat({ history: historyForApi });
+        const response = await chat({ history: historyForApi, pdfDataUri: pdfData });
         const botResponse: Message = {
           id: Date.now().toString(),
           role: 'assistant',
@@ -119,29 +106,54 @@ export default function Home() {
     }
   };
 
-  const handlePdfUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePdfUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && file.type === 'application/pdf') {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const dataUri = e.target?.result as string;
-        setPdfData(dataUri);
-        toast({
-          title: 'PDF File Uploaded',
-          description: `${file.name} is ready for financial analysis.`,
-        });
-      };
-      reader.readAsDataURL(file);
-    } else {
+    if (!file || file.type !== 'application/pdf') {
       toast({
         variant: 'destructive',
         title: 'Invalid File Type',
         description: 'Please upload a PDF file.',
       });
+      return;
     }
+    
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async (e) => {
+      const dataUri = e.target?.result as string;
+      setPdfData(dataUri); // Keep PDF data for context in future chats
+      toast({
+        title: 'PDF File Uploaded',
+        description: `${file.name} is ready. Starting analysis...`,
+      });
+
+      setIsLoading(true);
+      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: `Analyzing the financial statement: ${file.name}...` }]);
+      
+      try {
+        const response = await analyzeFinancialStatement({ pdfDataUri: dataUri });
+        const botResponse: Message = {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: `Here is the analysis of the financial statement:`,
+          financialReport: response,
+        };
+        setMessages(prev => [...prev, botResponse]);
+      } catch (error) {
+        console.error("Financial statement analysis failed:", error);
+        toast({
+          variant: 'destructive',
+          title: 'Analysis Failed',
+          description: 'Sasha could not analyze the financial statement. Please try again.',
+        });
+        setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: 'Sorry, I was unable to analyze that document.' }]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
   };
 
-  const handleDownloadPdf = (report: Message['analysisReport']) => {
+  const handleDownloadLoanPdf = (report: Message['analysisReport']) => {
     if (!report) return;
 
     const doc = new jsPDF();
@@ -164,8 +176,42 @@ export default function Home() {
     addSection('Summary', report.summary);
     addSection('Prediction', report.prediction);
     addSection('Eligibility', report.eligibility);
+    
+    const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
+    doc.setFontSize(8);
+    doc.text('AI generated by Sasha', 14, pageHeight - 10);
 
     doc.save(`loan-report-${report.loanId}.pdf`);
+  };
+  
+  const handleDownloadFinancialReportPdf = (report: Message['financialReport']) => {
+    if (!report) return;
+
+    const doc = new jsPDF();
+    let yPos = 22;
+
+    doc.setFontSize(18);
+    doc.text('Financial Statement Analysis', 14, yPos);
+    yPos += 18;
+
+    const addSection = (title: string, content: string) => {
+      doc.setFontSize(14);
+      doc.text(title, 14, yPos);
+      yPos += 8;
+      doc.setFontSize(10);
+      const splitContent = doc.splitTextToSize(content, 180);
+      doc.text(splitContent, 14, yPos);
+      yPos += (splitContent.length * 5) + 10;
+    };
+
+    addSection('Summary', report.summary);
+    addSection('Prediction', report.prediction);
+
+    const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
+    doc.setFontSize(8);
+    doc.text('AI generated by Sasha', 14, pageHeight - 10);
+
+    doc.save('financial-statement-analysis.pdf');
   };
 
   return (
@@ -180,7 +226,12 @@ export default function Home() {
         </header>
         
         <main className="flex-1 overflow-y-auto">
-          <MessageList messages={messages} isLoading={isLoading} onDownloadPdf={handleDownloadPdf} />
+          <MessageList 
+            messages={messages} 
+            isLoading={isLoading} 
+            onDownloadLoanPdf={handleDownloadLoanPdf}
+            onDownloadFinancialReportPdf={handleDownloadFinancialReportPdf}
+          />
         </main>
         
         <footer className="p-4 border-t shrink-0 bg-background">

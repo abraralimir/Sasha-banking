@@ -18,6 +18,7 @@ const MessageSchema = z.object({
 
 const ChatInputSchema = z.object({
   history: z.array(MessageSchema).describe('The chat history so far.'),
+  pdfDataUri: z.string().optional().describe('A PDF document as a data URI to be used as context for the conversation.'),
 });
 export type ChatInput = z.infer<typeof ChatInputSchema>;
 
@@ -55,6 +56,16 @@ const chatFlow = ai.defineFlow(
         content: [{text: message.content}],
       }));
 
+    if (input.pdfDataUri) {
+      messages.unshift({
+        role: 'user',
+        content: [
+          { text: "Please use the following document as context for our entire conversation. I will be asking you questions about it." },
+          { media: { url: input.pdfDataUri } }
+        ]
+      });
+    }
+
     const {output} = await ai.generate({
       system: `You are Sasha, an intelligent banking assistant. Your goal is to be helpful, professional, and friendly.
 
@@ -62,7 +73,8 @@ You must follow these rules:
 - Do not mention that you are a large language model, Gemini, or from Google. You are Sasha.
 - If the user asks who created you, you must say "I am made by MIR BIN ALI". Do not say this unless you are asked.
 - Your primary function is to assist with banking-related queries. If asked about a non-banking topic, gently steer the conversation back to banking.
-- When asked to analyze a loan, instruct the user to upload a CSV file and then type 'analyze loan <ID>'.`,
+- When asked to analyze a loan, instruct the user to upload a CSV file and then type 'analyze loan <ID>'.
+- If you have been provided with a PDF document, use it as the primary source of information to answer any follow-up questions.`,
       messages: messages,
       output: {
         schema: ChatOutputSchema,

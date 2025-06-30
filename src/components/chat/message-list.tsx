@@ -30,10 +30,11 @@ export type Message = {
 interface MessageListProps {
   messages: Message[];
   isLoading: boolean;
-  onDownloadPdf: (report: Message['analysisReport']) => void;
+  onDownloadLoanPdf: (report: Message['analysisReport']) => void;
+  onDownloadFinancialReportPdf: (report: Message['financialReport']) => void;
 }
 
-export function MessageList({ messages, isLoading, onDownloadPdf }: MessageListProps) {
+export function MessageList({ messages, isLoading, onDownloadLoanPdf, onDownloadFinancialReportPdf }: MessageListProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -46,7 +47,12 @@ export function MessageList({ messages, isLoading, onDownloadPdf }: MessageListP
     <ScrollArea className="h-full" viewportRef={viewportRef}>
       <div className="p-4 md:p-6 space-y-6 max-w-3xl mx-auto">
         {messages.map((message) => (
-          <ChatMessage key={message.id} message={message} onDownloadPdf={onDownloadPdf} />
+          <ChatMessage 
+            key={message.id} 
+            message={message} 
+            onDownloadLoanPdf={onDownloadLoanPdf}
+            onDownloadFinancialReportPdf={onDownloadFinancialReportPdf}
+          />
         ))}
         {isLoading && <TypingIndicator />}
       </div>
@@ -54,7 +60,15 @@ export function MessageList({ messages, isLoading, onDownloadPdf }: MessageListP
   );
 }
 
-function ChatMessage({ message, onDownloadPdf }: { message: Message, onDownloadPdf: (report: Message['analysisReport']) => void; }) {
+function ChatMessage({ 
+  message, 
+  onDownloadLoanPdf,
+  onDownloadFinancialReportPdf
+}: { 
+  message: Message, 
+  onDownloadLoanPdf: (report: Message['analysisReport']) => void; 
+  onDownloadFinancialReportPdf: (report: Message['financialReport']) => void; 
+}) {
   const isAssistant = message.role === 'assistant';
   return (
     <div
@@ -99,7 +113,7 @@ function ChatMessage({ message, onDownloadPdf }: { message: Message, onDownloadP
                 <h3 className="font-semibold mb-1">Eligibility</h3>
                 <p className="text-muted-foreground">{message.analysisReport.eligibility}</p>
               </div>
-              <Button onClick={() => onDownloadPdf(message.analysisReport)} variant="secondary" size="sm">
+              <Button onClick={() => onDownloadLoanPdf(message.analysisReport)} variant="secondary" size="sm">
                 <Download className="mr-2 h-4 w-4" />
                 Download PDF
               </Button>
@@ -121,6 +135,10 @@ function ChatMessage({ message, onDownloadPdf }: { message: Message, onDownloadP
                 <h3 className="font-semibold mb-1">Prediction</h3>
                 <p className="text-muted-foreground">{message.financialReport.prediction}</p>
               </div>
+               <Button onClick={() => onDownloadFinancialReportPdf(message.financialReport)} variant="secondary" size="sm">
+                <Download className="mr-2 h-4 w-4" />
+                Download PDF
+              </Button>
             </CardContent>
           </Card>
         )}
