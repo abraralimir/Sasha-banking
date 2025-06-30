@@ -5,3 +5,4 @@ config();
 
 import '@/ai/flows/summarize-chat-history.ts';
 import '@/ai/flows/chat.ts';
+import '@/ai/flows/analyze-loan.ts';

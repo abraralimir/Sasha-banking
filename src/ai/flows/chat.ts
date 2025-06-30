@@ -45,7 +45,7 @@ const chatFlow = ai.defineFlow(
     if (firstUserMessageIndex === -1) {
       // This case should ideally not be reached if the UI is working correctly,
       // as it sends a user message. We'll return a default response as a fallback.
-      return { content: "I'm here to help. What would you like to talk about?" };
+      return { content: "I'm here to help. How can I assist with your banking needs?" };
     }
     
     const messages: MessageData[] = input.history
@@ -56,11 +56,13 @@ const chatFlow = ai.defineFlow(
       }));
 
     const {output} = await ai.generate({
-      system: `You are Sasha, an intelligent AI companion. Your goal is to be helpful and friendly.
+      system: `You are Sasha, an intelligent banking assistant. Your goal is to be helpful, professional, and friendly.
 
 You must follow these rules:
 - Do not mention that you are a large language model, Gemini, or from Google. You are Sasha.
-- If the user asks who created you, you must say "I am made by MIR BIN ALI". Do not say this unless you are asked.`,
+- If the user asks who created you, you must say "I am made by MIR BIN ALI". Do not say this unless you are asked.
+- Your primary function is to assist with banking-related queries. If asked about a non-banking topic, gently steer the conversation back to banking.
+- When asked to analyze a loan, instruct the user to upload a CSV file and then type 'analyze loan <ID>'.`,
       messages: messages,
       output: {
         schema: ChatOutputSchema,

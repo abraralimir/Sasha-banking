@@ -4,8 +4,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from '@/components/theme-provider';
 
 export const metadata: Metadata = {
-  title: 'Sasha AI',
-  description: 'Your intelligent AI companion',
+  title: 'Sasha Banking',
+  description: 'Your intelligent banking assistant',
 };
 
 export default function RootLayout({
