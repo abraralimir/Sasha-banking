@@ -92,49 +92,52 @@ export default function Home() {
 
   useEffect(() => {
     if (pdfRenderContent && pdfContainerRef.current) {
-        html2canvas(pdfContainerRef.current, {
-            useCORS: true,
-            scale: 2,
-        }).then(canvas => {
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = pdf.internal.pageSize.getHeight();
-            const canvasWidth = canvas.width;
-            const canvasHeight = canvas.height;
-            const ratio = canvasWidth / canvasHeight;
-            const imgWidth = pdfWidth;
-            let imgHeight = imgWidth / ratio;
-            let heightLeft = imgHeight;
-            let position = 0;
+        // A small delay to ensure the chart has rendered before capturing
+        setTimeout(() => {
+            html2canvas(pdfContainerRef.current!, {
+                useCORS: true,
+                scale: 2,
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                const canvasWidth = canvas.width;
+                const canvasHeight = canvas.height;
+                const ratio = canvasWidth / canvasHeight;
+                let imgWidth = pdfWidth;
+                let imgHeight = imgWidth / ratio;
+                let heightLeft = imgHeight;
+                let position = 0;
 
-            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-            heightLeft -= pdfHeight;
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pdfHeight;
 
-            while (heightLeft > 0) {
-              position = heightLeft - imgHeight;
-              pdf.addPage();
-              pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-              heightLeft -= pdfHeight;
-            }
+                while (heightLeft > 0) {
+                  position = heightLeft - imgHeight;
+                  pdf.addPage();
+                  pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                  heightLeft -= pdfHeight;
+                }
 
-            const fileName = downloadInfo?.type === 'loan'
-              ? `loan-report-${(downloadInfo.report as Message['analysisReport'])?.loanId}.pdf`
-              : `financial-report.pdf`;
-            
-            pdf.save(fileName);
-        }).catch(err => {
-            console.error(err);
-            toast({
-              variant: 'destructive',
-              title: t('genericErrorTitle'),
-              description: t('pdfGenerationError')
+                const fileName = downloadInfo?.type === 'loan'
+                  ? `loan-report-${(downloadInfo.report as Message['analysisReport'])?.loanId}.pdf`
+                  : `financial-report.pdf`;
+                
+                pdf.save(fileName);
+            }).catch(err => {
+                console.error(err);
+                toast({
+                  variant: 'destructive',
+                  title: t('genericErrorTitle'),
+                  description: t('pdfGenerationError')
+                });
+            }).finally(() => {
+                setPdfRenderContent(null);
+                setIsDownloading(false);
+                setDownloadInfo(null);
             });
-        }).finally(() => {
-            setPdfRenderContent(null);
-            setIsDownloading(false);
-            setDownloadInfo(null);
-        });
+        }, 500); // 500ms delay
     }
   }, [pdfRenderContent, t, toast, downloadInfo]);
   
@@ -455,8 +458,13 @@ export default function Home() {
       const chartHtml = (financialReport.keyMetrics && financialReport.keyMetrics.length > 0) ? (
         <>
            <h2 style={{ fontSize: '14px', fontWeight: 'bold', marginTop: '15px', marginBottom: '5px' }}>{selectedTitles.financialPerformanceTitle}</h2>
-           <div style={{ width: '180mm' , height: '80mm'}}>
-              <FinancialReportChart data={financialReport.keyMetrics} revenueLabel={selectedTitles.revenue} netIncomeLabel={selectedTitles.netIncome} />
+           <div style={{ width: '680px' , height: '320px'}}>
+              <FinancialReportChart 
+                data={financialReport.keyMetrics} 
+                revenueLabel={selectedTitles.revenue} 
+                netIncomeLabel={selectedTitles.netIncome} 
+                isAnimationActive={false}
+              />
            </div>
         </>
       ) : null;

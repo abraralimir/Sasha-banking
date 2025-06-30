@@ -12,9 +12,10 @@ interface FinancialReportChartProps {
   }[];
   revenueLabel: string;
   netIncomeLabel: string;
+  isAnimationActive?: boolean;
 }
 
-export function FinancialReportChart({ data, revenueLabel, netIncomeLabel }: FinancialReportChartProps) {
+export function FinancialReportChart({ data, revenueLabel, netIncomeLabel, isAnimationActive = true }: FinancialReportChartProps) {
   const { t } = useLanguage();
 
   const formatCurrency = (value: number) => {
@@ -34,7 +35,7 @@ export function FinancialReportChart({ data, revenueLabel, netIncomeLabel }: Fin
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+          <BarChart data={data} margin={{ top: 5, right: 20, left: 20, bottom: 5 }} isAnimationActive={isAnimationActive}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
             <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={formatCurrency} />
