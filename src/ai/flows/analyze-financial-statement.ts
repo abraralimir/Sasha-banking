@@ -21,8 +21,8 @@ const AnalyzeFinancialStatementInputSchema = z.object({
 export type AnalyzeFinancialStatementInput = z.infer<typeof AnalyzeFinancialStatementInputSchema>;
 
 const AnalyzeFinancialStatementOutputSchema = z.object({
-  summary: z.string().describe('A detailed AI-generated summary of the financial statement, including key metrics like revenue, profit, and cash flow.'),
-  prediction: z.string().describe('A prediction of the company\'s financial health and future prospects (e.g., "Strong Growth Potential", "Stable but Cautious", "High-Risk").'),
+  summary: z.string().describe('A dense, executive summary of the financial statement, weaving in KPIs and ratios into a coherent narrative.'),
+  prediction: z.string().describe('A clear, evidence-backed prediction of the company\'s financial trajectory (e.g., "Strong Growth Potential," "Stable but Cautious," "High-Risk").'),
 });
 export type AnalyzeFinancialStatementOutput = z.infer<typeof AnalyzeFinancialStatementOutputSchema>;
 
@@ -34,25 +34,27 @@ const analyzeFinancialStatementPrompt = ai.definePrompt({
   name: 'analyzeFinancialStatementPrompt',
   input: {schema: AnalyzeFinancialStatementInputSchema},
   output: {schema: AnalyzeFinancialStatementOutputSchema},
-  prompt: `You are a sophisticated AI financial analyst. Your primary task is to analyze a company's yearly financial statement from a provided PDF document, which may contain various sections including marketing and other non-essential information.
+  prompt: `You are a top-tier AI financial analyst, equivalent to a senior analyst at a major investment firm. Your task is to perform a deep, critical analysis of a company's yearly financial statement from a provided PDF. Your analysis must be sharp, data-driven, and insightful, cutting through non-essential information to deliver actionable intelligence.
 
-Your goal is to be precise and focus exclusively on the financial data.
+Your goal is to be surgically precise, focusing exclusively on the financial data to produce an institutional-quality report.
 
-1.  **Locate Financial Data:** First, scan the document to find the core financial statements. These are typically labeled "Consolidated Statements of Operations," "Income Statement," "Consolidated Balance Sheets," "Balance Sheet," "Consolidated Statements of Cash Flows," or "Cash Flow Statement." Ignore all other sections like marketing fluff, company overview, or letters to shareholders unless they are directly cited in the financial analysis sections.
+1.  **Isolate Financial Core:** Immediately scan the document to locate the primary financial statements (Income Statement, Balance Sheet, Cash Flow Statement). Disregard all marketing material, shareholder letters, and other narrative sections unless they contain specific financial data or footnotes referenced by the core statements.
 
-2.  **Extract Key Metrics:** From these financial statements, extract and analyze key metrics. Focus on:
-    *   **Revenue / Sales:** Total sales figures.
-    *   **Net Income / Profit:** The bottom-line profit.
-    *   **Profit Margins:** Gross and net profit margins.
-    *   **Cash Flow:** Particularly cash flow from operations.
-    *   **Assets, Liabilities, and Equity:** Key figures from the balance sheet.
-    *   Identify any significant year-over-year changes if data is available.
+2.  **Comprehensive Metric & Ratio Analysis:** From the core statements, extract and analyze the following:
+    *   **Key Performance Indicators (KPIs):** Revenue, Cost of Goods Sold (COGS), Gross Profit, Operating Expenses, Operating Income (EBIT), Net Income.
+    *   **Balance Sheet Items:** Total Assets, Total Liabilities, Shareholders' Equity. Note the composition of assets (current vs. non-current) and liabilities.
+    *   **Cash Flow:** Cash Flow from Operations (CFO), Cash Flow from Investing (CFI), Cash Flow from Financing (CFF).
+    *   **Key Financial Ratios:**
+        *   **Profitability:** Gross Profit Margin, Net Profit Margin, Return on Equity (ROE).
+        *   **Liquidity:** Current Ratio.
+        *   **Leverage:** Debt-to-Equity Ratio.
+    *   **Trend Analysis:** Identify significant year-over-year (YoY) changes in these metrics and ratios if the data is available.
 
-3.  **Generate Report:** Based on your focused analysis of the numbers, generate a report with the following two sections:
-    *   **Summary:** Provide a detailed summary of the company's financial performance for the year based *only* on the metrics you extracted.
-    *   **Prediction:** Provide a prediction of the company's future financial health and prospects (e.g., "Strong Growth Potential," "Stable but Cautious," "High-Risk"). Justify your prediction with specific data points and trends identified from the financial statements.
+3.  **Generate Executive-Level Report:** Synthesize your findings into a concise report with two sections:
+    *   **Summary:** Provide a dense, executive summary of the company's financial performance. Start with a headline statement (e.g., "Robust profitability but rising leverage"). Weave the extracted KPIs and ratios into a coherent narrative.
+    *   **Prediction:** Offer a clear, evidence-backed prediction of the company's financial trajectory (e.g., "Strong Growth Potential," "Stable but Cautious," "High-Risk"). Justify this prediction by citing specific ratios, trends, and cash flow dynamics you identified.
 
-Analyze the following PDF document:
+Analyze the following PDF document with utmost precision:
 {{media url=pdfDataUri}}`,
 });
 

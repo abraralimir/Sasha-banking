@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { CornerDownLeft, Image as ImageIcon, Mic, FileUp, FileText } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { CornerDownLeft, Image as ImageIcon, Mic, FileUp, FileText, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -28,9 +28,27 @@ export default function Home() {
   const [isImageGenerationOpen, setImageGenerationOpen] = useState(false);
   const [csvData, setCsvData] = useState<string | null>(null);
   const [pdfData, setPdfData] = useState<string | null>(null);
+  const [pdfFileName, setPdfFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    try {
+      const savedPdfData = localStorage.getItem('sasha-pdf-data');
+      const savedPdfFileName = localStorage.getItem('sasha-pdf-filename');
+      if (savedPdfData && savedPdfFileName) {
+        setPdfData(savedPdfData);
+        setPdfFileName(savedPdfFileName);
+        toast({
+          title: 'Document Loaded',
+          description: `Continuing session with ${savedPdfFileName}.`,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to access localStorage:", error);
+    }
+  }, [toast]);
   
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,14 +139,29 @@ export default function Home() {
     reader.readAsDataURL(file);
     reader.onload = async (e) => {
       const dataUri = e.target?.result as string;
-      setPdfData(dataUri); // Keep PDF data for context in future chats
+      const fileName = file.name;
+
+      setPdfData(dataUri);
+      setPdfFileName(fileName);
+      try {
+        localStorage.setItem('sasha-pdf-data', dataUri);
+        localStorage.setItem('sasha-pdf-filename', fileName);
+      } catch (error) {
+        console.error("Failed to save PDF to localStorage:", error);
+        toast({
+          variant: 'destructive',
+          title: 'Could not save session',
+          description: 'Your browser may be out of space or in private mode.'
+        });
+      }
+
       toast({
         title: 'PDF File Uploaded',
-        description: `${file.name} is ready. Starting analysis...`,
+        description: `${fileName} is ready. Starting analysis...`,
       });
 
       setIsLoading(true);
-      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: `Analyzing the financial statement: ${file.name}...` }]);
+      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: `Analyzing the financial statement: ${fileName}...` }]);
       
       try {
         const response = await analyzeFinancialStatement({ pdfDataUri: dataUri });
@@ -151,6 +184,26 @@ export default function Home() {
         setIsLoading(false);
       }
     };
+  };
+
+  const handleClearPdf = () => {
+    setPdfData(null);
+    setPdfFileName(null);
+    try {
+      localStorage.removeItem('sasha-pdf-data');
+      localStorage.removeItem('sasha-pdf-filename');
+    } catch (error) {
+      console.error("Failed to clear localStorage:", error);
+    }
+    toast({
+      title: 'PDF Cleared',
+      description: 'The document has been removed from the session.',
+    });
+    setMessages(prev => [...prev, {
+      id: Date.now().toString(),
+      role: 'assistant',
+      content: 'I have cleared the previous document. How can I assist you now?'
+    }]);
   };
 
   const handleDownloadLoanPdf = (report: Message['analysisReport']) => {
@@ -236,6 +289,23 @@ export default function Home() {
         
         <footer className="p-4 border-t shrink-0 bg-background">
           <div className="max-w-3xl mx-auto">
+            {pdfFileName && (
+              <div className="flex items-center justify-between p-2 mb-2 text-sm rounded-md bg-muted text-muted-foreground">
+                <div className="flex items-center gap-2 truncate">
+                  <FileText className="w-4 h-4 shrink-0" />
+                  <span className="font-medium truncate">Analyzing: {pdfFileName}</span>
+                </div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button type="button" variant="ghost" size="icon" onClick={handleClearPdf} className="w-6 h-6 shrink-0">
+                      <XCircle className="w-4 h-4" />
+                      <span className="sr-only">Clear PDF</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Clear PDF from session</TooltipContent>
+                </Tooltip>
+              </div>
+            )}
             <form onSubmit={handleSendMessage} className="relative">
               <Textarea
                 value={input}
