@@ -69,7 +69,7 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     revenue: "Revenue",
     netIncome: "Net Income",
     pdfGenerationError: "Could not generate the PDF report.",
-    maintenanceMessage: "Some services might be affected due to maintenance. Time remaining: {{time}}",
+    maintenanceMessage: "Services are undergoing maintenance and major upgrades. Time remaining: {{time}}",
   },
   ar: {
     pageTitle: 'ساشا المصرفية',
@@ -128,7 +128,7 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     revenue: "الإيرادات",
     netIncome: "صافي الدخل",
     pdfGenerationError: "تعذر إنشاء تقرير PDF.",
-    maintenanceMessage: "قد تتأثر بعض الخدمات بسبب الصيانة. الوقت المتبقي: {{time}}",
+    maintenanceMessage: "تخضع الخدمات للصيانة والتحديثات الرئيسية. الوقت المتبقي: {{time}}",
   },
 };
 

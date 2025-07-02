@@ -23,7 +23,7 @@ export function MaintenanceBanner() {
       } catch (e) {
         console.error("Could not access localStorage", e);
       }
-      const newTarget = new Date().getTime() + 6 * 60 * 60 * 1000;
+      const newTarget = new Date().getTime() + 14 * 60 * 60 * 1000;
       try {
         localStorage.setItem('maintenanceEndTime', newTarget.toString());
       } catch (e) {
