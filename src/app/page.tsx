@@ -497,12 +497,11 @@ export default function Home() {
   return (
     <TooltipProvider delayDuration={0}>
       <div className="flex flex-col h-screen text-foreground animate-in fade-in-50 duration-500" dir={dir}>
-        <header className="flex items-center justify-between p-4 border-b shrink-0 bg-background/80 backdrop-blur-sm">
-          <div className="flex items-center">
-            <SashaAvatar className="w-8 h-8 mr-3" />
-            <h1 className="text-xl font-semibold tracking-tight">{t('pageTitle')}</h1>
+        <header className="relative flex items-center justify-center p-4 border-b shrink-0 bg-background/80 backdrop-blur-sm">
+          <h1 className="text-xl font-semibold tracking-tight">{t('pageTitle')}</h1>
+          <div className="absolute right-4 top-1/2 -translate-y-1/2">
+            <LanguageToggle />
           </div>
-          <LanguageToggle />
         </header>
         
         <main className="flex-1 overflow-y-auto">
