@@ -498,10 +498,12 @@ export default function Home() {
   return (
     <TooltipProvider delayDuration={0}>
       <div className="flex flex-col h-screen text-foreground animate-in fade-in-50 duration-500" dir={dir}>
-        <header className="relative flex items-center justify-center p-4 border-b shrink-0 bg-background/80 backdrop-blur-sm">
-          <MaintenanceBanner />
-          <h1 className="text-xl font-semibold tracking-tight">{t('pageTitle')}</h1>
-          <div className="absolute right-4 top-1/2 -translate-y-1/2">
+        <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background/80 backdrop-blur-sm">
+          <div className="justify-self-start">
+            <MaintenanceBanner />
+          </div>
+          <h1 className="text-xl font-semibold tracking-tight justify-self-center">{t('pageTitle')}</h1>
+          <div className="justify-self-end">
             <LanguageToggle />
           </div>
         </header>
