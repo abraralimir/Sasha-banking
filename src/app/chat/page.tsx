@@ -62,11 +62,21 @@ export default function ChatPage() {
   const [isImageGenOpen, setIsImageGenOpen] = useState(false);
 
   useEffect(() => {
-    setMessages([{ id: '1', role: 'assistant', content: t('initialMessage') }]);
-  }, [t]);
-
-  useEffect(() => {
     try {
+      // Load chat history
+      const savedMessages = localStorage.getItem('sasha-chat-history');
+      if (savedMessages) {
+        const parsedMessages = JSON.parse(savedMessages);
+        if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
+          setMessages(parsedMessages);
+        } else {
+          setMessages([{ id: '1', role: 'assistant', content: t('initialMessage') }]);
+        }
+      } else {
+        setMessages([{ id: '1', role: 'assistant', content: t('initialMessage') }]);
+      }
+
+      // Load files
       const savedCsvData = localStorage.getItem('sasha-csv-data');
       const savedCsvFileName = localStorage.getItem('sasha-csv-filename');
       if (savedCsvData && savedCsvFileName) {
@@ -90,8 +100,25 @@ export default function ChatPage() {
       }
     } catch (error) {
       console.error("Failed to access localStorage:", error);
+      setMessages([{ id: '1', role: 'assistant', content: t('initialMessage') }]);
     }
   }, [t, toast]);
+  
+  useEffect(() => {
+    // Save messages if a user has sent a message
+    if (messages.some(m => m.role === 'user')) {
+        try {
+            localStorage.setItem('sasha-chat-history', JSON.stringify(messages));
+        } catch (error) {
+            console.error("Failed to save messages to localStorage:", error);
+            toast({
+                variant: 'destructive',
+                title: t('sessionSaveErrorTitle'),
+                description: t('sessionSaveErrorDesc')
+            });
+        }
+    }
+  }, [messages, t, toast]);
 
   useEffect(() => {
     if (pdfRenderContent && pdfContainerRef.current) {
@@ -155,31 +182,14 @@ export default function ChatPage() {
     setIsLoading(true);
 
     try {
-      const loanAnalysisRegex = /analyze loan (\w+)/i;
-      const loanMatch = input.match(loanAnalysisRegex);
-
-      if (loanMatch && csvData) {
-        const loanId = loanMatch[1];
-        const response = await analyzeLoan({ csvData, loanId, language });
-        const botResponse: Message = {
-          id: Date.now().toString(),
-          role: 'assistant',
-          content: t('loanAnalysisHeader', { loanId }),
-          analysisReport: { ...response, loanId },
-        };
-        setMessages(prev => [...prev, botResponse]);
-      } else if (loanMatch && !csvData) {
-        setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: t('uploadCsvFirst') }]);
-      } else {
-        const historyForApi = newMessages.map(({ id, analysisReport, financialReport, ...rest }) => rest);
-        const response = await chat({ history: historyForApi, pdfDataUri: pdfData, csvData: csvData, language });
-        const botResponse: Message = {
-          id: Date.now().toString(),
-          role: 'assistant',
-          content: response.content,
-        };
-        setMessages(prev => [...prev, botResponse]);
-      }
+      const historyForApi = newMessages.map(({ id, analysisReport, financialReport, ...rest }) => rest);
+      const response = await chat({ history: historyForApi, pdfDataUri: pdfData, csvData: csvData, language });
+      const botResponse: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: response.content,
+      };
+      setMessages(prev => [...prev, botResponse]);
     } catch (error) {
       console.error(error);
       toast({
@@ -256,29 +266,11 @@ export default function ChatPage() {
         description: t('pdfUploadDesc', { fileName }),
       });
 
-      setIsLoading(true);
-      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: t('analyzingPdfMessage', { fileName }) }]);
-      
-      try {
-        const response = await analyzeFinancialStatement({ pdfDataUri: dataUri, language });
-        const botResponse: Message = {
-          id: Date.now().toString(),
-          role: 'assistant',
-          content: t('financialAnalysisHeader'),
-          financialReport: response,
-        };
-        setMessages(prev => [...prev, botResponse]);
-      } catch (error) {
-        console.error("Financial statement analysis failed:", error);
-        toast({
-          variant: 'destructive',
-          title: t('analysisFailedTitle'),
-          description: t('analysisFailedDesc'),
-        });
-        setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: t('unableToAnalyzeMessage') }]);
-      } finally {
-        setIsLoading(false);
-      }
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: t('pdfLoadedForChat', { fileName }),
+      }]);
     };
   };
 
