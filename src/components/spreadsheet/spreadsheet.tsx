@@ -9,12 +9,14 @@ registerAllModules();
 
 interface SpreadsheetProps {
   data: any[][];
+  hotRef?: React.RefObject<HotTable>;
 }
 
-export function Spreadsheet({ data }: SpreadsheetProps) {
+export function Spreadsheet({ data, hotRef }: SpreadsheetProps) {
   return (
     <div className="w-full h-full handsontable-container">
       <HotTable
+        ref={hotRef}
         data={data}
         rowHeaders={true}
         colHeaders={true}
@@ -30,6 +32,7 @@ export function Spreadsheet({ data }: SpreadsheetProps) {
         filters={true}
         dropdownMenu={true}
         comments={true}
+        cell={[]}
       />
     </div>
   );

@@ -86,3 +86,16 @@
 .handsontable .htBorders .area {
   background: hsl(var(--primary));
 }
+
+/* Custom cell formatting */
+.ht-cell-bold {
+  font-weight: 700;
+}
+
+.ht-cell-italic {
+  font-style: italic;
+}
+
+.ht-cell-underline {
+  text-decoration: underline;
+}

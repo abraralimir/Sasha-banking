@@ -18,6 +18,21 @@ const SpreadsheetAssistantInputSchema = z.object({
 });
 export type SpreadsheetAssistantInput = z.infer<typeof SpreadsheetAssistantInputSchema>;
 
+const CellRangeSchema = z.object({
+  row: z.number(),
+  col: z.number(),
+  row2: z.number(),
+  col2: z.number(),
+});
+
+const CellFormattingSchema = z.object({
+    bold: z.boolean().optional(),
+    italic: z.boolean().optional(),
+    underline: z.boolean().optional(),
+    color: z.string().optional().describe('A hex color code for the text, e.g., #FF0000'),
+    backgroundColor: z.string().optional().describe('A hex color code for the cell background, e.g., #FFFF00'),
+});
+
 const OperationSchema = z.object({
     command: z.enum(['setData', 'createGantt', 'formatCells', 'clearSheet', 'info'])
       .describe('The command to execute on the spreadsheet.'),
@@ -41,17 +56,26 @@ const spreadsheetAssistantPrompt = ai.definePrompt({
   output: {schema: SpreadsheetAssistantOutputSchema},
   prompt: `You are Sasha, an AI assistant integrated into a web-based spreadsheet application. Your task is to interpret natural language prompts from the user and translate them into a series of structured operations to manipulate the spreadsheet. Your entire response MUST be in the following language: {{{language}}}.
 
+**Spreadsheet Structure:**
+- The spreadsheet is a 0-indexed 2D array.
+- Cell ranges are specified with 'row', 'col', 'row2', 'col2'. For a single cell (e.g., A1), row=0, col=0, row2=0, col2=0. For a range (e.g., A1:B2), row=0, col=0, row2=1, col2=1.
+
 **Capabilities:**
 1.  **Set Data:** You can set the value of one or more cells.
     *   *User Prompt:* "Put 'Total Sales' in A1 and 25000 in B1"
     *   *Operation:* \`{ command: 'setData', params: { data: [['Total Sales', 25000]] }, confirmation: "I've added the data." }\`
-2.  **Create Templates (Gantt Chart):** You can generate a full template.
+2.  **Format Cells:** You can apply formatting to a range of cells.
+    *   *User Prompt:* "Make cell B2 bold and red"
+    *   *Operation:* \`{ command: 'formatCells', params: { range: { row: 1, col: 1, row2: 1, col2: 1 }, properties: { bold: true, color: '#FF0000' } }, confirmation: "I've formatted cell B2." }\`
+    *   *User Prompt:* "Highlight the first row in yellow"
+    *   *Operation:* \`{ command: 'formatCells', params: { range: { row: 0, col: 0, row2: 0, col2: 4 }, properties: { backgroundColor: '#FFFF00' } }, confirmation: "I've highlighted the first row." }\`
+3.  **Create Templates (Gantt Chart):** You can generate a full template.
     *   *User Prompt:* "Make a gantt chart for a new project"
     *   *Operation:* \`{ command: 'createGantt', params: {}, confirmation: "Here is a Gantt chart template for your new project." }\`
-3.  **Clear Sheet:** You can clear the entire sheet.
+4.  **Clear Sheet:** You can clear the entire sheet.
     *   *User Prompt:* "clear everything"
     *   *Operation:* \`{ command: 'clearSheet', params: {}, confirmation: "I've cleared the sheet." }\`
-4.  **Answer Questions:** If the user asks a question that doesn't require changing the sheet, use the 'info' command.
+5.  **Answer Questions:** If the user asks a question that doesn't require changing the sheet, use the 'info' command.
     *   *User Prompt:* "What is this for?"
     *   *Operation:* \`{ command: 'info', params: {}, confirmation: "This is a spreadsheet where you can ask me to organize data, create templates, and more." }\`
 
@@ -63,7 +87,7 @@ const spreadsheetAssistantPrompt = ai.definePrompt({
 **User's Request:**
 {{{prompt}}}
 
-Based on the user's request, determine the necessary operations.`,
+Based on the user's request, determine the necessary operations. Be precise with cell ranges. Assume the current sheet has about 10 columns unless the data shows otherwise.`,
 });
 
 const spreadsheetAssistantFlow = ai.defineFlow(

@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import type { HotTable } from '@handsontable/react';
+import type Handsontable from 'handsontable';
 import { LanguageToggle } from '@/components/language-toggle';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Spreadsheet } from '@/components/spreadsheet/spreadsheet';
@@ -18,6 +20,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { spreadsheetAssistant } from '@/ai/flows/spreadsheet-assistant';
+import { SpreadsheetToolbar } from '@/components/spreadsheet/toolbar';
 
 const initialData = [
   ['', 'Ford', 'Volvo', 'Toyota', 'Honda'],
@@ -44,35 +47,64 @@ export default function SpreadsheetPage() {
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const hotRef = useRef<HotTable>(null);
+  const [hotInstance, setHotInstance] = useState<Handsontable | null>(null);
+
+  useEffect(() => {
+    if (hotRef.current) {
+      setHotInstance(hotRef.current.hotInstance);
+    }
+  }, []);
 
   const handleSashaSubmit = async () => {
-    if (!prompt.trim()) return;
+    if (!prompt.trim() || !hotInstance) return;
     setIsLoading(true);
 
     try {
+      const currentData = hotInstance.getData();
       const response = await spreadsheetAssistant({
         prompt,
-        sheetData,
+        sheetData: currentData,
         language,
       });
       
-      let finalData = [...sheetData];
       let confirmationMessage = "I've processed your request.";
 
       for (const op of response.operations) {
         confirmationMessage = op.confirmation; // Use the last confirmation
         switch (op.command) {
           case 'createGantt':
-            finalData = ganttTemplate;
+            hotInstance.loadData(ganttTemplate);
             break;
           case 'clearSheet':
-            finalData = Array(10).fill(Array(5).fill(''));
+            hotInstance.loadData(Array(10).fill(Array(5).fill('')));
             break;
           case 'setData':
-            // This is a simplified implementation. A real one would be more robust.
             if (op.params.data) {
-                finalData = op.params.data;
+              hotInstance.loadData(op.params.data);
             }
+            break;
+          case 'formatCells':
+            const { range, properties } = op.params;
+            for (let row = range.row; row <= range.row2; row++) {
+                for (let col = range.col; col <= range.col2; col++) {
+                    const cell = hotInstance.getCell(row, col);
+                    if (cell) {
+                        let className = cell.className || '';
+                        const style = cell.style || {};
+
+                        if (properties.bold) className += ' ht-cell-bold';
+                        if (properties.italic) className += ' ht-cell-italic';
+                        if (properties.underline) className += ' ht-cell-underline';
+                        if (properties.color) style.color = properties.color;
+                        if (properties.backgroundColor) style.backgroundColor = properties.backgroundColor;
+
+                        hotInstance.setCellMeta(row, col, 'className', className.trim());
+                        hotInstance.setCellMeta(row, col, 'style', style);
+                    }
+                }
+            }
+            hotInstance.render();
             break;
           case 'info':
             // No data change, just show the message.
@@ -80,8 +112,6 @@ export default function SpreadsheetPage() {
         }
       }
       
-      setSheetData(finalData);
-
       toast({
         title: "Sasha's Update",
         description: confirmationMessage,
@@ -106,23 +136,26 @@ export default function SpreadsheetPage() {
       <header className="grid grid-cols-3 items-center p-4 border-b shrink-0">
         <div className="justify-self-start flex items-center gap-2">
           <SidebarTrigger />
-          <Button
-            variant="outline"
-            onClick={() => setIsSashaOpen(true)}
-          >
-            <Wand2 className="mr-2 h-4 w-4" />
-            Ask Sasha
-          </Button>
         </div>
         <h1 className="text-xl font-semibold tracking-tight justify-self-center">
           Spreadsheet
         </h1>
-        <div className="justify-self-end">
-          <LanguageToggle />
+        <div className="justify-self-end flex items-center gap-2">
+            <Button
+                variant="outline"
+                onClick={() => setIsSashaOpen(true)}
+            >
+                <Wand2 className="mr-2 h-4 w-4" />
+                Ask Sasha
+            </Button>
+            <LanguageToggle />
         </div>
       </header>
+      
+      <SpreadsheetToolbar hotInstance={hotInstance} />
+
       <main className="flex-1 overflow-auto">
-        <Spreadsheet data={sheetData} />
+        <Spreadsheet data={sheetData} hotRef={hotRef} />
       </main>
 
       <Dialog open={isSashaOpen} onOpenChange={setIsSashaOpen}>
@@ -130,7 +163,7 @@ export default function SpreadsheetPage() {
           <DialogHeader>
             <DialogTitle>Ask Sasha</DialogTitle>
             <DialogDescription>
-              Tell Sasha what you want to do with the spreadsheet. For example: "Create a gantt chart" or "Clear the sheet".
+              Tell Sasha what you want to do with the spreadsheet. For example: "Create a gantt chart" or "Make cell A1 bold and red".
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -146,7 +179,7 @@ export default function SpreadsheetPage() {
             <Button
               type="submit"
               onClick={handleSashaSubmit}
-              disabled={isLoading}
+              disabled={isLoading || !hotInstance}
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isLoading ? 'Thinking...' : 'Submit'}
