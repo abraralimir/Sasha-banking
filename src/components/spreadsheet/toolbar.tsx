@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -110,6 +111,22 @@ export function SpreadsheetToolbar({ hotInstance }: SpreadsheetToolbarProps) {
     }
     hotInstance.render();
   };
+  
+  const handleDownload = () => {
+    if (!hotInstance) return;
+    const exportPlugin = hotInstance.getPlugin('exportFile');
+    exportPlugin.downloadFile('csv', {
+      bom: true,
+      columnHeaders: true,
+      exportHiddenColumns: true,
+      exportHiddenRows: true,
+      fileExtension: 'csv',
+      filename: 'Sasha-Spreadsheet_[YYYY]-[MM]-[DD]',
+      mimeType: 'text/csv;charset=utf-8',
+      rowDelimiter: '\r\n',
+      rowHeaders: true,
+    });
+  };
 
   const handleBold = () => toggleCellClass('ht-cell-bold');
   const handleItalic = () => toggleCellClass('ht-cell-italic');
@@ -143,6 +160,9 @@ export function SpreadsheetToolbar({ hotInstance }: SpreadsheetToolbarProps) {
             </MenubarMenu>
              <MenubarMenu>
               <MenubarTrigger className="px-3 py-1.5">View</MenubarTrigger>
+            </MenubarMenu>
+            <MenubarMenu>
+              <MenubarTrigger className="px-3 py-1.5" onClick={handleDownload}>Download</MenubarTrigger>
             </MenubarMenu>
           </div>
         </Menubar>
