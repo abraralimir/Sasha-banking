@@ -27,6 +27,7 @@ import { useLanguage } from '@/context/language-context';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { ImageGenerationDialog } from '@/components/chat/image-generation-dialog';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 type ReportToDownload = NonNullable<Message['analysisReport'] | Message['financialReport']>;
 type ReportType = 'loan' | 'financial';
@@ -511,7 +512,7 @@ export default function ChatPage() {
       <div className="flex flex-col h-screen text-foreground animate-in fade-in-50 duration-500" dir={dir}>
         <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background/80 backdrop-blur-sm">
           <div className="justify-self-start">
-            
+            <SidebarTrigger />
           </div>
           <h1 className="text-xl font-semibold tracking-tight justify-self-center">{t('pageTitle')}</h1>
           <div className="justify-self-end">

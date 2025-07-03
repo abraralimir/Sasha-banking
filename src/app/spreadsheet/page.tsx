@@ -1,11 +1,16 @@
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { LanguageToggle } from '@/components/language-toggle';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 export default function SpreadsheetPage() {
   return (
     <div className="flex flex-col h-screen">
       <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background">
-          <div className="justify-self-start"></div>
+          <div className="justify-self-start">
+            <SidebarTrigger />
+          </div>
           <h1 className="text-xl font-semibold tracking-tight justify-self-center">Spreadsheet</h1>
           <div className="justify-self-end">
             <LanguageToggle />
