@@ -54,9 +54,15 @@ export default function SpreadsheetPage() {
 
   useEffect(() => {
     if (hotRef.current) {
-      setHotInstance(hotRef.current.hotInstance);
+      const instance = hotRef.current.hotInstance;
+      setHotInstance(instance);
+      // This is a workaround to ensure the data is loaded correctly
+      // when the component mounts or when sheetData changes externally.
+      if(instance.getSourceData() !== sheetData) {
+        instance.loadData(sheetData);
+      }
     }
-  }, []);
+  }, [sheetData]);
 
   const handleImportClick = () => {
     fileInputRef.current?.click();
@@ -114,7 +120,7 @@ export default function SpreadsheetPage() {
             break;
           case 'clearSheet':
             setSheetData([[]]);
-            hotInstance.updateSettings({ cell: [] });
+            hotInstance.updateSettings({ cell: [] }); // Clear formatting
             hotInstance.render();
             break;
           case 'setData':
@@ -124,25 +130,27 @@ export default function SpreadsheetPage() {
             break;
           case 'formatCells':
             const { range, properties } = op.params;
-            for (let row = range.row; row <= range.row2; row++) {
-                for (let col = range.col; col <= range.col2; col++) {
-                    const cell = hotInstance.getCell(row, col);
-                    if (cell) {
-                        let className = cell.className || '';
-                        const style = cell.style || {};
+            if (range && properties) {
+              for (let row = range.row; row <= range.row2; row++) {
+                  for (let col = range.col; col <= range.col2; col++) {
+                      const cell = hotInstance.getCell(row, col);
+                      if (cell) {
+                          let className = cell.className || '';
+                          const style = cell.style || {};
 
-                        if (properties.bold) className += ' ht-cell-bold';
-                        if (properties.italic) className += ' ht-cell-italic';
-                        if (properties.underline) className += ' ht-cell-underline';
-                        if (properties.color) style.color = properties.color;
-                        if (properties.backgroundColor) style.backgroundColor = properties.backgroundColor;
+                          if (properties.bold) className += ' ht-cell-bold';
+                          if (properties.italic) className += ' ht-cell-italic';
+                          if (properties.underline) className += ' ht-cell-underline';
+                          if (properties.color) style.color = properties.color;
+                          if (properties.backgroundColor) style.backgroundColor = properties.backgroundColor;
 
-                        hotInstance.setCellMeta(row, col, 'className', className.trim());
-                        hotInstance.setCellMeta(row, col, 'style', style);
-                    }
-                }
+                          hotInstance.setCellMeta(row, col, 'className', className.trim());
+                          hotInstance.setCellMeta(row, col, 'style', style);
+                      }
+                  }
+              }
+              hotInstance.render();
             }
-            hotInstance.render();
             break;
           case 'info':
             // No data change, just show the message.
