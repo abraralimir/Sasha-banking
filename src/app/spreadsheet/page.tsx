@@ -8,7 +8,7 @@ import { LanguageToggle } from '@/components/language-toggle';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Spreadsheet } from '@/components/spreadsheet/spreadsheet';
 import { Button } from '@/components/ui/button';
-import { Wand2, Loader2, X } from 'lucide-react';
+import { Wand2, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import {
   Dialog,
@@ -64,7 +64,7 @@ export default function SpreadsheetPage() {
 
   const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !hotInstance) return;
+    if (!file) return;
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -74,7 +74,7 @@ export default function SpreadsheetPage() {
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
             const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-            hotInstance.loadData(json as any[][]);
+            setSheetData(json as any[][]);
             toast({
                 title: 'Import Successful',
                 description: `Successfully imported "${file.name}".`,
@@ -110,16 +110,16 @@ export default function SpreadsheetPage() {
       for (const op of response.operations) {
         switch (op.command) {
           case 'createGantt':
-            hotInstance.loadData(ganttTemplate);
+            setSheetData(ganttTemplate);
             break;
           case 'clearSheet':
-            hotInstance.clear();
+            setSheetData([[]]);
             hotInstance.updateSettings({ cell: [] });
             hotInstance.render();
             break;
           case 'setData':
             if (op.params.data) {
-              hotInstance.loadData(op.params.data);
+              setSheetData(op.params.data);
             }
             break;
           case 'formatCells':
