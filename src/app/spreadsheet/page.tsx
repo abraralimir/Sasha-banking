@@ -68,10 +68,10 @@ export default function SpreadsheetPage() {
         language,
       });
       
-      let confirmationMessage = "I've processed your request.";
+      const firstConfirmation = response.operations.find(op => op.confirmation)?.confirmation;
+      const confirmationMessage = firstConfirmation || "I've processed your request.";
 
       for (const op of response.operations) {
-        confirmationMessage = op.confirmation; // Use the last confirmation
         switch (op.command) {
           case 'createGantt':
             hotInstance.loadData(ganttTemplate);
