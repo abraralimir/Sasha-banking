@@ -57,7 +57,7 @@ const spreadsheetAssistantPrompt = ai.definePrompt({
 
 **Current Spreadsheet Data (for context):**
 \`\`\`json
-{{{json stringify(sheetData)}}}
+{{{json sheetData}}}
 \`\`\`
 
 **User's Request:**
