@@ -77,7 +77,10 @@ export default function SpreadsheetPage() {
             hotInstance.loadData(ganttTemplate);
             break;
           case 'clearSheet':
-            hotInstance.loadData(Array(10).fill(Array(5).fill('')));
+            const rowCount = hotInstance.countRows();
+            const colCount = hotInstance.countCols();
+            const emptyData = Array.from({ length: rowCount }, () => Array(colCount).fill(''));
+            hotInstance.loadData(emptyData);
             break;
           case 'setData':
             if (op.params.data) {
