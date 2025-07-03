@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { HotTable } from '@handsontable/react';
 import type Handsontable from 'handsontable';
+import * as XLSX from 'xlsx';
 import { LanguageToggle } from '@/components/language-toggle';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Spreadsheet } from '@/components/spreadsheet/spreadsheet';
@@ -23,7 +24,7 @@ import { spreadsheetAssistant } from '@/ai/flows/spreadsheet-assistant';
 import { SpreadsheetToolbar } from '@/components/spreadsheet/toolbar';
 
 const initialData = [
-  ['', 'Ford', 'Volvo', 'Toyota', 'Honda'],
+  ['', 'Tesla', 'Ford', 'Toyota', 'Honda'],
   ['2021', 10, 11, 12, 13],
   ['2022', 20, 11, 14, 13],
   ['2023', 30, 15, 12, 13],
@@ -49,12 +50,47 @@ export default function SpreadsheetPage() {
   const { toast } = useToast();
   const hotRef = useRef<HotTable>(null);
   const [hotInstance, setHotInstance] = useState<Handsontable | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (hotRef.current) {
       setHotInstance(hotRef.current.hotInstance);
     }
   }, []);
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !hotInstance) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        try {
+            const data = event.target?.result;
+            const workbook = XLSX.read(data, { type: 'binary' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            hotInstance.loadData(json as any[][]);
+            toast({
+                title: 'Import Successful',
+                description: `Successfully imported "${file.name}".`,
+            });
+        } catch (error) {
+            console.error("Error importing file:", error);
+            toast({
+                variant: 'destructive',
+                title: 'Import Failed',
+                description: 'There was an error processing your Excel file.',
+            });
+        }
+    };
+    reader.readAsBinaryString(file);
+    if(e.target) e.target.value = '';
+  };
 
   const handleSashaSubmit = async () => {
     if (!prompt.trim() || !hotInstance) return;
@@ -77,10 +113,9 @@ export default function SpreadsheetPage() {
             hotInstance.loadData(ganttTemplate);
             break;
           case 'clearSheet':
-            const rowCount = hotInstance.countRows();
-            const colCount = hotInstance.countCols();
-            const emptyData = Array.from({ length: rowCount }, () => Array(colCount).fill(''));
-            hotInstance.loadData(emptyData);
+            hotInstance.clear();
+            hotInstance.updateSettings({ cell: [] });
+            hotInstance.render();
             break;
           case 'setData':
             if (op.params.data) {
@@ -136,6 +171,13 @@ export default function SpreadsheetPage() {
 
   return (
     <div className="flex flex-col h-screen bg-background" dir={dir}>
+       <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileImport}
+        className="hidden"
+        accept=".xlsx, .xls, .csv"
+      />
       <header className="grid grid-cols-3 items-center p-4 border-b shrink-0">
         <div className="justify-self-start flex items-center gap-2">
           <SidebarTrigger />
@@ -155,7 +197,7 @@ export default function SpreadsheetPage() {
         </div>
       </header>
       
-      <SpreadsheetToolbar hotInstance={hotInstance} />
+      <SpreadsheetToolbar hotInstance={hotInstance} onImport={handleImportClick} />
 
       <main className="flex-1 overflow-auto">
         <Spreadsheet data={sheetData} hotRef={hotRef} />

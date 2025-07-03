@@ -38,9 +38,10 @@ import { Separator } from '@/components/ui/separator';
 
 interface SpreadsheetToolbarProps {
   hotInstance: Handsontable | null;
+  onImport: () => void;
 }
 
-export function SpreadsheetToolbar({ hotInstance }: SpreadsheetToolbarProps) {
+export function SpreadsheetToolbar({ hotInstance, onImport }: SpreadsheetToolbarProps) {
 
   const applyCellMeta = (prop: string, value: any) => {
     if (!hotInstance) return;
@@ -172,6 +173,9 @@ export function SpreadsheetToolbar({ hotInstance }: SpreadsheetToolbarProps) {
             </MenubarMenu>
             <MenubarMenu>
               <MenubarTrigger className="px-3 py-1.5" onClick={handleDownload}>Download</MenubarTrigger>
+            </MenubarMenu>
+            <MenubarMenu>
+              <MenubarTrigger className="px-3 py-1.5" onClick={onImport}>Import</MenubarTrigger>
             </MenubarMenu>
           </div>
         </Menubar>
