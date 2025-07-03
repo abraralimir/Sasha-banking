@@ -1,8 +1,8 @@
-
 'use client';
 
 import React from 'react';
 import type Handsontable from 'handsontable';
+import * as XLSX from 'xlsx';
 import {
   ClipboardPaste,
   Scissors,
@@ -114,18 +114,27 @@ export function SpreadsheetToolbar({ hotInstance }: SpreadsheetToolbarProps) {
   
   const handleDownload = () => {
     if (!hotInstance) return;
-    const exportPlugin = hotInstance.getPlugin('exportFile');
-    exportPlugin.downloadFile('csv', {
-      bom: true,
-      columnHeaders: true,
-      exportHiddenColumns: true,
-      exportHiddenRows: true,
-      fileExtension: 'csv',
-      filename: 'Sasha-Spreadsheet_[YYYY]-[MM]-[DD]',
-      mimeType: 'text/csv;charset=utf-8',
-      rowDelimiter: '\r\n',
-      rowHeaders: true,
-    });
+
+    // Get data, including headers
+    const colHeaders = hotInstance.getColHeader() as string[];
+    const rowHeaders = hotInstance.getRowHeader() as (string | number)[];
+    const data = hotInstance.getData();
+
+    // Create a new data array with all headers
+    const exportData = [
+      ['', ...colHeaders],
+      ...data.map((row, i) => [rowHeaders[i] || '', ...row])
+    ];
+
+    // Create a worksheet
+    const ws = XLSX.utils.aoa_to_sheet(exportData);
+    
+    // Create a workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+    
+    // Trigger download
+    XLSX.writeFile(wb, 'Sasha-Spreadsheet.xlsx');
   };
 
   const handleBold = () => toggleCellClass('ht-cell-bold');
