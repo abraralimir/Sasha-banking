@@ -23,10 +23,10 @@ import { spreadsheetAssistant } from '@/ai/flows/spreadsheet-assistant';
 import { SpreadsheetToolbar } from '@/components/spreadsheet/toolbar';
 
 const initialData = [
-  [null, null, null, null, null],
-  ['2021', null, null, null, 'Honda'],
-  ['2024', null, null, null, 13],
-  ['2025', null, null, null, 13],
+  ['', 'Ford', 'Volvo', 'Toyota', 'Honda'],
+  ['2021', 10, 11, 12, 13],
+  ['2022', 20, 11, 14, 13],
+  ['2023', 30, 15, 12, 13],
 ];
 
 const ganttTemplate = [
@@ -49,7 +49,6 @@ export default function SpreadsheetPage() {
   const { toast } = useToast();
   const hotRef = useRef<HotTable>(null);
   const [hotInstance, setHotInstance] = useState<Handsontable | null>(null);
-  const [showIssue, setShowIssue] = useState(true);
 
   useEffect(() => {
     if (hotRef.current) {
@@ -188,19 +187,6 @@ export default function SpreadsheetPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
-      {showIssue && (
-        <div className="fixed bottom-4 left-4 z-50 animate-in fade-in-50 slide-in-from-bottom-10 duration-500">
-          <div className="flex items-center gap-2 rounded-full bg-destructive p-1 pr-3 text-destructive-foreground shadow-lg">
-            <div className="flex size-6 items-center justify-center rounded-full bg-white font-bold text-destructive">N</div>
-            <span className="text-sm font-medium">1 Issue</span>
-            <Button variant="ghost" size="icon" className="ml-1 -mr-1 h-6 w-6 rounded-full text-destructive-foreground hover:bg-destructive/80 hover:text-destructive-foreground" onClick={() => setShowIssue(false)}>
-                <X className="size-4" />
-                <span className="sr-only">Dismiss</span>
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
