@@ -1,0 +1,36 @@
+'use client';
+
+import React from 'react';
+import { HotTable } from '@handsontable/react';
+import { registerAllModules } from 'handsontable/registry';
+
+// register Handsontable's modules
+registerAllModules();
+
+interface SpreadsheetProps {
+  data: any[][];
+}
+
+export function Spreadsheet({ data }: SpreadsheetProps) {
+  return (
+    <div className="w-full h-full handsontable-container">
+      <HotTable
+        data={data}
+        rowHeaders={true}
+        colHeaders={true}
+        height="100%"
+        width="100%"
+        licenseKey="non-commercial-and-evaluation"
+        stretchH="all"
+        autoWrapRow={true}
+        autoWrapCol={true}
+        contextMenu={true}
+        manualColumnResize={true}
+        manualRowResize={true}
+        filters={true}
+        dropdownMenu={true}
+        comments={true}
+      />
+    </div>
+  );
+}

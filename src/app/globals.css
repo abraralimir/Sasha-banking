@@ -1,3 +1,4 @@
+@import 'handsontable/dist/handsontable.full.min.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -47,4 +48,41 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.handsontable .htCore {
+  border-color: hsl(var(--border));
+}
+
+.handsontable .htDimmed {
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--card));
+}
+
+.handsontable th, .handsontable td {
+  border-color: hsl(var(--border));
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.handsontable th {
+  background-color: hsl(var(--muted));
+  font-weight: 500;
+}
+
+.handsontable .ht__highlight {
+  background: hsl(var(--accent));
+}
+
+.handsontable .ht__active_highlight {
+  background: hsl(var(--accent));
+}
+
+.handsontable .ht__selection {
+  background: hsl(var(--primary) / 0.1);
+}
+
+.handsontable .htBorders .current,
+.handsontable .htBorders .area {
+  background: hsl(var(--primary));
 }
