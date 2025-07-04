@@ -89,6 +89,7 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     chatTitle: 'Chat',
     learnTitle: 'About',
     spreadsheetTitle: 'Spreadsheet',
+    dataAnalyticsTitle: 'Data Analytics',
 
     // Learn Page
     learnPageTitle: 'About Sasha',
@@ -98,6 +99,8 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     learnChatDesc: "Engage with an AI that understands the nuances of finance. Upload complex financial statements, credit reports from bureaus like Oman's Mala'a, or internal loan data. Sasha doesn't just read; she comprehends, synthesizes, and critiques. Ask her to 'Identify key risks in this balance sheet,' 'Benchmark this company's P/E ratio against industry standards,' or 'Draft a summary for the credit committee.' Sasha provides instant, institutional-quality analysis in both English and Arabic, becoming an indispensable partner for credit officers, analysts, and decision-makers.",
     learnSpreadsheetTitle: 'The Truly Agentic Spreadsheet',
     learnSpreadsheetDesc: "This is not just a spreadsheet; it's an intelligent workspace. Command Sasha with natural language to perform tasks that once took hours. Say 'Create a 5-year financial forecast based on this historical data,' 'Generate a Gantt chart for the Q4 product launch,' or 'Analyze these sales figures and highlight all regions that underperformed by 15%.' Sasha functions as a state-of-the-art AI architect, understanding your intent, structuring the data, applying formats, and executing complex operations instantly, transforming your productivity.",
+    learnDATitle: 'Sasha Data Analytics: Your BI Co-Pilot',
+    learnDADesc: "Transform raw data into actionable insights. Sasha brings the power of a Business Intelligence platform into a conversational interface. Upload CSV, Excel, or even PDF files and command Sasha to perform complex data transformations, cleaning, and modeling using natural language. Ask her to 'Identify key trends in this sales data,' 'create a calculated column for profit margin,' or 'suggest the best visualization for customer segmentation.' Sasha acts as your personal data engineer, preparing your data for deep analysis.",
     learnAITitle: 'Powered by a State-of-the-Art AI Architecture',
     learnAIDesc: "Sasha is built on a private, state-of-the-art AI architecture. This enables her to understand complex documents, reason about data, follow multi-step instructions, and generate human-like text, making her a powerful and versatile financial partner.",
     learnSecurityTitle: 'Enterprise-Grade Security & Privacy',
@@ -114,6 +117,8 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     gsChatStepDesc: "Navigate to the <strong>Chat</strong> page. You can start talking to Sasha immediately. For more powerful analysis, use the upload buttons in the message bar to provide a PDF or CSV file as context for your conversation.",
     gsSpreadsheetStepTitle: "2. Command Your Spreadsheet",
     gsSpreadsheetStepDesc: "Go to the <strong>Spreadsheet</strong> page. Use the integrated chat sidebar to give Sasha commands. You can also import your own Excel files using the toolbar to have Sasha work with your own data.",
+    gsDAStepTitle: "3. Analyze Your Data",
+    gsDAStepDesc: "Head to the <strong>Data Analytics</strong> page. Upload your dataset (Excel, CSV) and use the chat to ask Sasha to uncover trends, generate insights, and suggest visualizations.",
     
     comingSoonSashaTitle: "The Future of Sasha: AI Capabilities",
     comingSoonSashaDesc: "Sasha's evolution is relentless. Our roadmap is focused on building the most powerful, proactive AI financial agent.",
@@ -145,6 +150,20 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     csSpreadsheetFeature8: "Automated Data Import from Web Sources",
     csSpreadsheetFeature9: "Live Collaborative Editing with AI Assistance",
     csSpreadsheetFeature10: "Full Version History with AI Summaries",
+    
+    comingSoonDATitle: "The Future of Analytics: An Agentic BI Engine",
+    comingSoonDADesc: "We are evolving Sasha into a fully-fledged, AI-native Business Intelligence platform that rivals traditional tools.",
+    csDAFeature1: "Interactive Dashboard Generation from Chat",
+    csDAFeature2: "Power Query-like Visual Data Transformation Tools",
+    csDAFeature3: "Natural Language to DAX-style Expressions",
+    csDAFeature4: "Automated Data Storytelling and Report Building",
+    csDAFeature5: "Real-time Anomaly Detection and Alerts",
+    csDAFeature6: "Predictive Analytics and Forecasting Models",
+    csDAFeature7: "Multi-Source Data Joins and Blending",
+    csDAFeature8: "AI-powered Root Cause Analysis",
+    csDAFeature9: "Custom Visuals and API Extensibility",
+    csDAFeature10: "Automated ETL Pipeline Creation",
+
     getStartedSasha: 'GET STARTED WITH SASHA',
     getStartedSpreadsheet: 'Or, get started with the Spreadsheet',
 
@@ -189,6 +208,21 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     tooltipAutoSum: "AutoSum (Coming Soon)",
     tooltipSortFilter: "Sort & Filter (Coming Soon)",
     tooltipFindSelect: "Find & Select (Coming Soon)",
+
+    // Data Analytics Page
+    sashaDAHello: "Hello! I'm ready to be your data analyst. Please upload an Excel or CSV file to begin.",
+    daUploadPromptTitle: "Unlock Insights from Your Data",
+    daUploadPromptDesc: "Upload your Excel or CSV file and use the chat to ask Sasha to perform analysis, create models, and suggest visualizations.",
+    daUploadButton: "Upload Data File",
+    daChatPlaceholder: "e.g., Show me total sales by region",
+    daFileProcessingTitle: "Processing File",
+    daFileProcessingDesc: "Sasha is analyzing {{fileName}}...",
+    sashaDAFileLoaded: "I've successfully loaded {{fileName}}. What insights can I help you uncover?",
+    daDashboardTitle: "Data Dashboard",
+    daDashboardDesc: "This is a placeholder for your interactive dashboard for {{fileName}}. Use the chat to ask Sasha to build visualizations.",
+    daKpiCard1: "Total Rows",
+    daKpiCard2: "Total Sales",
+    daChartPlaceholder: "Charts and visuals will appear here",
   },
   ar: {
     pageTitle: 'ساشا المصرفية',
@@ -267,6 +301,7 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     chatTitle: 'الدردشة',
     learnTitle: 'حول ساشا',
     spreadsheetTitle: 'جدول البيانات',
+    dataAnalyticsTitle: 'تحليل البيانات',
 
     // Learn Page
     learnPageTitle: 'حول ساشا',
@@ -276,6 +311,8 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     learnChatDesc: "تفاعل مع ذكاء اصطناعي يفهم دقائق الأمور المالية. قم بتحميل بيانات مالية معقدة، تقارير ائتمانية من مكاتب مثل 'ملاءة' في عُمان، أو بيانات قروض داخلية. ساشا لا تقرأ فقط؛ بل تفهم، وتحلل، وتنتقد. اطلب منها 'تحديد المخاطر الرئيسية في هذه الميزانية العمومية'، 'مقارنة نسبة السعر إلى الأرباح لهذه الشركة بمعايير الصناعة'، أو 'صياغة ملخص للجنة الائتمان'. تقدم ساشا تحليلاً فوريًا بجودة مؤسسية باللغتين الإنجليزية والعربية، لتصبح شريكًا لا غنى عنه لمسؤولي الائتمان والمحللين وصناع القرار.",
     learnSpreadsheetTitle: 'جدول البيانات الوكيلي الحقيقي',
     learnSpreadsheetDesc: "هذا ليس مجرد جدول بيانات؛ إنها مساحة عمل ذكية. أصدر أوامر لساشا بلغة طبيعية لأداء مهام كانت تستغرق ساعات. قل 'أنشئ توقعات مالية لمدة 5 سنوات بناءً على هذه البيانات التاريخية'، 'أنشئ مخطط جانت لإطلاق منتج الربع الرابع'، أو 'حلل أرقام المبيعات هذه وقم بتمييز جميع المناطق التي كان أداؤها أقل بنسبة 15%'. تعمل ساشا كمهندس معماري للذكاء الاصطناعي على أحدث طراز، حيث تفهم نيتك، وتنظم البيانات، وتطبق التنسيقات، وتنفذ العمليات المعقدة على الفور، مما يغير إنتاجيتك.",
+    learnDATitle: 'تحليلات بيانات ساشا: مساعدك في ذكاء الأعمال',
+    learnDADesc: "حوّل البيانات الأولية إلى رؤى قابلة للتنفيذ. تجلب ساشا قوة منصة ذكاء الأعمال إلى واجهة محادثة. قم بتحميل ملفات CSV أو Excel أو حتى PDF وأمر ساشا بإجراء تحويلات معقدة للبيانات وتنظيفها ونمذجتها باستخدام اللغة الطبيعية. اطلب منها 'تحديد الاتجاهات الرئيسية في بيانات المبيعات هذه'، 'إنشاء عمود محسوب لهامش الربح'، أو 'اقتراح أفضل تصور لتقسيم العملاء'. تعمل ساشا كمهندس بيانات شخصي لك، وتجهز بياناتك للتحليل العميق.",
     learnAITitle: 'مدعومة ببنية تحتية حديثة للذكاء الاصطناعي',
     learnAIDesc: "ساشا مبنية على بنية تحتية خاصة وحديثة للذكاء الاصطناعي. وهذا يمكنها من فهم المستندات المعقدة، والاستدلال على البيانات، واتباع التعليمات متعددة الخطوات، وإنشاء نصوص شبيهة بالإنسان، مما يجعلها شريكًا ماليًا قويًا ومتعدد الاستخدامات.",
     learnSecurityTitle: 'أمان وخصوصية على مستوى المؤسسات',
@@ -292,6 +329,8 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     gsChatStepDesc: "انتقل إلى صفحة <strong>الدردشة</strong>. يمكنك البدء في التحدث إلى ساشا على الفور. لتحليل أقوى، استخدم أزرار التحميل في شريط الرسائل لتوفير ملف PDF أو CSV كسياق لمحادثتك.",
     gsSpreadsheetStepTitle: "٢. تحكم في جدول بياناتك",
     gsSpreadsheetStepDesc: "اذهب إلى صفحة <strong>جدول البيانات</strong>. استخدم الشريط الجانبي للدردشة المدمج لإعطاء أوامر لساشا. يمكنك أيضًا استيراد ملفات Excel الخاصة بك باستخدام شريط الأدوات لجعل ساشا تعمل مع بياناتك الخاصة.",
+    gsDAStepTitle: "٣. حلل بياناتك",
+    gsDAStepDesc: "توجه إلى صفحة <strong>تحليل البيانات</strong>. قم بتحميل مجموعة البيانات الخاصة بك (Excel، CSV) واستخدم الدردشة لتطلب من ساشا الكشف عن الاتجاهات وإنشاء رؤى واقتراح تصورات.",
     
     comingSoonSashaTitle: "مستقبل ساشا: قدرات الذكاء الاصطناعي",
     comingSoonSashaDesc: "تطور ساشا لا هوادة فيه. تركز خارطة طريقنا على بناء أقوى وكيل مالي استباقي يعمل بالذكاء الاصطناعي.",
@@ -323,6 +362,20 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     csSpreadsheetFeature8: "استيراد تلقائي للبيانات من مصادر الويب",
     csSpreadsheetFeature9: "تحرير تعاوني مباشر بمساعدة الذكاء الاصطناعي",
     csSpreadsheetFeature10: "سجل إصدارات كامل مع ملخصات بالذكاء الاصطناعي",
+
+    comingSoonDATitle: "مستقبل التحليلات: محرك ذكاء أعمال وكيلي",
+    comingSoonDADesc: "نحن نعمل على تطوير ساشا لتصبح منصة ذكاء أعمال أصلية للذكاء الاصطناعي تنافس الأدوات التقليدية.",
+    csDAFeature1: "إنشاء لوحة معلومات تفاعلية من الدردشة",
+    csDAFeature2: "أدوات تحويل بيانات مرئية شبيهة بـ Power Query",
+    csDAFeature3: "تحويل اللغة الطبيعية إلى تعبيرات شبيهة بـ DAX",
+    csDAFeature4: "بناء تقارير وقصص بيانات تلقائية",
+    csDAFeature5: "كشف الحالات الشاذة والتنبيهات في الوقت الحقيقي",
+    csDAFeature6: "نماذج التحليلات التنبؤية والتنبؤ",
+    csDAFeature7: "دمج ومزج البيانات من مصادر متعددة",
+    csDAFeature8: "تحليل السبب الجذري المدعوم بالذكاء الاصطناعي",
+    csDAFeature9: "مرئيات مخصصة وقابلية توسيع API",
+    csDAFeature10: "إنشاء خطوط أنابيب ETL تلقائية",
+
     getStartedSasha: 'ابدأ مع ساشا',
     getStartedSpreadsheet: 'أو, ابدأ مع جدول البيانات',
 
@@ -367,6 +420,21 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     tooltipAutoSum: "جمع تلقائي (قريباً)",
     tooltipSortFilter: "فرز وتصفية (قريباً)",
     tooltipFindSelect: "بحث وتحديد (قريباً)",
+
+    // Data Analytics Page
+    sashaDAHello: "مرحباً! أنا مستعدة لأكون محللة بياناتك. يرجى تحميل ملف Excel أو CSV للبدء.",
+    daUploadPromptTitle: "اكتشف الرؤى من بياناتك",
+    daUploadPromptDesc: "قم بتحميل ملف Excel أو CSV الخاص بك واستخدم الدردشة لتطلب من ساشا إجراء التحليل وإنشاء النماذج واقتراح التصورات.",
+    daUploadButton: "تحميل ملف البيانات",
+    daChatPlaceholder: "مثال: أرني إجمالي المبيعات حسب المنطقة",
+    daFileProcessingTitle: "جاري معالجة الملف",
+    daFileProcessingDesc: "ساشا تقوم بتحليل {{fileName}}...",
+    sashaDAFileLoaded: "لقد قمت بتحميل {{fileName}} بنجاح. ما هي الرؤى التي يمكنني مساعدتك في اكتشافها؟",
+    daDashboardTitle: "لوحة تحكم البيانات",
+    daDashboardDesc: "هذا مكان مبدئي للوحة التحكم التفاعلية الخاصة بك لملف {{fileName}}. استخدم الدردشة لتطلب من ساشا بناء التصورات.",
+    daKpiCard1: "إجمالي الصفوف",
+    daKpiCard2: "إجمالي المبيعات",
+    daChartPlaceholder: "ستظهر المخططات والمرئيات هنا",
   },
 };
 

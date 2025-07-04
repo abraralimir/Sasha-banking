@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { MessageCircle, Sheet as SheetIcon, BookOpen } from 'lucide-react';
+import { MessageCircle, Sheet as SheetIcon, BookOpen, BarChart3 } from 'lucide-react';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 import { useLanguage } from '@/context/language-context';
 
@@ -25,6 +25,14 @@ export function MainNav() {
           <Link href="/spreadsheet">
             <SheetIcon />
             <span>{t('spreadsheetTitle')}</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+       <SidebarMenuItem>
+        <SidebarMenuButton asChild isActive={pathname.startsWith('/data-analytics')}>
+          <Link href="/data-analytics">
+            <BarChart3 />
+            <span>{t('dataAnalyticsTitle')}</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>

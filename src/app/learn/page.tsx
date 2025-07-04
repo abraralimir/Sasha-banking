@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { MessageCircle, Sheet, BookOpen, Rocket, Wand, ListChecks, BrainCircuit, Bot, ShieldCheck, LineChart, FileCheck as FileCheckIcon, Briefcase } from 'lucide-react';
+import { MessageCircle, Sheet, BookOpen, Rocket, Wand, ListChecks, BrainCircuit, Bot, ShieldCheck, LineChart, FileCheck as FileCheckIcon, Briefcase, BarChart3 } from 'lucide-react';
 import { LanguageToggle } from '@/components/language-toggle';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useLanguage } from '@/context/language-context';
@@ -26,6 +26,11 @@ export default function LearnPage() {
       description: t('learnSpreadsheetDesc'),
     },
     {
+      icon: BarChart3,
+      title: t('learnDATitle'),
+      description: t('learnDADesc'),
+    },
+    {
       icon: Wand,
       title: t('learnAITitle'),
       description: t('learnAIDesc'),
@@ -46,11 +51,16 @@ export default function LearnPage() {
       title: t('gsSpreadsheetStepTitle'),
       description: t('gsSpreadsheetStepDesc'),
     },
+    {
+      title: t('gsDAStepTitle'),
+      description: t('gsDAStepDesc'),
+    },
   ];
   
   const sashaFeatures = Array.from({ length: 15 }, (_, i) => t(`csSashaFeature${i + 1}`));
   const spreadsheetFeatures = Array.from({ length: 10 }, (_, i) => t(`csSpreadsheetFeature${i + 1}`));
-  
+  const dataAnalyticsFeatures = Array.from({ length: 10 }, (_, i) => t(`csDAFeature${i + 1}`));
+
   const whoBenefits = [
     {
       icon: LineChart,
@@ -182,6 +192,26 @@ export default function LearnPage() {
             <CardContent>
               <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
                   {spreadsheetFeatures.map((feature, index) => (
+                      <li key={index} className="flex items-start gap-3">
+                          <Rocket className="w-5 h-5 mt-0.5 text-primary/70 shrink-0"/>
+                          <span className="text-muted-foreground">{feature}</span>
+                      </li>
+                  ))}
+              </ul>
+            </CardContent>
+          </Card>
+
+           <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <BarChart3 className="w-7 h-7 text-primary" />
+                <CardTitle>{t('comingSoonDATitle')}</CardTitle>
+              </div>
+              <CardDescription>{t('comingSoonDADesc')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                  {dataAnalyticsFeatures.map((feature, index) => (
                       <li key={index} className="flex items-start gap-3">
                           <Rocket className="w-5 h-5 mt-0.5 text-primary/70 shrink-0"/>
                           <span className="text-muted-foreground">{feature}</span>
