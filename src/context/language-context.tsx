@@ -210,12 +210,13 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     tooltipFindSelect: "Find & Select (Coming Soon)",
 
     // Data Analytics Page
-    sashaDAHello: "Hello! I'm ready to be your data analyst. Please upload an Excel, CSV, or PDF file to begin.",
     daUploadPromptTitle: "Unlock Insights from Your Data",
     daUploadPromptDesc: "Upload your data file and Sasha will instantly generate an interactive dashboard.",
     daUploadButton: "Upload Data File",
     daFileProcessingTitle: "Analyzing Data",
     daFileProcessingDesc: "Sasha is building your dashboard for {{fileName}}...",
+    daGeneratingDashboardTitle: "Generating Your Dashboard",
+    daGeneratingDashboardDesc: "Sasha is analyzing your data to create insights...",
     daDashboardGenError: "Sasha could not generate a dashboard for this file. It may be an unsupported format or corrupt. Please try another file.",
     refreshSession: "Clear & Reset Session",
     fullscreen: "Fullscreen",
@@ -425,12 +426,13 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     tooltipFindSelect: "بحث وتحديد (قريباً)",
 
     // Data Analytics Page
-    sashaDAHello: "مرحباً! أنا مستعدة لأكون محللة بياناتك. يرجى تحميل ملف Excel أو CSV أو PDF للبدء.",
     daUploadPromptTitle: "اكتشف الرؤى من بياناتك",
     daUploadPromptDesc: "قم بتحميل ملف البيانات الخاص بك وستقوم ساشا على الفور بإنشاء لوحة معلومات تفاعلية.",
     daUploadButton: "تحميل ملف البيانات",
     daFileProcessingTitle: "تحليل البيانات",
     daFileProcessingDesc: "ساشا تقوم ببناء لوحة التحكم الخاصة بك لـ {{fileName}}...",
+    daGeneratingDashboardTitle: "جاري إنشاء لوحة المعلومات الخاصة بك",
+    daGeneratingDashboardDesc: "تقوم ساشا بتحليل بياناتك لإنشاء رؤى...",
     daDashboardGenError: "لم تتمكن ساشا من إنشاء لوحة معلومات لهذا الملف. قد يكون بتنسيق غير مدعوم أو تالف. يرجى تجربة ملف آخر.",
     refreshSession: "مسح وإعادة تعيين الجلسة",
     fullscreen: "ملء الشاشة",
