@@ -2,11 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { MessageCircle, Sheet as SheetIcon } from 'lucide-react';
+import { MessageCircle, Sheet as SheetIcon, BookOpen } from 'lucide-react';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
+import { useLanguage } from '@/context/language-context';
 
 export function MainNav() {
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   return (
     <SidebarMenu>
@@ -14,7 +16,7 @@ export function MainNav() {
         <SidebarMenuButton asChild isActive={pathname.startsWith('/chat')}>
           <Link href="/chat">
             <MessageCircle />
-            <span>Chat</span>
+            <span>{t('chatTitle')}</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -22,7 +24,15 @@ export function MainNav() {
         <SidebarMenuButton asChild isActive={pathname.startsWith('/spreadsheet')}>
           <Link href="/spreadsheet">
             <SheetIcon />
-            <span>Spreadsheet</span>
+            <span>{t('spreadsheetTitle')}</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+       <SidebarMenuItem>
+        <SidebarMenuButton asChild isActive={pathname.startsWith('/learn')}>
+          <Link href="/learn">
+            <BookOpen />
+            <span>{t('learnTitle')}</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>

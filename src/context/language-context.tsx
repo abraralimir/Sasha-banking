@@ -85,6 +85,21 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     imageGenFailedDesc: "Sorry, I couldn't create an image at this time. Please try again later.",
     pollinationsDisclaimer: "Powered by Pollinations.ai. Images are public domain.",
 
+    // Nav
+    chatTitle: 'Chat',
+    learnTitle: 'Learn',
+
+    // Learn Page
+    learnPageTitle: 'Learn About Sasha',
+    learnIntro: 'Sasha is an advanced, AI-powered financial strategist and banking assistant designed to bring institutional-grade analysis and agentic task execution to your fingertips. Interact naturally, get deep insights, and automate complex tasks with ease.',
+    learnCapabilitiesTitle: "Sasha's Core Capabilities",
+    learnChatTitle: 'Conversational Financial Chat',
+    learnChatDesc: 'Upload financial statements (PDF), loan data (CSV), or just ask general financial questions. Sasha can analyze documents, answer questions based on the provided context, and provide expert financial advice in both English and Arabic.',
+    learnSpreadsheetTitle: 'Agentic Spreadsheet Assistant',
+    learnSpreadsheetDesc: 'Treat Sasha as your spreadsheet power-user. Ask her to create budget templates, build project plans, format tables, color-code cells, and analyze data directly in the sheet. She understands your intent and executes the commands for you.',
+    learnAITitle: 'Powered by Advanced AI',
+    learnAIDesc: "Sasha leverages Google's state-of-the-art Gemini family of models. This enables her to understand complex documents, reason about data, follow multi-step instructions, and generate human-like text, making her a powerful and versatile assistant.",
+
     // Spreadsheet Page
     spreadsheetTitle: 'Spreadsheet',
     chatWithSasha: "Chat with Sasha",
@@ -200,6 +215,21 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     imageGenFailedTitle: "فشل إنشاء الصورة",
     imageGenFailedDesc: "عذرًا، لم أتمكن من إنشاء صورة في هذا الوقت. يرجى المحاولة مرة أخرى لاحقًا.",
     pollinationsDisclaimer: "مدعوم من Pollinations.ai. الصور في الملكية العامة.",
+
+    // Nav
+    chatTitle: 'الدردشة',
+    learnTitle: 'تعلم',
+
+    // Learn Page
+    learnPageTitle: 'تعرف على ساشا',
+    learnIntro: 'ساشا هي خبيرة استراتيجية مالية ومساعدة مصرفية متقدمة تعمل بالذكاء الاصطناعي، مصممة لتوفر لك تحليلات على مستوى المؤسسات وتنفيذ مهام وكيلية بكل سهولة. تفاعل بشكل طبيعي، واحصل على رؤى عميقة، وقم بأتمتة المهام المعقدة.',
+    learnCapabilitiesTitle: "قدرات ساشا الأساسية",
+    learnChatTitle: 'محادثة مالية تفاعلية',
+    learnChatDesc: 'قم بتحميل البيانات المالية (PDF)، وبيانات القروض (CSV)، أو ببساطة اطرح أسئلة مالية عامة. يمكن لساشا تحليل المستندات، والإجابة على الأسئلة بناءً على السياق المقدم، وتقديم مشورة مالية متخصصة باللغتين الإنجليزية والعربية.',
+    learnSpreadsheetTitle: 'مساعد جداول البيانات الوكيلي',
+    learnSpreadsheetDesc: 'تعامل مع ساشا كمستخدم خبير لجداول البيانات. اطلب منها إنشاء قوالب ميزانية، وبناء خطط مشاريع، وتنسيق الجداول، وتلوين الخلايا، وتحليل البيانات مباشرة في الورقة. إنها تفهم نيتك وتنفذ الأوامر من أجلك.',
+    learnAITitle: 'مدعومة بذكاء اصطناعي متقدم',
+    learnAIDesc: "تستفيد ساشا من عائلة نماذج Gemini الحديثة من Google. وهذا يمكنها من فهم المستندات المعقدة، والاستدلال على البيانات، واتباع التعليمات متعددة الخطوات، وإنشاء نصوص شبيهة بالإنسان، مما يجعلها مساعدة قوية ومتعددة الاستخدامات.",
 
     // Spreadsheet Page
     spreadsheetTitle: 'جدول البيانات',
