@@ -66,7 +66,7 @@ const generateDashboardPrompt = ai.definePrompt({
   name: 'generateDashboardPrompt',
   input: {schema: GenerateDashboardInputSchema},
   output: {schema: GenerateDashboardOutputSchema},
-  model: 'googleai/gemini-1.5-flash-latest',
+  model: 'googleai/gemini-2.0-flash',
   prompt: `You are Sasha, a world-class Business Intelligence (BI) dashboard architect. Your primary and most critical task is to analyze a dataset and design a visually rich, professional, and insightful dashboard. Your success is measured by the quality of the analysis and the clarity of the visualizations you produce.
 
 Your entire output MUST be a single, valid JSON object that strictly adheres to the output schema. Do not include any conversational text, markdown, or explanations.
