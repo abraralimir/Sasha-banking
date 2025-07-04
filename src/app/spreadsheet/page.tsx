@@ -23,12 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { spreadsheetAssistant } from '@/ai/flows/spreadsheet-assistant';
 import { SpreadsheetToolbar } from '@/components/spreadsheet/toolbar';
 
-const initialData = [
-  ['', 'Tesla', 'Ford', 'Toyota', 'Honda'],
-  ['2021', 10, 11, 12, 13],
-  ['2022', 20, 11, 14, 13],
-  ['2023', 30, 15, 12, 13],
-];
+const initialData = Array.from({ length: 50 }, () => Array(26).fill(''));
 
 const ganttTemplate = [
     ["Task", "Start Date", "End Date", "Duration", "Completion"],
