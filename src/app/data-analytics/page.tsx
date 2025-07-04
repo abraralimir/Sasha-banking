@@ -2,47 +2,32 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 import { LanguageToggle } from '@/components/language-toggle';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Loader2, Send, MessageSquare, X, FileUp, Bot, RefreshCw, Maximize, Minimize } from 'lucide-react';
+import { Loader2, Bot, RefreshCw, Maximize, Minimize, FileUp, Download } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { SashaAvatar } from '@/components/sasha-avatar';
-import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { User } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { dataAnalytics } from '@/ai/flows/data-analytics';
 import { generateDashboard, type DashboardLayout } from '@/ai/flows/generate-dashboard';
-import type { DataAnalyticsOutput } from '@/ai/flows/data-analytics';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { KpiCard } from '@/components/analytics/kpi-card';
 import { AnalyticsBarChart } from '@/components/analytics/analytics-bar-chart';
 import { AnalyticsPieChart } from '@/components/analytics/analytics-pie-chart';
 import { AnalyticsTable } from '@/components/analytics/analytics-table';
 
-type ChatMessage = {
-  role: 'user' | 'assistant';
-  content: string;
-  chart?: DataAnalyticsOutput['chart'];
-}
-
 export default function DataAnalyticsPage() {
   const { t, language, dir } = useLanguage();
-  const [prompt, setPrompt] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isDashboardLoading, setIsDashboardLoading] = useState(false);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const fullscreenRef = useRef<HTMLDivElement>(null);
+  const dashboardRef = useRef<HTMLDivElement>(null);
 
-  const [isChatOpen, setIsChatOpen] = useState(true);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [isDashboardLoading, setIsDashboardLoading] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [fileType, setFileType] = useState<'csv' | 'pdf' | null>(null);
@@ -58,16 +43,9 @@ export default function DataAnalyticsPage() {
       setFileContent(savedContent);
       setFileType(savedType);
       setFileName(savedName);
-      setChatMessages([{ role: 'assistant', content: t('sashaDAFileLoaded', { fileName: savedName }) }]);
       handleGenerateDashboard(savedContent, savedType);
-    } else {
-      setChatMessages([{ role: 'assistant', content: t('sashaDAHello') }]);
     }
   }, [t]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages, isLoading]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -95,7 +73,6 @@ export default function DataAnalyticsPage() {
     setFileType(null);
     setFileName(null);
     setDashboardLayout(null);
-    setChatMessages([{ role: 'assistant', content: t('sashaDAHello') }]);
     localStorage.removeItem('sasha-da-content');
     localStorage.removeItem('sasha-da-type');
     localStorage.removeItem('sasha-da-name');
@@ -110,10 +87,10 @@ export default function DataAnalyticsPage() {
     setDashboardLayout(null);
     try {
       const payload = type === 'pdf' 
-        ? { pdfDataUri: content } 
-        : { csvContent: content };
+        ? { pdfDataUri: content, language } 
+        : { csvContent: content, language };
       
-      const layout = await generateDashboard({ ...payload, language });
+      const layout = await generateDashboard(payload);
       setDashboardLayout(layout);
     } catch (error) {
       console.error("Error generating dashboard:", error);
@@ -122,10 +99,7 @@ export default function DataAnalyticsPage() {
         title: t('genericErrorTitle'),
         description: t('daDashboardGenError'),
       });
-      setFileContent(null);
-      localStorage.removeItem('sasha-da-content');
-      localStorage.removeItem('sasha-da-type');
-      localStorage.removeItem('sasha-da-name');
+      handleClearSession();
     } finally {
       setIsDashboardLoading(false);
     }
@@ -138,7 +112,6 @@ export default function DataAnalyticsPage() {
     localStorage.setItem('sasha-da-content', content);
     localStorage.setItem('sasha-da-type', type);
     localStorage.setItem('sasha-da-name', name);
-    setChatMessages([{ role: 'assistant', content: t('sashaDAFileLoaded', { fileName: name }) }]);
     handleGenerateDashboard(content, type);
   }
 
@@ -185,44 +158,56 @@ export default function DataAnalyticsPage() {
 
     if(e.target) e.target.value = '';
   };
-
-  const handleSashaSubmit = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!prompt.trim() || !fileContent || !fileType) return;
-
-    const newMessages: ChatMessage[] = [...chatMessages, { role: 'user', content: prompt }];
-    setChatMessages(newMessages);
-    const currentPrompt = prompt;
-    setPrompt('');
-    setIsLoading(true);
-
-    try {
-      const payload = fileType === 'pdf' 
-        ? { pdfDataUri: fileContent } 
-        : { csvContent: fileContent };
-
-      const response = await dataAnalytics({
-        prompt: currentPrompt,
-        ...payload,
-        language,
-      });
-      
-      setChatMessages(prev => [...prev, { role: 'assistant', content: response.response, chart: response.chart }]);
-
-    } catch (error) {
-      console.error(error);
-      const errorMessage = t('sashaSpreadsheetError');
-      setChatMessages(prev => [...prev, { role: 'assistant', content: errorMessage }]);
-      toast({
-        variant: 'destructive',
-        title: t('genericErrorTitle'),
-        description: t('genericErrorDesc'),
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
   
+  const handleDownloadPdf = () => {
+    if (!dashboardRef.current || isDownloading) return;
+
+    setIsDownloading(true);
+    toast({
+        title: t('generatingPdf'),
+    });
+
+    html2canvas(dashboardRef.current, {
+        useCORS: true,
+        scale: 2,
+        backgroundColor: null, // Use transparent background, so parent page background is used
+    }).then((canvas) => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        const ratio = canvasWidth / canvasHeight;
+        
+        let imgWidth = pdfWidth;
+        let imgHeight = imgWidth / ratio;
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+
+        while (heightLeft > 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pdfHeight;
+        }
+        
+        pdf.save(`${dashboardLayout?.title.replace(/ /g, '_') || 'dashboard'}.pdf`);
+    }).catch(err => {
+        console.error("PDF Generation Error:", err);
+        toast({
+            variant: 'destructive',
+            title: t('genericErrorTitle'),
+            description: t('pdfGenError'),
+        });
+    }).finally(() => {
+        setIsDownloading(false);
+    });
+  };
+
   const renderDashboardItem = (item: DashboardLayout['items'][0], index: number) => {
     switch (item.type) {
       case 'kpi':
@@ -253,17 +238,6 @@ export default function DataAnalyticsPage() {
     }
   };
   
-  const renderChatMessage = (message: ChatMessage, index: number) => {
-    if (message.chart?.type === 'bar') {
-        return <div className="w-full h-64 p-2"><AnalyticsBarChart data={message.chart.data} /></div>
-    }
-    if (message.chart?.type === 'pie') {
-        return <div className="w-full h-64 p-2"><AnalyticsPieChart data={message.chart.data} /></div>
-    }
-    return <p className="whitespace-pre-wrap">{message.content}</p>;
-  }
-
-
   return (
     <div ref={fullscreenRef} className="flex flex-col h-screen bg-background text-foreground" dir={dir}>
        <input
@@ -284,12 +258,21 @@ export default function DataAnalyticsPage() {
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={handleClearSession} disabled={isLoading || isDashboardLoading}>
+                    <Button variant="ghost" size="icon" onClick={handleClearSession} disabled={isDashboardLoading || isDownloading}>
                         <RefreshCw className="h-5 w-5" />
                         <span className="sr-only">{t('refreshSession')}</span>
                     </Button>
                     </TooltipTrigger>
                     <TooltipContent><p>{t('refreshSession')}</p></TooltipContent>
+                </Tooltip>
+                 <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" onClick={handleDownloadPdf} disabled={isDownloading || !dashboardLayout}>
+                          {isDownloading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Download className="h-5 w-5" />}
+                          <span className="sr-only">{t('downloadDashboard')}</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>{t('downloadDashboard')}</p></TooltipContent>
                 </Tooltip>
                 <Tooltip>
                     <TooltipTrigger asChild>
@@ -301,116 +284,53 @@ export default function DataAnalyticsPage() {
                     <TooltipContent><p>{isFullscreen ? t('exitFullscreen') : t('fullscreen')}</p></TooltipContent>
                 </Tooltip>
             </TooltipProvider>
-           <Button variant="ghost" size="icon" onClick={() => setIsChatOpen(!isChatOpen)}>
-            <MessageSquare className="h-5 w-5" />
-            <span className="sr-only">{isChatOpen ? t('hideChat') : t('showChat')}</span>
-          </Button>
           <LanguageToggle />
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
-        <main className="flex-1 overflow-auto p-4 md:p-6">
-            {!fileContent ? (
-                 <Card className="w-full max-w-lg mx-auto text-center shadow-lg animate-in fade-in-50 duration-500">
-                    <CardHeader>
-                        <div className="mx-auto bg-primary/10 text-primary p-3 rounded-full mb-4">
-                            <Bot className="w-10 h-10" />
-                        </div>
-                        <CardTitle>{t('daUploadPromptTitle')}</CardTitle>
-                        <CardDescription>{t('daUploadPromptDesc')}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Button onClick={() => fileInputRef.current?.click()}>
-                            <FileUp className="mr-2 h-4 w-4" />
-                            {t('daUploadButton')}
-                        </Button>
-                    </CardContent>
-                 </Card>
-            ) : isDashboardLoading ? (
-                <div className="flex flex-col items-center justify-center h-full text-center">
-                    <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
-                    <h2 className="text-xl font-semibold">{t('daGeneratingDashboardTitle')}</h2>
-                    <p className="text-muted-foreground">{t('daGeneratingDashboardDesc')}</p>
-                </div>
-            ) : dashboardLayout ? (
-                <div className="max-w-7xl mx-auto animate-in fade-in-50 duration-500">
-                    <div className="mb-6">
-                      <h1 className="text-3xl font-bold tracking-tight">{dashboardLayout.title}</h1>
-                      <p className="text-muted-foreground">{dashboardLayout.description}</p>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                       {dashboardLayout.items.map(renderDashboardItem)}
-                    </div>
-                </div>
-            ) : null}
-        </main>
-        
-        {isChatOpen && (
-            <aside className={cn("w-[350px] border-l bg-background flex flex-col h-full animate-in duration-300", dir === 'ltr' ? 'slide-in-from-right-sm' : 'slide-in-from-left-sm')}>
-                <div className="p-4 border-b flex items-center justify-between">
-                    <h2 className="text-lg font-semibold tracking-tight">{t('chatWithSasha')}</h2>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsChatOpen(false)}>
-                        <X className="h-4 w-4" />
-                        <span className="sr-only">{t('closeChat')}</span>
-                    </Button>
-                </div>
-                <ScrollArea className="flex-1 p-4">
-                    <div className="space-y-4">
-                        {chatMessages.map((message, index) => (
-                            <div key={index} className={cn('flex items-start gap-3 animate-in fade-in', { 'justify-end flex-row-reverse': message.role === 'user' })}>
-                                {message.role === 'assistant' && <SashaAvatar className="w-8 h-8 shrink-0" />}
-                                <div className={cn('rounded-lg p-3 text-sm max-w-[calc(100%-2.5rem)] shadow-sm', {
-                                    'bg-primary text-primary-foreground': message.role === 'assistant',
-                                    'bg-card text-card-foreground': message.role === 'user',
-                                })}>
-                                    {renderChatMessage(message, index)}
-                                </div>
-                                {message.role === 'user' && (
-                                    <Avatar className="w-8 h-8 shrink-0">
-                                        <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
-                                    </Avatar>
-                                )}
-                            </div>
-                        ))}
-                        {isLoading && (
-                            <div className={cn("flex items-start gap-3", {'justify-end flex-row-reverse': dir === 'rtl'})}>
-                                <SashaAvatar className="w-8 h-8 shrink-0" />
-                                <div className="bg-primary text-primary-foreground rounded-lg p-3 shadow-sm flex items-center space-x-1">
-                                    <span className="w-2 h-2 bg-primary-foreground/50 rounded-full animate-pulse delay-0 duration-1000"></span>
-                                    <span className="w-2 h-2 bg-primary-foreground/50 rounded-full animate-pulse delay-200 duration-1000"></span>
-                                    <span className="w-2 h-2 bg-primary-foreground/50 rounded-full animate-pulse delay-400 duration-1000"></span>
-                                </div>
-                            </div>
-                        )}
-                        <div ref={messagesEndRef} />
-                    </div>
-                </ScrollArea>
-                <div className="p-4 border-t bg-background">
-                    <form onSubmit={handleSashaSubmit} className="relative">
-                        <Textarea
-                            value={prompt}
-                            onChange={(e) => setPrompt(e.target.value)}
-                            placeholder={t('daChatPlaceholder')}
-                            className="pr-12 text-base resize-none"
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleSashaSubmit(e);
-                                }
-                            }}
-                            rows={1}
-                            disabled={isLoading || !fileContent}
-                        />
-                        <Button type="submit" size="icon" className={cn("absolute top-1/2 transform -translate-y-1/2 h-8 w-8", dir === 'ltr' ? 'right-2' : 'left-2')} disabled={isLoading || !prompt.trim() || !fileContent}>
-                            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                            <span className="sr-only">{t('send')}</span>
-                        </Button>
-                    </form>
-                </div>
-            </aside>
-        )}
-      </div>
+      <main className="flex-1 overflow-auto p-4 md:p-6">
+          {!fileContent ? (
+               <Card className="w-full max-w-lg mx-auto text-center shadow-lg animate-in fade-in-50 duration-500">
+                  <CardHeader>
+                      <div className="mx-auto bg-primary/10 text-primary p-3 rounded-full mb-4">
+                          <Bot className="w-10 h-10" />
+                      </div>
+                      <CardTitle>{t('daUploadPromptTitle')}</CardTitle>
+                      <CardDescription>{t('daUploadPromptDesc')}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                      <Button onClick={() => fileInputRef.current?.click()}>
+                          <FileUp className="mr-2 h-4 w-4" />
+                          {t('daUploadButton')}
+                      </Button>
+                  </CardContent>
+               </Card>
+          ) : isDashboardLoading ? (
+              <div className="flex flex-col items-center justify-center h-full text-center">
+                  <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
+                  <h2 className="text-xl font-semibold">{t('daGeneratingDashboardTitle')}</h2>
+                  <p className="text-muted-foreground">{t('daGeneratingDashboardDesc')}</p>
+              </div>
+          ) : dashboardLayout ? (
+              <div ref={dashboardRef} className="max-w-4xl mx-auto animate-in fade-in-50 duration-500 space-y-6 bg-background p-4 sm:p-6">
+                  <div className="text-center">
+                    <h1 className="text-3xl font-bold tracking-tight">{dashboardLayout.title}</h1>
+                    <p className="mt-2 text-lg text-muted-foreground">{dashboardLayout.executiveSummary}</p>
+                  </div>
+                   <Card>
+                      <CardHeader>
+                          <CardTitle>{t('detailedAnalysisTitle')}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                          <p className="whitespace-pre-wrap text-muted-foreground">{dashboardLayout.detailedAnalysis}</p>
+                      </CardContent>
+                    </Card>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                     {dashboardLayout.items.map(renderDashboardItem)}
+                  </div>
+              </div>
+          ) : null}
+      </main>
     </div>
   );
 }

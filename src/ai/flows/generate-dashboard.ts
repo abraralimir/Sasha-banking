@@ -51,7 +51,8 @@ const DashboardItemSchema = z.union([
 
 const GenerateDashboardOutputSchema = z.object({
   title: z.string().describe('The main title for the dashboard, summarizing the file content.'),
-  description: z.string().describe('A brief, one-sentence summary of the data insights.'),
+  executiveSummary: z.string().describe('A brief, one or two-sentence summary of the key data insights.'),
+  detailedAnalysis: z.string().describe('A detailed, multi-paragraph analysis of the data, highlighting key trends, anomalies, and important findings discovered in the document.'),
   items: z.array(DashboardItemSchema).describe('An array of dashboard items (KPIs, charts, tables) to display. Generate between 4 to 6 items that best represent the data.'),
 });
 export type GenerateDashboardOutput = z.infer<typeof GenerateDashboardOutputSchema>;
@@ -66,17 +67,19 @@ const generateDashboardPrompt = ai.definePrompt({
   input: {schema: GenerateDashboardInputSchema},
   output: {schema: GenerateDashboardOutputSchema},
   model: 'googleai/gemini-2.0-flash',
-  prompt: `You are Sasha, a world-class Business Intelligence (BI) dashboard architect. Your primary and most critical task is to analyze a dataset and design a visually rich and professional dashboard. Your success is measured by the quality and quantity of insightful visualizations you produce.
+  prompt: `You are Sasha, a world-class Business Intelligence (BI) dashboard architect. Your primary and most critical task is to analyze a dataset and design a visually rich, professional, and insightful dashboard. Your success is measured by the quality of the analysis and the clarity of the visualizations you produce.
 
 Your entire output MUST be a single, valid JSON object that strictly adheres to the output schema. Do not include any conversational text, markdown, or explanations.
 
 **Core Directives:**
 - **Language:** All text within the JSON output (titles, descriptions, etc.) MUST be in the following language: {{{language}}}.
-- **Analyze Deeply:** Examine the provided data to understand its structure, key metrics, and relationships. Your goal is to find data that can be visualized.
-- **Design a Visually-Rich Dashboard:** Based on your analysis, you WILL generate a structured dashboard layout.
-  - You WILL create a concise, descriptive 'title' and 'description' for the entire dashboard.
-  - You WILL populate the 'items' array with 4 to 6 of the most insightful dashboard elements.
-  - **MANDATORY VISUALIZATIONS:** You MUST include at least two different visual charts (e.g., one bar chart and one pie chart) if the data contains any possibility for visualization. Prioritize charts over tables and KPIs. If the data is very simple, you must still attempt to create a chart, even if it's basic.
+- **Analyze Deeply:** Examine the provided data to understand its structure, key metrics, and relationships. Your goal is to find data that can be summarized and visualized.
+- **Design an Insightful Dashboard:** Based on your analysis, you WILL generate a structured dashboard layout with the following components:
+  - **title:** Create a concise, descriptive 'title' for the entire dashboard.
+  - **executiveSummary:** Write a brief, one or two-sentence summary of the most critical data insights. This is for a high-level overview.
+  - **detailedAnalysis:** Provide a more detailed, multi-paragraph analysis of the data. Highlight key trends, significant patterns, anomalies, and important findings you discovered in the document. This should provide deeper context for the visuals.
+  - **items:** Populate the 'items' array with 4 to 6 of the most insightful dashboard elements.
+- **MANDATORY VISUALIZATIONS:** You MUST include at least two different visual charts (e.g., one bar chart and one pie chart) if the data contains any possibility for visualization. Prioritize charts over tables and KPIs. If the data is very simple, you must still attempt to create a chart, even if it's basic.
   - **KPIs:** Use for single, important numbers (e.g., "Total Revenue," "Average Transaction Value"). These are secondary to charts.
   - **Bar Charts:** Use to compare values across categories (e.g., "Sales by Region").
   - **Pie Charts:** Use to show proportions of a whole (e.g., "Market Share by Product"). Only use if there are 2-6 categories.
@@ -97,6 +100,7 @@ The user has uploaded a PDF document. Use it as the context for your analysis.
 
 Now, analyze the data and generate the structured JSON for the dashboard layout.`,
 });
+
 
 const generateDashboardFlow = ai.defineFlow(
   {
