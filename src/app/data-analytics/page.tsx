@@ -17,17 +17,25 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { User } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { dataAnalytics } from '@/ai/flows/data-analytics';
+import { generateDashboard, type DashboardLayout } from '@/ai/flows/generate-dashboard';
+import type { DataAnalyticsOutput } from '@/ai/flows/data-analytics';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { KpiCard } from '@/components/analytics/kpi-card';
+import { AnalyticsBarChart } from '@/components/analytics/analytics-bar-chart';
+import { AnalyticsPieChart } from '@/components/analytics/analytics-pie-chart';
+import { AnalyticsTable } from '@/components/analytics/analytics-table';
 
 type ChatMessage = {
   role: 'user' | 'assistant';
   content: string;
+  chart?: DataAnalyticsOutput['chart'];
 }
 
 export default function DataAnalyticsPage() {
   const { t, language, dir } = useLanguage();
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isDashboardLoading, setIsDashboardLoading] = useState(false);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -36,30 +44,16 @@ export default function DataAnalyticsPage() {
   const [isChatOpen, setIsChatOpen] = useState(true);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   
-  const [fileData, setFileData] = useState<string | null>(null);
+  const [fileContent, setFileContent] = useState<string | null>(null);
+  const [fileType, setFileType] = useState<'csv' | 'pdf' | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [dashboardLayout, setDashboardLayout] = useState<DashboardLayout | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
-    try {
-        const savedFileData = localStorage.getItem('sasha-da-file-data');
-        const savedFileName = localStorage.getItem('sasha-da-file-name');
-        if (savedFileData && savedFileName) {
-            setFileData(savedFileData);
-            setFileName(savedFileName);
-            toast({
-                title: t('documentLoadedTitle'),
-                description: t('documentLoadedDesc', { fileName: savedFileName }),
-            });
-            setChatMessages([{ role: 'assistant', content: t('sashaDAFileLoaded', { fileName: savedFileName }) }]);
-        } else {
-            setChatMessages([{ role: 'assistant', content: t('sashaDAHello') }]);
-        }
-    } catch (error) {
-        console.error("Failed to access localStorage:", error);
-        setChatMessages([{ role: 'assistant', content: t('sashaDAHello') }]);
-    }
-  }, [t, toast]);
+    // We don't load previous sessions for this page as the dashboard is generative
+    setChatMessages([{ role: 'assistant', content: t('sashaDAHello') }]);
+  }, [t]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -87,81 +81,92 @@ export default function DataAnalyticsPage() {
   };
 
   const handleClearSession = () => {
-    setIsLoading(true);
-    setFileData(null);
+    setFileContent(null);
+    setFileType(null);
     setFileName(null);
+    setDashboardLayout(null);
     setChatMessages([{ role: 'assistant', content: t('sashaDAHello') }]);
-    try {
-        localStorage.removeItem('sasha-da-file-data');
-        localStorage.removeItem('sasha-da-file-name');
-    } catch (error) {
-        console.error("Failed to clear localStorage:", error);
-    }
     toast({
         title: t('sessionClearedTitle'),
         description: t('sessionClearedDesc'),
     });
-    setIsLoading(false);
+  };
+  
+  const handleGenerateDashboard = async (content: string, type: 'csv' | 'pdf') => {
+    setIsDashboardLoading(true);
+    setDashboardLayout(null);
+    try {
+      const layout = await generateDashboard({ fileContent: content, fileType: type, language });
+      setDashboardLayout(layout);
+    } catch (error) {
+      console.error("Error generating dashboard:", error);
+      toast({
+        variant: 'destructive',
+        title: t('genericErrorTitle'),
+        description: t('daDashboardGenError'),
+      });
+      setFileContent(null); // Clear file on error
+    } finally {
+      setIsDashboardLoading(false);
+    }
   };
 
   const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    handleClearSession();
     setFileName(file.name);
-    setIsLoading(true);
     toast({
         title: t('daFileProcessingTitle'),
         description: t('daFileProcessingDesc', { fileName: file.name }),
     });
 
     const reader = new FileReader();
-    reader.onload = (event) => {
-        try {
-            const data = event.target?.result;
-            const workbook = XLSX.read(data, { type: 'binary' });
-            const sheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[sheetName];
-            // Convert to CSV string to pass to the AI model
-            const csvString = XLSX.utils.sheet_to_csv(worksheet);
-            setFileData(csvString);
-            
+    
+    if (file.type === 'application/pdf') {
+        setFileType('pdf');
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const dataUri = event.target?.result as string;
+            setFileContent(dataUri);
+            setChatMessages([{ role: 'assistant', content: t('sashaDAFileLoaded', { fileName: file.name }) }]);
+            handleGenerateDashboard(dataUri, 'pdf');
+        };
+    } else {
+        setFileType('csv');
+        reader.readAsBinaryString(file);
+        reader.onload = (event) => {
             try {
-              localStorage.setItem('sasha-da-file-data', csvString);
-              localStorage.setItem('sasha-da-file-name', file.name);
+                const data = event.target?.result;
+                const workbook = XLSX.read(data, { type: 'binary' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const csvString = XLSX.utils.sheet_to_csv(worksheet);
+                setFileContent(csvString);
+                setChatMessages(prev => [...prev, { role: 'assistant', content: t('sashaDAFileLoaded', { fileName: file.name }) }]);
+                handleGenerateDashboard(csvString, 'csv');
             } catch (error) {
-              console.error("Failed to save DA data to localStorage:", error);
-              toast({
-                  variant: 'destructive',
-                  title: t('sessionSaveErrorTitle'),
-                  description: t('sessionSaveErrorDesc')
-              });
+                console.error("Error importing file:", error);
+                toast({ variant: 'destructive', title: t('importFailedTitle'), description: t('importFailedDesc') });
+                setFileName(null);
+                setFileType(null);
             }
-            
-            toast({
-                title: t('importSuccessTitle'),
-                description: t('importSuccessDesc', { fileName: file.name }),
-            });
-            setChatMessages(prev => [...prev, { role: 'assistant', content: t('sashaDAFileLoaded', { fileName: file.name }) }]);
-        } catch (error) {
-            console.error("Error importing file:", error);
-            toast({
-                variant: 'destructive',
-                title: t('importFailedTitle'),
-                description: t('importFailedDesc'),
-            });
-            setFileName(null);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-    reader.readAsBinaryString(file);
+        };
+    }
+
+    reader.onerror = () => {
+        toast({ variant: 'destructive', title: t('importFailedTitle'), description: t('importFailedDesc') });
+        setFileName(null);
+        setFileType(null);
+    }
+
     if(e.target) e.target.value = '';
   };
 
   const handleSashaSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!prompt.trim() || !fileData) return;
+    if (!prompt.trim() || !fileContent || !fileType) return;
 
     const newMessages: ChatMessage[] = [...chatMessages, { role: 'user', content: prompt }];
     setChatMessages(newMessages);
@@ -172,15 +177,16 @@ export default function DataAnalyticsPage() {
     try {
       const response = await dataAnalytics({
         prompt: currentPrompt,
-        csvData: fileData,
+        fileContent: fileContent,
+        fileType: fileType,
         language,
       });
       
-      setChatMessages(prev => [...prev, { role: 'assistant', content: response.response }]);
+      setChatMessages(prev => [...prev, { role: 'assistant', content: response.response, chart: response.chart }]);
 
     } catch (error) {
       console.error(error);
-      const errorMessage = t('sashaSpreadsheetError'); // Re-use a generic error message
+      const errorMessage = t('sashaSpreadsheetError');
       setChatMessages(prev => [...prev, { role: 'assistant', content: errorMessage }]);
       toast({
         variant: 'destructive',
@@ -191,6 +197,47 @@ export default function DataAnalyticsPage() {
       setIsLoading(false);
     }
   };
+  
+  const renderDashboardItem = (item: DashboardLayout['items'][0], index: number) => {
+    switch (item.type) {
+      case 'kpi':
+        return <KpiCard key={index} title={item.title} value={item.value} description={item.description} />;
+      case 'bar':
+        return (
+          <Card key={index} className="col-span-1 md:col-span-2">
+            <CardHeader><CardTitle>{item.title}</CardTitle></CardHeader>
+            <CardContent><AnalyticsBarChart data={item.data} /></CardContent>
+          </Card>
+        );
+      case 'pie':
+        return (
+          <Card key={index} className="col-span-1">
+            <CardHeader><CardTitle>{item.title}</CardTitle></CardHeader>
+            <CardContent><AnalyticsPieChart data={item.data} /></CardContent>
+          </Card>
+        );
+      case 'table':
+        return (
+          <Card key={index} className="col-span-1 md:col-span-3">
+            <CardHeader><CardTitle>{item.title}</CardTitle></CardHeader>
+            <CardContent><AnalyticsTable headers={item.headers} rows={item.rows} /></CardContent>
+          </Card>
+        );
+      default:
+        return null;
+    }
+  };
+  
+  const renderChatMessage = (message: ChatMessage, index: number) => {
+    if (message.chart?.type === 'bar') {
+        return <div className="w-full h-64 p-2"><AnalyticsBarChart data={message.chart.data} /></div>
+    }
+    if (message.chart?.type === 'pie') {
+        return <div className="w-full h-64 p-2"><AnalyticsPieChart data={message.chart.data} /></div>
+    }
+    return <p className="whitespace-pre-wrap">{message.content}</p>;
+  }
+
 
   return (
     <div ref={fullscreenRef} className="flex flex-col h-screen bg-background text-foreground" dir={dir}>
@@ -199,7 +246,7 @@ export default function DataAnalyticsPage() {
         ref={fileInputRef}
         onChange={handleFileImport}
         className="hidden"
-        accept=".xlsx, .xls, .csv"
+        accept=".xlsx, .xls, .csv, .pdf"
       />
       <header className="grid grid-cols-3 items-center p-4 border-b shrink-0">
         <div className="justify-self-start flex items-center gap-2">
@@ -212,7 +259,7 @@ export default function DataAnalyticsPage() {
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={handleClearSession} disabled={isLoading}>
+                    <Button variant="ghost" size="icon" onClick={handleClearSession} disabled={isLoading || isDashboardLoading}>
                         <RefreshCw className="h-5 w-5" />
                         <span className="sr-only">{t('refreshSession')}</span>
                     </Button>
@@ -238,9 +285,9 @@ export default function DataAnalyticsPage() {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        <main className="flex-1 overflow-auto p-4 md:p-6 flex items-center justify-center">
-            {!fileData ? (
-                 <Card className="w-full max-w-lg text-center shadow-lg animate-in fade-in-50 duration-500">
+        <main className="flex-1 overflow-auto p-4 md:p-6">
+            {!fileContent ? (
+                 <Card className="w-full max-w-lg mx-auto text-center shadow-lg animate-in fade-in-50 duration-500">
                     <CardHeader>
                         <div className="mx-auto bg-primary/10 text-primary p-3 rounded-full mb-4">
                             <Bot className="w-10 h-10" />
@@ -249,23 +296,29 @@ export default function DataAnalyticsPage() {
                         <CardDescription>{t('daUploadPromptDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Button onClick={() => fileInputRef.current?.click()} disabled={isLoading}>
-                            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
+                        <Button onClick={() => fileInputRef.current?.click()}>
+                            <FileUp className="mr-2 h-4 w-4" />
                             {t('daUploadButton')}
                         </Button>
                     </CardContent>
                  </Card>
-            ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-center p-8 bg-muted/50 rounded-lg">
-                    <h2 className="text-2xl font-semibold text-foreground">{t('daDashboardTitle')}</h2>
-                    <p className="text-muted-foreground mt-2 max-w-md">{t('daDashboardDesc', {fileName: fileName || ''})}</p>
-                    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
-                        <Card><CardHeader><CardTitle>{t('daKpiCard1')}</CardTitle></CardHeader><CardContent><p className="text-3xl font-bold">1,402</p></CardContent></Card>
-                        <Card><CardHeader><CardTitle>{t('daKpiCard2')}</CardTitle></CardHeader><CardContent><p className="text-3xl font-bold">$2.3M</p></CardContent></Card>
-                        <Card className="md:col-span-2"><CardContent className="h-64 flex items-center justify-center"><p className="text-muted-foreground">{t('daChartPlaceholder')}</p></CardContent></Card>
+            ) : isDashboardLoading ? (
+                <div className="flex flex-col items-center justify-center h-full text-center">
+                    <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
+                    <h2 className="text-xl font-semibold">{t('daGeneratingDashboardTitle')}</h2>
+                    <p className="text-muted-foreground">{t('daGeneratingDashboardDesc')}</p>
+                </div>
+            ) : dashboardLayout ? (
+                <div className="max-w-7xl mx-auto animate-in fade-in-50 duration-500">
+                    <div className="mb-6">
+                      <h1 className="text-3xl font-bold tracking-tight">{dashboardLayout.title}</h1>
+                      <p className="text-muted-foreground">{dashboardLayout.description}</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                       {dashboardLayout.items.map(renderDashboardItem)}
                     </div>
                 </div>
-            )}
+            ) : null}
         </main>
         
         {isChatOpen && (
@@ -282,11 +335,11 @@ export default function DataAnalyticsPage() {
                         {chatMessages.map((message, index) => (
                             <div key={index} className={cn('flex items-start gap-3 animate-in fade-in', { 'justify-end flex-row-reverse': message.role === 'user' })}>
                                 {message.role === 'assistant' && <SashaAvatar className="w-8 h-8 shrink-0" />}
-                                <div className={cn('rounded-lg p-3 text-sm max-w-xs shadow-sm', {
+                                <div className={cn('rounded-lg p-3 text-sm max-w-[calc(100%-2.5rem)] shadow-sm', {
                                     'bg-primary text-primary-foreground': message.role === 'assistant',
                                     'bg-card text-card-foreground': message.role === 'user',
                                 })}>
-                                    <p className="whitespace-pre-wrap">{message.content}</p>
+                                    {renderChatMessage(message, index)}
                                 </div>
                                 {message.role === 'user' && (
                                     <Avatar className="w-8 h-8 shrink-0">
@@ -322,9 +375,9 @@ export default function DataAnalyticsPage() {
                                 }
                             }}
                             rows={1}
-                            disabled={isLoading || !fileData}
+                            disabled={isLoading || !fileContent}
                         />
-                        <Button type="submit" size="icon" className={cn("absolute top-1/2 transform -translate-y-1/2 h-8 w-8", dir === 'ltr' ? 'right-2' : 'left-2')} disabled={isLoading || !prompt.trim() || !fileData}>
+                        <Button type="submit" size="icon" className={cn("absolute top-1/2 transform -translate-y-1/2 h-8 w-8", dir === 'ltr' ? 'right-2' : 'left-2')} disabled={isLoading || !prompt.trim() || !fileContent}>
                             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                             <span className="sr-only">{t('send')}</span>
                         </Button>
