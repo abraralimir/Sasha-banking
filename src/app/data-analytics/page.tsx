@@ -16,24 +16,12 @@ import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { User } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-// This will be the AI flow for data analytics, which you'd create.
-// For now, we can use a placeholder function.
-// import { analyzeData } from '@/ai/flows/data-analytics';
+import { dataAnalytics } from '@/ai/flows/data-analytics';
 
 type ChatMessage = {
   role: 'user' | 'assistant';
   content: string;
 }
-
-// Placeholder for the real AI flow
-const analyzeData = async (input: { prompt: string, csvData: string | null, language: 'en' | 'ar'}) => {
-    await new Promise(res => setTimeout(res, 1500));
-    if (input.prompt.toLowerCase().includes('hello')) {
-        return { response: input.language === 'en' ? 'Hello! I am ready to analyze your data. What would you like to know?' : 'مرحباً! أنا مستعدة لتحليل بياناتك. ماذا تود أن تعرف؟' }
-    }
-    return { response: input.language === 'en' ? `I have received your request to analyze the data. I am working on it. This is a placeholder response.` : `لقد تلقيت طلبك لتحليل البيانات. أنا أعمل عليه. هذه إجابة مبدئية.` }
-};
-
 
 export default function DataAnalyticsPage() {
   const { t, language, dir } = useLanguage();
@@ -104,7 +92,7 @@ export default function DataAnalyticsPage() {
 
   const handleSashaSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!prompt.trim()) return;
+    if (!prompt.trim() || !fileData) return;
 
     const newMessages: ChatMessage[] = [...chatMessages, { role: 'user', content: prompt }];
     setChatMessages(newMessages);
@@ -113,8 +101,7 @@ export default function DataAnalyticsPage() {
     setIsLoading(true);
 
     try {
-      // Replace with the actual AI call
-      const response = await analyzeData({
+      const response = await dataAnalytics({
         prompt: currentPrompt,
         csvData: fileData,
         language,
