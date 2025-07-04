@@ -145,6 +145,8 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     csSpreadsheetFeature8: "Automated Data Import from Web Sources",
     csSpreadsheetFeature9: "Live Collaborative Editing with AI Assistance",
     csSpreadsheetFeature10: "Full Version History with AI Summaries",
+    getStartedSasha: 'GET STARTED WITH SASHA',
+    getStartedSpreadsheet: 'Or, get started with the Spreadsheet',
 
     // Spreadsheet Page
     chatWithSasha: "Chat with Sasha",
@@ -321,6 +323,8 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     csSpreadsheetFeature8: "استيراد تلقائي للبيانات من مصادر الويب",
     csSpreadsheetFeature9: "تحرير تعاوني مباشر بمساعدة الذكاء الاصطناعي",
     csSpreadsheetFeature10: "سجل إصدارات كامل مع ملخصات بالذكاء الاصطناعي",
+    getStartedSasha: 'ابدأ مع ساشا',
+    getStartedSpreadsheet: 'أو, ابدأ مع جدول البيانات',
 
     // Spreadsheet Page
     chatWithSasha: "الدردشة مع ساشا",

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { MessageCircle, Sheet, BookOpen, Rocket, Wand, ListChecks, BrainCircuit, Bot, ShieldCheck, LineChart, FileCheck as FileCheckIcon, Briefcase } from 'lucide-react';
 import { LanguageToggle } from '@/components/language-toggle';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -8,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { SashaAvatar } from '@/components/sasha-avatar';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 export default function LearnPage() {
   const { t, dir } = useLanguage();
@@ -189,6 +191,14 @@ export default function LearnPage() {
             </CardContent>
           </Card>
 
+          <div className="flex flex-col items-center gap-4 mt-12 mb-8">
+            <Button asChild size="lg" className="font-semibold text-base px-8 py-6 bg-gradient-to-br from-slate-900 to-slate-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+              <Link href="/chat">{t('getStartedSasha')}</Link>
+            </Button>
+            <Button asChild variant="link" className="text-muted-foreground">
+              <Link href="/spreadsheet">{t('getStartedSpreadsheet')}</Link>
+            </Button>
+          </div>
         </div>
       </main>
     </div>

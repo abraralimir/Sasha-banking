@@ -22,7 +22,6 @@ export function SashaAvatar({ className }: { className?: string }) {
         </defs>
         <circle cx="50" cy="50" r="50" fill="url(#sasha-gradient)" />
       </svg>
-      <span className="z-10 font-semibold text-primary-foreground">S</span>
     </div>
   );
 }
