@@ -4,26 +4,30 @@ import React, { useState, useRef, useEffect } from 'react';
 import type { HotTable } from '@handsontable/react';
 import type Handsontable from 'handsontable';
 import * as XLSX from 'xlsx';
+
 import { LanguageToggle } from '@/components/language-toggle';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Spreadsheet } from '@/components/spreadsheet/spreadsheet';
 import { Button } from '@/components/ui/button';
-import { Wand2, Loader2 } from 'lucide-react';
+import { Loader2, Send, CornerDownLeft } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { spreadsheetAssistant } from '@/ai/flows/spreadsheet-assistant';
 import { SpreadsheetToolbar } from '@/components/spreadsheet/toolbar';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { SashaAvatar } from '@/components/sasha-avatar';
+import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { User } from 'lucide-react';
 
-const initialData = Array.from({ length: 50 }, () => Array(26).fill(''));
+const initialData = [
+  ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+  ["Revenue", 5000, 5200, 5500, 5300, 5600, 5800],
+  ["Expenses", 3000, 3100, 3200, 3050, 3300, 3400],
+  ["Profit", 2000, 2100, 2300, 2250, 2300, 2400],
+  [],
+];
 
 const ganttTemplate = [
     ["Task", "Start Date", "End Date", "Duration", "Completion"],
@@ -36,28 +40,39 @@ const ganttTemplate = [
     [],
 ];
 
+type ChatMessage = {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 export default function SpreadsheetPage() {
   const { t, language, dir } = useLanguage();
   const [sheetData, setSheetData] = useState<any[][]>(initialData);
-  const [isSashaOpen, setIsSashaOpen] = useState(false);
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const hotRef = useRef<HotTable>(null);
   const [hotInstance, setHotInstance] = useState<Handsontable | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+    { role: 'assistant', content: "Hello! I'm Sasha. I can help you create, format, and analyze this spreadsheet. Just tell me what you need." }
+  ]);
 
   useEffect(() => {
     if (hotRef.current) {
       const instance = hotRef.current.hotInstance;
       setHotInstance(instance);
-      // This is a workaround to ensure the data is loaded correctly
-      // when the component mounts or when sheetData changes externally.
       if(instance.getSourceData() !== sheetData) {
         instance.loadData(sheetData);
       }
     }
   }, [sheetData]);
+  
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages, isLoading]);
 
   const handleImportClick = () => {
     fileInputRef.current?.click();
@@ -80,6 +95,7 @@ export default function SpreadsheetPage() {
                 title: 'Import Successful',
                 description: `Successfully imported "${file.name}".`,
             });
+            setChatMessages(prev => [...prev, { role: 'assistant', content: `I've loaded "${file.name}" into the spreadsheet. How can I help you with it?` }]);
         } catch (error) {
             console.error("Error importing file:", error);
             toast({
@@ -93,14 +109,20 @@ export default function SpreadsheetPage() {
     if(e.target) e.target.value = '';
   };
 
-  const handleSashaSubmit = async () => {
+  const handleSashaSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!prompt.trim() || !hotInstance) return;
+
+    const newMessages: ChatMessage[] = [...chatMessages, { role: 'user', content: prompt }];
+    setChatMessages(newMessages);
+    const currentPrompt = prompt;
+    setPrompt('');
     setIsLoading(true);
 
     try {
       const currentData = hotInstance.getData();
       const response = await spreadsheetAssistant({
-        prompt,
+        prompt: currentPrompt,
         sheetData: currentData,
         language,
       });
@@ -108,58 +130,61 @@ export default function SpreadsheetPage() {
       const firstConfirmation = response.operations.find(op => op.confirmation)?.confirmation;
       const confirmationMessage = firstConfirmation || "I've processed your request.";
 
-      for (const op of response.operations) {
-        switch (op.command) {
-          case 'createGantt':
-            setSheetData(ganttTemplate);
-            break;
-          case 'clearSheet':
-            setSheetData([[]]);
-            hotInstance.updateSettings({ cell: [] }); // Clear formatting
-            hotInstance.render();
-            break;
-          case 'setData':
-            if (op.params.data) {
-              setSheetData(op.params.data);
-            }
-            break;
-          case 'formatCells':
-            const { range, properties } = op.params;
-            if (range && properties) {
-              for (let row = range.row; row <= range.row2; row++) {
-                  for (let col = range.col; col <= range.col2; col++) {
-                      const cell = hotInstance.getCell(row, col);
-                      if (cell) {
-                          let className = cell.className || '';
-                          const style = cell.style || {};
-
-                          if (properties.bold) className += ' ht-cell-bold';
-                          if (properties.italic) className += ' ht-cell-italic';
-                          if (properties.underline) className += ' ht-cell-underline';
-                          if (properties.color) style.color = properties.color;
-                          if (properties.backgroundColor) style.backgroundColor = properties.backgroundColor;
-
-                          hotInstance.setCellMeta(row, col, 'className', className.trim());
-                          hotInstance.setCellMeta(row, col, 'style', style);
-                      }
-                  }
-              }
-              hotInstance.render();
-            }
-            break;
-          case 'info':
-            // No data change, just show the message.
-            break;
-        }
-      }
+      setChatMessages(prev => [...prev, { role: 'assistant', content: confirmationMessage }]);
       
-      toast({
-        title: "Sasha's Update",
-        description: confirmationMessage,
+      hotInstance.batch(() => {
+        for (const op of response.operations) {
+          switch (op.command) {
+            case 'createGantt':
+              setSheetData(ganttTemplate);
+              break;
+            case 'clearSheet':
+              const clearedData = Array.from({ length: 50 }, () => Array(26).fill(''));
+              setSheetData(clearedData);
+              hotInstance.updateSettings({ cell: [], comments: false });
+              hotInstance.getPlugin('comments').clearComments();
+              hotInstance.render();
+              break;
+            case 'setData':
+              if (op.params.data) {
+                setSheetData(op.params.data);
+              }
+              break;
+            case 'formatCells':
+              const { range, properties } = op.params;
+              if (range && properties) {
+                for (let row = range.row; row <= range.row2; row++) {
+                    for (let col = range.col; col <= range.col2; col++) {
+                        const cell = hotInstance.getCell(row, col);
+                        if (cell) {
+                            let className = cell.className || '';
+                            const style = cell.style || {};
+
+                            if (properties.bold) className += ' ht-cell-bold';
+                            if (properties.italic) className += ' ht-cell-italic';
+                            if (properties.underline) className += ' ht-cell-underline';
+                            if (properties.color) style.color = properties.color;
+                            if (properties.backgroundColor) style.backgroundColor = properties.backgroundColor;
+
+                            hotInstance.setCellMeta(row, col, 'className', className.trim());
+                            hotInstance.setCellMeta(row, col, 'style', style);
+                        }
+                    }
+                }
+              }
+              break;
+            case 'info':
+              // No data change, the message is already in the chat.
+              break;
+          }
+        }
       });
+      hotInstance.render();
 
     } catch (error) {
       console.error(error);
+      const errorMessage = "Sorry, I ran into an issue. Please try that again.";
+      setChatMessages(prev => [...prev, { role: 'assistant', content: errorMessage }]);
       toast({
         variant: 'destructive',
         title: t('genericErrorTitle'),
@@ -167,14 +192,12 @@ export default function SpreadsheetPage() {
       });
     } finally {
       setIsLoading(false);
-      setIsSashaOpen(false);
-      setPrompt('');
     }
   };
 
   return (
     <div className="flex flex-col h-screen bg-background" dir={dir}>
-       <input
+      <input
         type="file"
         ref={fileInputRef}
         onChange={handleFileImport}
@@ -189,52 +212,78 @@ export default function SpreadsheetPage() {
           Spreadsheet
         </h1>
         <div className="justify-self-end flex items-center gap-2">
-            <Button
-                variant="outline"
-                onClick={() => setIsSashaOpen(true)}
-            >
-                <Wand2 className="mr-2 h-4 w-4" />
-                Ask Sasha
-            </Button>
-            <LanguageToggle />
+          <LanguageToggle />
         </div>
       </header>
       
       <SpreadsheetToolbar hotInstance={hotInstance} onImport={handleImportClick} />
 
-      <main className="flex-1 overflow-auto">
-        <Spreadsheet data={sheetData} hotRef={hotRef} />
-      </main>
-
-      <Dialog open={isSashaOpen} onOpenChange={setIsSashaOpen}>
-        <DialogContent className="sm:max-w-[425px]" dir={dir}>
-          <DialogHeader>
-            <DialogTitle>Ask Sasha</DialogTitle>
-            <DialogDescription>
-              Tell Sasha what you want to do with the spreadsheet. For example: "Create a gantt chart" or "Make cell A1 bold and red".
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Textarea
-              id="sasha-prompt"
-              placeholder="e.g., Make a gantt chart for a new project"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              className="col-span-3"
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              type="submit"
-              onClick={handleSashaSubmit}
-              disabled={isLoading || !hotInstance}
-            >
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isLoading ? 'Thinking...' : 'Submit'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <div className="flex flex-1 overflow-hidden">
+        <main className="flex-1 overflow-auto">
+          <Spreadsheet data={sheetData} hotRef={hotRef} />
+        </main>
+        
+        <aside className="w-[350px] border-l bg-background flex flex-col h-full">
+            <div className="p-4 border-b">
+                <h2 className="text-lg font-semibold tracking-tight">Chat with Sasha</h2>
+            </div>
+            <ScrollArea className="flex-1 p-4">
+                <div className="space-y-4">
+                    {chatMessages.map((message, index) => (
+                        <div key={index} className={cn('flex items-start gap-3 animate-in fade-in', { 'justify-end': message.role === 'user' })}>
+                            {message.role === 'assistant' && <SashaAvatar className="w-8 h-8 shrink-0" />}
+                            <div className={cn('rounded-lg p-3 text-sm max-w-xs shadow-sm', {
+                                'bg-primary text-primary-foreground': message.role === 'assistant',
+                                'bg-card text-card-foreground': message.role === 'user',
+                            })}>
+                                <p className="whitespace-pre-wrap">{message.content}</p>
+                            </div>
+                            {message.role === 'user' && (
+                                <Avatar className="w-8 h-8 shrink-0">
+                                    <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
+                                </Avatar>
+                            )}
+                        </div>
+                    ))}
+                    {isLoading && (
+                        <div className="flex items-start gap-3">
+                            <SashaAvatar className="w-8 h-8 shrink-0" />
+                            <div className="bg-primary text-primary-foreground rounded-lg p-3 shadow-sm flex items-center space-x-1">
+                                <span className="w-2 h-2 bg-primary-foreground/50 rounded-full animate-pulse delay-0 duration-1000"></span>
+                                <span className="w-2 h-2 bg-primary-foreground/50 rounded-full animate-pulse delay-200 duration-1000"></span>
+                                <span className="w-2 h-2 bg-primary-foreground/50 rounded-full animate-pulse delay-400 duration-1000"></span>
+                            </div>
+                        </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                </div>
+            </ScrollArea>
+            <div className="p-4 border-t bg-background">
+                <form onSubmit={handleSashaSubmit} className="relative">
+                    <Textarea
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                        placeholder="e.g., Make row 1 bold and blue"
+                        className="pr-12 text-base resize-none"
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                handleSashaSubmit(e);
+                            }
+                        }}
+                        rows={1}
+                        disabled={isLoading}
+                    />
+                    <Button type="submit" size="icon" className="absolute top-1/2 right-2 transform -translate-y-1/2 h-8 w-8" disabled={isLoading || !prompt.trim()}>
+                        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                        <span className="sr-only">Send</span>
+                    </Button>
+                </form>
+            </div>
+        </aside>
+      </div>
     </div>
   );
 }
+
+    
