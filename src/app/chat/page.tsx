@@ -76,28 +76,7 @@ export default function ChatPage() {
         setMessages([{ id: '1', role: 'assistant', content: t('initialMessage') }]);
       }
 
-      // Load files
-      const savedCsvData = localStorage.getItem('sasha-csv-data');
-      const savedCsvFileName = localStorage.getItem('sasha-csv-filename');
-      if (savedCsvData && savedCsvFileName) {
-        setCsvData(savedCsvData);
-        setCsvFileName(savedCsvFileName);
-        toast({
-          title: t('documentLoadedTitle'),
-          description: t('documentLoadedDesc', { fileName: savedCsvFileName }),
-        });
-      }
-
-      const savedPdfData = localStorage.getItem('sasha-pdf-data');
-      const savedPdfFileName = localStorage.getItem('sasha-pdf-filename');
-      if (savedPdfData && savedPdfFileName) {
-        setPdfData(savedPdfData);
-        setPdfFileName(savedPdfFileName);
-        toast({
-          title: t('documentLoadedTitle'),
-          description: t('documentLoadedDesc', { fileName: savedPdfFileName }),
-        });
-      }
+      // Removed loading files from localStorage to prevent quota errors
     } catch (error) {
       console.error("Failed to access localStorage:", error);
       setMessages([{ id: '1', role: 'assistant', content: t('initialMessage') }]);
@@ -210,17 +189,7 @@ export default function ChatPage() {
         const text = e.target?.result as string;
         setCsvData(text);
         setCsvFileName(file.name);
-        try {
-          localStorage.setItem('sasha-csv-data', text);
-          localStorage.setItem('sasha-csv-filename', file.name);
-        } catch (error) {
-          console.error("Failed to save CSV to localStorage:", error);
-          toast({
-            variant: 'destructive',
-            title: t('sessionSaveErrorTitle'),
-            description: t('sessionSaveErrorDesc')
-          });
-        }
+        // Removed saving to localStorage to prevent quota errors
         toast({
           title: t('csvUploadTitle'),
           description: t('csvUploadDesc', { fileName: file.name }),
@@ -249,18 +218,7 @@ export default function ChatPage() {
 
       setPdfData(dataUri);
       setPdfFileName(fileName);
-      try {
-        localStorage.setItem('sasha-pdf-data', dataUri);
-        localStorage.setItem('sasha-pdf-filename', fileName);
-      } catch (error) {
-        console.error("Failed to save PDF to localStorage:", error);
-        toast({
-          variant: 'destructive',
-          title: t('sessionSaveErrorTitle'),
-          description: t('sessionSaveErrorDesc')
-        });
-      }
-
+      // Removed saving to localStorage to prevent quota errors
       toast({
         title: t('pdfUploadTitle'),
         description: t('pdfUploadDesc', { fileName }),
@@ -277,12 +235,7 @@ export default function ChatPage() {
   const handleClearPdf = () => {
     setPdfData(null);
     setPdfFileName(null);
-    try {
-      localStorage.removeItem('sasha-pdf-data');
-      localStorage.removeItem('sasha-pdf-filename');
-    } catch (error) {
-      console.error("Failed to clear localStorage:", error);
-    }
+    // Removed clearing localStorage to align with not setting it
     toast({
       title: t('pdfClearedTitle'),
       description: t('pdfClearedDesc'),
@@ -297,12 +250,7 @@ export default function ChatPage() {
   const handleClearCsv = () => {
     setCsvData(null);
     setCsvFileName(null);
-    try {
-      localStorage.removeItem('sasha-csv-data');
-      localStorage.removeItem('sasha-csv-filename');
-    } catch (error) {
-      console.error("Failed to clear localStorage:", error);
-    }
+    // Removed clearing localStorage to align with not setting it
     toast({
       title: t('csvClearedTitle'),
       description: t('csvClearedDesc'),

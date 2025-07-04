@@ -35,17 +35,7 @@ export default function DataAnalyticsPage() {
   const [dashboardLayout, setDashboardLayout] = useState<DashboardLayout | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  useEffect(() => {
-    const savedContent = localStorage.getItem('sasha-da-content');
-    const savedType = localStorage.getItem('sasha-da-type') as 'csv' | 'pdf' | null;
-    const savedName = localStorage.getItem('sasha-da-name');
-    if (savedContent && savedType && savedName) {
-      setFileContent(savedContent);
-      setFileType(savedType);
-      setFileName(savedName);
-      handleGenerateDashboard(savedContent, savedType);
-    }
-  }, [t]);
+  // Removed useEffect that loaded from localStorage to prevent quota errors.
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -73,9 +63,7 @@ export default function DataAnalyticsPage() {
     setFileType(null);
     setFileName(null);
     setDashboardLayout(null);
-    localStorage.removeItem('sasha-da-content');
-    localStorage.removeItem('sasha-da-type');
-    localStorage.removeItem('sasha-da-name');
+    // Removed localStorage clearing to align with not setting it
     toast({
         title: t('sessionClearedTitle'),
         description: t('sessionClearedDesc'),
@@ -109,9 +97,7 @@ export default function DataAnalyticsPage() {
     setFileContent(content);
     setFileType(type);
     setFileName(name);
-    localStorage.setItem('sasha-da-content', content);
-    localStorage.setItem('sasha-da-type', type);
-    localStorage.setItem('sasha-da-name', name);
+    // Removed saving to localStorage to prevent quota errors with large files
     handleGenerateDashboard(content, type);
   }
 
