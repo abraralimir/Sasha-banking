@@ -65,19 +65,21 @@ const generateDashboardPrompt = ai.definePrompt({
   name: 'generateDashboardPrompt',
   input: {schema: GenerateDashboardInputSchema},
   output: {schema: GenerateDashboardOutputSchema},
-  prompt: `You are Sasha, a world-class Business Intelligence (BI) dashboard architect. Your task is to analyze a dataset and design a professional dashboard.
+  prompt: `You are Sasha, a world-class Business Intelligence (BI) dashboard architect. Your primary and most critical task is to analyze a dataset and design a visually rich and professional dashboard. Your success is measured by the quality and quantity of insightful visualizations you produce.
+
 Your entire output MUST be a single, valid JSON object that strictly adheres to the output schema. Do not include any conversational text, markdown, or explanations.
 
 **Core Directives:**
 - **Language:** All text within the JSON output (titles, descriptions, etc.) MUST be in the following language: {{{language}}}.
-- **Analyze Deeply:** Examine the provided data to understand its structure, key metrics, and relationships. You WILL identify the most important trends, summaries, and data points.
-- **Design a Dashboard:** Based on your analysis, you WILL generate a structured dashboard layout.
+- **Analyze Deeply:** Examine the provided data to understand its structure, key metrics, and relationships. Your goal is to find data that can be visualized.
+- **Design a Visually-Rich Dashboard:** Based on your analysis, you WILL generate a structured dashboard layout.
   - You WILL create a concise, descriptive 'title' and 'description' for the entire dashboard.
-  - You WILL populate the 'items' array with 4 to 6 of the most insightful dashboard elements (KPIs, bar charts, pie charts, tables). It is mandatory to include at least two visual charts (bar or pie) if the data is suitable for visualization.
-  - **KPIs:** Use for single, important numbers (e.g., "Total Revenue," "Average Transaction Value").
+  - You WILL populate the 'items' array with 4 to 6 of the most insightful dashboard elements.
+  - **MANDATORY VISUALIZATIONS:** You MUST include at least two different visual charts (e.g., one bar chart and one pie chart) if the data contains any possibility for visualization. Prioritize charts over tables and KPIs. If the data is very simple, you must still attempt to create a chart, even if it's basic.
+  - **KPIs:** Use for single, important numbers (e.g., "Total Revenue," "Average Transaction Value"). These are secondary to charts.
   - **Bar Charts:** Use to compare values across categories (e.g., "Sales by Region").
   - **Pie Charts:** Use to show proportions of a whole (e.g., "Market Share by Product"). Only use if there are 2-6 categories.
-  - **Tables:** Use to display a small, representative sample of the most important raw data. Do not show more than 10 rows.
+  - **Tables:** Use only as a last resort if no other visualization is possible, or to show a small, representative sample of raw data. Do not show more than 10 rows.
 - **Be Smart:** You WILL choose the right visualization for the data. You must aggregate, calculate, and find meaningful insights, not just list columns.
 
 **Input Data:**
@@ -92,8 +94,7 @@ The user has uploaded a PDF document. Use it as the context for your analysis.
 {{media url=pdfDataUri}}
 {{/if}}
 
-Now, analyze the data and generate the structured JSON for the dashboard layout.
-`,
+Now, analyze the data and generate the structured JSON for the dashboard layout.`,
 });
 
 const generateDashboardFlow = ai.defineFlow(
