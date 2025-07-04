@@ -52,7 +52,7 @@ const dataAnalyticsPrompt = ai.definePrompt({
   name: 'dataAnalyticsPrompt',
   input: {schema: DataAnalyticsInputSchema},
   output: {schema: DataAnalyticsOutputSchema},
-  model: 'googleai/gemini-2.0-flash',
+  model: 'googleai/gemini-1.5-flash-latest',
   prompt: `You are Sasha, an expert data analyst with capabilities rivaling Power BI. Your task is to assist users by analyzing their uploaded data and performing complex data tasks based on natural language commands. Your primary goal is to generate visualizations when requested.
 
 **Core Directives:**
