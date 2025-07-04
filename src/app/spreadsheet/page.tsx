@@ -9,7 +9,7 @@ import { LanguageToggle } from '@/components/language-toggle';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Spreadsheet } from '@/components/spreadsheet/spreadsheet';
 import { Button } from '@/components/ui/button';
-import { Loader2, Send } from 'lucide-react';
+import { Loader2, Send, MessageSquare, X } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -52,6 +52,7 @@ export default function SpreadsheetPage() {
   const fullscreenRef = useRef<HTMLDivElement>(null);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(true);
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     { role: 'assistant', content: "Hello! I'm Sasha. I can help you create, format, and analyze this spreadsheet. Just tell me what you need." }
@@ -232,6 +233,10 @@ export default function SpreadsheetPage() {
           Spreadsheet
         </h1>
         <div className="justify-self-end flex items-center gap-2">
+           <Button variant="ghost" size="icon" onClick={() => setIsChatOpen(!isChatOpen)}>
+            <MessageSquare className="h-5 w-5" />
+            <span className="sr-only">{isChatOpen ? "Hide Chat" : "Show Chat"}</span>
+          </Button>
           <LanguageToggle />
         </div>
       </header>
@@ -248,64 +253,70 @@ export default function SpreadsheetPage() {
           <Spreadsheet data={sheetData} hotRef={hotRef} />
         </main>
         
-        <aside className="w-[350px] border-l bg-background flex flex-col h-full">
-            <div className="p-4 border-b">
-                <h2 className="text-lg font-semibold tracking-tight">Chat with Sasha</h2>
-            </div>
-            <ScrollArea className="flex-1 p-4">
-                <div className="space-y-4">
-                    {chatMessages.map((message, index) => (
-                        <div key={index} className={cn('flex items-start gap-3 animate-in fade-in', { 'justify-end': message.role === 'user' })}>
-                            {message.role === 'assistant' && <SashaAvatar className="w-8 h-8 shrink-0" />}
-                            <div className={cn('rounded-lg p-3 text-sm max-w-xs shadow-sm', {
-                                'bg-primary text-primary-foreground': message.role === 'assistant',
-                                'bg-card text-card-foreground': message.role === 'user',
-                            })}>
-                                <p className="whitespace-pre-wrap">{message.content}</p>
-                            </div>
-                            {message.role === 'user' && (
-                                <Avatar className="w-8 h-8 shrink-0">
-                                    <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
-                                </Avatar>
-                            )}
-                        </div>
-                    ))}
-                    {isLoading && (
-                        <div className="flex items-start gap-3">
-                            <SashaAvatar className="w-8 h-8 shrink-0" />
-                            <div className="bg-primary text-primary-foreground rounded-lg p-3 shadow-sm flex items-center space-x-1">
-                                <span className="w-2 h-2 bg-primary-foreground/50 rounded-full animate-pulse delay-0 duration-1000"></span>
-                                <span className="w-2 h-2 bg-primary-foreground/50 rounded-full animate-pulse delay-200 duration-1000"></span>
-                                <span className="w-2 h-2 bg-primary-foreground/50 rounded-full animate-pulse delay-400 duration-1000"></span>
-                            </div>
-                        </div>
-                    )}
-                    <div ref={messagesEndRef} />
-                </div>
-            </ScrollArea>
-            <div className="p-4 border-t bg-background">
-                <form onSubmit={handleSashaSubmit} className="relative">
-                    <Textarea
-                        value={prompt}
-                        onChange={(e) => setPrompt(e.target.value)}
-                        placeholder="e.g., Make row 1 bold and blue"
-                        className="pr-12 text-base resize-none"
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                handleSashaSubmit(e);
-                            }
-                        }}
-                        rows={1}
-                        disabled={isLoading}
-                    />
-                    <Button type="submit" size="icon" className="absolute top-1/2 right-2 transform -translate-y-1/2 h-8 w-8" disabled={isLoading || !prompt.trim()}>
-                        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                        <span className="sr-only">Send</span>
+        {isChatOpen && (
+            <aside className="w-[350px] border-l bg-background flex flex-col h-full animate-in slide-in-from-right-sm duration-300">
+                <div className="p-4 border-b flex items-center justify-between">
+                    <h2 className="text-lg font-semibold tracking-tight">Chat with Sasha</h2>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsChatOpen(false)}>
+                        <X className="h-4 w-4" />
+                        <span className="sr-only">Close chat</span>
                     </Button>
-                </form>
-            </div>
-        </aside>
+                </div>
+                <ScrollArea className="flex-1 p-4">
+                    <div className="space-y-4">
+                        {chatMessages.map((message, index) => (
+                            <div key={index} className={cn('flex items-start gap-3 animate-in fade-in', { 'justify-end': message.role === 'user' })}>
+                                {message.role === 'assistant' && <SashaAvatar className="w-8 h-8 shrink-0" />}
+                                <div className={cn('rounded-lg p-3 text-sm max-w-xs shadow-sm', {
+                                    'bg-primary text-primary-foreground': message.role === 'assistant',
+                                    'bg-card text-card-foreground': message.role === 'user',
+                                })}>
+                                    <p className="whitespace-pre-wrap">{message.content}</p>
+                                </div>
+                                {message.role === 'user' && (
+                                    <Avatar className="w-8 h-8 shrink-0">
+                                        <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
+                                    </Avatar>
+                                )}
+                            </div>
+                        ))}
+                        {isLoading && (
+                            <div className="flex items-start gap-3">
+                                <SashaAvatar className="w-8 h-8 shrink-0" />
+                                <div className="bg-primary text-primary-foreground rounded-lg p-3 shadow-sm flex items-center space-x-1">
+                                    <span className="w-2 h-2 bg-primary-foreground/50 rounded-full animate-pulse delay-0 duration-1000"></span>
+                                    <span className="w-2 h-2 bg-primary-foreground/50 rounded-full animate-pulse delay-200 duration-1000"></span>
+                                    <span className="w-2 h-2 bg-primary-foreground/50 rounded-full animate-pulse delay-400 duration-1000"></span>
+                                </div>
+                            </div>
+                        )}
+                        <div ref={messagesEndRef} />
+                    </div>
+                </ScrollArea>
+                <div className="p-4 border-t bg-background">
+                    <form onSubmit={handleSashaSubmit} className="relative">
+                        <Textarea
+                            value={prompt}
+                            onChange={(e) => setPrompt(e.target.value)}
+                            placeholder="e.g., Make row 1 bold and blue"
+                            className="pr-12 text-base resize-none"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSashaSubmit(e);
+                                }
+                            }}
+                            rows={1}
+                            disabled={isLoading}
+                        />
+                        <Button type="submit" size="icon" className="absolute top-1/2 right-2 transform -translate-y-1/2 h-8 w-8" disabled={isLoading || !prompt.trim()}>
+                            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                            <span className="sr-only">Send</span>
+                        </Button>
+                    </form>
+                </div>
+            </aside>
+        )}
       </div>
     </div>
   );
