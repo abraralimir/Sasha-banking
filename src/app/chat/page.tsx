@@ -151,7 +151,7 @@ export default function ChatPage() {
                 }
 
                 const fileName = downloadInfo?.type === 'loan'
-                  ? `loan-report-${(downloadInfo.report as Message['analysisReport'])?.loanId}.pdf`
+                  ? `loan-report-${(downloadInfo.report as NonNullable<Message['analysisReport']>)?.loanId}.pdf`
                   : `financial-report.pdf`;
                 
                 pdf.save(fileName);
@@ -182,7 +182,7 @@ export default function ChatPage() {
     setIsLoading(true);
 
     try {
-      const historyForApi = newMessages.map(({ id, analysisReport, financialReport, ...rest }) => rest);
+      const historyForApi = newMessages.map(({ id, analysisReport, financialReport, imageUrl, ...rest }) => rest);
       const response = await chat({ history: historyForApi, pdfDataUri: pdfData, csvData: csvData, language });
       const botResponse: Message = {
         id: Date.now().toString(),
@@ -320,7 +320,7 @@ export default function ChatPage() {
     const inputs = {
         pdfDataUri: type === 'financial' ? pdfData : null,
         csvData: type === 'loan' ? csvData : null,
-        loanId: (report as Message['analysisReport'])?.loanId
+        loanId: (report as NonNullable<Message['analysisReport']>)?.loanId
     };
 
     setDownloadInfo({ type, report, inputs });
@@ -376,7 +376,7 @@ export default function ChatPage() {
   const getTranslatedTitles = (lang: 'en' | 'ar', report: ReportToDownload) => {
     const allTranslations = {
       en: {
-        loanReportTitle: `Loan Analysis Report: ID ${(report as Message['analysisReport'])?.loanId}`,
+        loanReportTitle: `Loan Analysis Report: ID ${(report as NonNullable<Message['analysisReport']>)?.loanId}`,
         financialReportTitle: "Financial Statement Analysis",
         summary: "Summary",
         prediction: "Prediction",
@@ -390,7 +390,7 @@ export default function ChatPage() {
         netIncome: "Net Income",
       },
       ar: {
-        loanReportTitle: `تقرير تحليل القرض: معرف ${(report as Message['analysisReport'])?.loanId}`,
+        loanReportTitle: `تقرير تحليل القرض: معرف ${(report as NonNullable<Message['analysisReport']>)?.loanId}`,
         financialReportTitle: "تحليل البيان المالي",
         summary: "ملخص",
         prediction: "توقع",

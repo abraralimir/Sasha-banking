@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import NextImage from 'next/image';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { SashaAvatar } from '@/components/sasha-avatar';
@@ -15,6 +16,7 @@ export type Message = {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  imageUrl?: string;
   analysisReport?: {
     summary: string;
     prediction: string;
@@ -87,17 +89,31 @@ function ChatMessage({
     >
       {isAssistant && <SashaAvatar className="w-8 h-8 shrink-0" />}
       <div className="max-w-[75%] space-y-2">
-        <div
-          className={cn(
-            'rounded-lg p-3 text-sm shadow-sm',
-            {
-              'bg-card text-card-foreground': !isAssistant,
-              'bg-primary text-primary-foreground': isAssistant,
-            }
-          )}
-        >
-          <p className="whitespace-pre-wrap">{message.content}</p>
-        </div>
+        {message.content && (
+          <div
+            className={cn(
+              'rounded-lg p-3 text-sm shadow-sm',
+              {
+                'bg-card text-card-foreground': !isAssistant,
+                'bg-primary text-primary-foreground': isAssistant,
+              }
+            )}
+          >
+            <p className="whitespace-pre-wrap">{message.content}</p>
+          </div>
+        )}
+        
+        {message.imageUrl && (
+          <div className="relative aspect-video w-full max-w-sm overflow-hidden rounded-lg border bg-muted">
+            <NextImage
+              src={message.imageUrl}
+              alt={message.content || 'Generated image'}
+              fill
+              className="object-cover"
+              data-ai-hint="generative art"
+            />
+          </div>
+        )}
 
         {message.analysisReport && (
           <Card className="bg-card text-card-foreground">

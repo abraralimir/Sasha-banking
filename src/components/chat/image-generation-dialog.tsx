@@ -27,6 +27,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/context/language-context';
+import { generateImageFromText } from '@/ai/flows/generate-image-from-text';
 
 const formSchema = z.object({
   prompt: z.string().min(3, 'Prompt must be at least 3 characters.'),
@@ -51,27 +52,23 @@ export function ImageGenerationDialog({ open, onOpenChange, onImageGenerated }: 
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     setGeneratedImage(null);
 
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(values.prompt)}`;
-
-    const img = new window.Image();
-    img.src = imageUrl;
-    img.onload = () => {
-      setGeneratedImage(imageUrl);
-      setIsLoading(false);
-    };
-    img.onerror = () => {
-      console.error('Failed to load image from Pollinations.ai');
+    try {
+      const result = await generateImageFromText({ prompt: values.prompt });
+      setGeneratedImage(result.imageUrl);
+    } catch (error) {
+      console.error('Failed to generate image from Genkit flow', error);
       toast({
         variant: 'destructive',
         title: t('imageGenFailedTitle'),
         description: t('imageGenFailedDesc'),
       });
+    } finally {
       setIsLoading(false);
-    };
+    }
   };
   
   const handleOpenChange = (isOpen: boolean) => {
@@ -87,6 +84,17 @@ export function ImageGenerationDialog({ open, onOpenChange, onImageGenerated }: 
     if(generatedImage) {
       onImageGenerated(generatedImage, form.getValues('prompt'));
       handleOpenChange(false);
+    }
+  }
+
+  const handleDownloadImage = () => {
+    if (generatedImage) {
+      const link = document.createElement('a');
+      link.href = generatedImage;
+      link.download = 'sasha-magic.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   }
 
@@ -140,7 +148,8 @@ export function ImageGenerationDialog({ open, onOpenChange, onImageGenerated }: 
                 />
                 <DialogFooter>
                   <Button type="submit" disabled={isLoading}>
-                    {isLoading ? <Loader2 className="animate-spin" /> : t('generateButton')}
+                    {isLoading ? <Loader2 className="animate-spin mr-2" /> : null}
+                    {t('generateButton')}
                   </Button>
                 </DialogFooter>
               </form>
@@ -149,16 +158,14 @@ export function ImageGenerationDialog({ open, onOpenChange, onImageGenerated }: 
         </div>
         {generatedImage && !isLoading && (
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setGeneratedImage(null); }}>
+            <Button variant="outline" onClick={() => { setGeneratedImage(null); form.reset(); }}>
               {t('generateAnotherButton')}
             </Button>
             <div className="flex-grow" />
-            <a href={generatedImage} download="sasha-magic.png">
-              <Button variant="secondary">
-                <Download className="mr-2" />
-                {t('downloadButton')}
-              </Button>
-            </a>
+            <Button variant="secondary" onClick={handleDownloadImage}>
+              <Download className="mr-2 h-4 w-4" />
+              {t('downloadButton')}
+            </Button>
             <Button onClick={handleAddToChat}>{t('addToChatButton')}</Button>
           </DialogFooter>
         )}
