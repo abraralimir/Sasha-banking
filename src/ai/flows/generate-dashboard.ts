@@ -73,7 +73,7 @@ Your entire output MUST be a single, valid JSON object that strictly adheres to 
 - **Analyze Deeply:** Examine the provided data to understand its structure, key metrics, and relationships. You WILL identify the most important trends, summaries, and data points.
 - **Design a Dashboard:** Based on your analysis, you WILL generate a structured dashboard layout.
   - You WILL create a concise, descriptive 'title' and 'description' for the entire dashboard.
-  - You WILL populate the 'items' array with 4 to 6 of the most insightful dashboard elements (KPIs, bar charts, pie charts, tables).
+  - You WILL populate the 'items' array with 4 to 6 of the most insightful dashboard elements (KPIs, bar charts, pie charts, tables). It is mandatory to include at least two visual charts (bar or pie) if the data is suitable for visualization.
   - **KPIs:** Use for single, important numbers (e.g., "Total Revenue," "Average Transaction Value").
   - **Bar Charts:** Use to compare values across categories (e.g., "Sales by Region").
   - **Pie Charts:** Use to show proportions of a whole (e.g., "Market Share by Product"). Only use if there are 2-6 categories.
