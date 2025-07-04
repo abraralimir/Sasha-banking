@@ -43,12 +43,16 @@ interface SpreadsheetToolbarProps {
 
 export function SpreadsheetToolbar({ hotInstance, onImport }: SpreadsheetToolbarProps) {
 
-  const applyCellMeta = (prop: string, value: any) => {
-    if (!hotInstance) return;
-    const selected = hotInstance.getSelectedRange();
-    if (!selected) return;
+  const getSelectedRange = () => {
+    if (!hotInstance) return [];
+    // Handsontable's getSelectedRange returns an array of ranges.
+    return hotInstance.getSelectedRange() || [];
+  };
 
-    for (const range of selected) {
+  const applyMetaToSelection = (callback: (row: number, col: number) => void) => {
+    if (!hotInstance) return;
+    const ranges = getSelectedRange();
+    ranges.forEach(range => {
       const fromRow = Math.min(range.from.row, range.to.row);
       const toRow = Math.max(range.from.row, range.to.row);
       const fromCol = Math.min(range.from.col, range.to.col);
@@ -56,94 +60,102 @@ export function SpreadsheetToolbar({ hotInstance, onImport }: SpreadsheetToolbar
 
       for (let row = fromRow; row <= toRow; row++) {
         for (let col = fromCol; col <= toCol; col++) {
-          const currentMeta = hotInstance.getCellMeta(row, col) || {};
-          let className = currentMeta.className || '';
-
-          if (prop === 'className') {
-            const alignments = ['htLeft', 'htCenter', 'htRight', 'htJustify'];
-            if (alignments.includes(value)) {
-              className = className.split(' ').filter(c => !alignments.includes(c)).join(' ');
-              className += ` ${value}`;
-            }
-          }
-          
-          hotInstance.setCellMeta(row, col, 'className', className.trim());
+          callback(row, col);
         }
       }
-    }
-    hotInstance.render();
-  };
-
-  const toggleCellClass = (classNameToToggle: string) => {
-    if (!hotInstance) return;
-    const selected = hotInstance.getSelectedRange();
-    if (!selected || selected.length === 0) return;
-    
-    // Use the first selected range to determine the initial state
-    const firstRange = selected[0];
-    const fromRow = Math.min(firstRange.from.row, firstRange.to.row);
-    const fromCol = Math.min(firstRange.from.col, firstRange.to.col);
-    
-    const firstCellMeta = hotInstance.getCellMeta(fromRow, fromCol);
-    const isApplied = firstCellMeta.className && firstCellMeta.className.includes(classNameToToggle);
-
-    for (const range of selected) {
-        const r1 = Math.min(range.from.row, range.to.row);
-        const r2 = Math.max(range.from.row, range.to.row);
-        const c1 = Math.min(range.from.col, range.to.col);
-        const c2 = Math.max(range.from.col, range.to.col);
-
-        for (let row = r1; row <= r2; row++) {
-            for (let col = c1; col <= c2; col++) {
-                const currentMeta = hotInstance.getCellMeta(row, col) || {};
-                let classNames = (currentMeta.className || '').split(' ').filter(Boolean);
-                
-                if (isApplied) {
-                    classNames = classNames.filter(cn => cn !== classNameToToggle);
-                } else {
-                    if (!classNames.includes(classNameToToggle)) {
-                        classNames.push(classNameToToggle);
-                    }
-                }
-                
-                hotInstance.setCellMeta(row, col, 'className', classNames.join(' '));
-            }
-        }
-    }
+    });
     hotInstance.render();
   };
   
+  const toggleCellClass = (classNameToToggle: string) => {
+    if (!hotInstance || getSelectedRange().length === 0) return;
+
+    const firstCell = getSelectedRange()[0];
+    const fromRow = Math.min(firstCell.from.row, firstCell.to.row);
+    const fromCol = Math.min(firstCell.from.col, firstCell.to.col);
+    const firstCellMeta = hotInstance.getCellMeta(fromRow, fromCol);
+    const isApplied = (firstCellMeta.className || '').includes(classNameToToggle);
+
+    applyMetaToSelection((row, col) => {
+      const currentMeta = hotInstance.getCellMeta(row, col) || {};
+      let classNames = (currentMeta.className || '').split(' ').filter(Boolean);
+      
+      if (isApplied) {
+          classNames = classNames.filter(cn => cn !== classNameToToggle);
+      } else if (!classNames.includes(classNameToToggle)) {
+          classNames.push(classNameToToggle);
+      }
+      hotInstance.setCellMeta(row, col, 'className', classNames.join(' '));
+    });
+  };
+
+  const setAlignment = (alignment: 'htLeft' | 'htCenter' | 'htRight' | 'htJustify') => {
+    applyMetaToSelection((row, col) => {
+        const currentMeta = hotInstance.getCellMeta(row, col) || {};
+        let classNames = (currentMeta.className || '').split(' ').filter(Boolean);
+        const alignments = ['htLeft', 'htCenter', 'htRight', 'htJustify'];
+        // Remove existing alignment classes
+        classNames = classNames.filter(c => !alignments.includes(c));
+        // Add the new alignment class
+        classNames.push(alignment);
+        hotInstance.setCellMeta(row, col, 'className', classNames.join(' '));
+    });
+  };
+
+  const handleMergeToggle = () => {
+    if (!hotInstance) return;
+    const mergePlugin = hotInstance.getPlugin('mergeCells');
+    const ranges = getSelectedRange();
+    if (ranges.length === 0) return;
+    
+    const range = ranges[0]; // Handsontable supports multiple selections, but we'll work with the first for simplicity
+    const selection = hotInstance.getSelectedRangeLast();
+    if (!selection) return;
+
+    // Check if the selection is already merged
+    const isMerged = mergePlugin.getMergedCell(selection.from.row, selection.from.col);
+
+    if (isMerged) {
+      mergePlugin.unmerge(selection.from.row, selection.from.col);
+    } else {
+      mergePlugin.merge(selection.from.row, selection.from.col, selection.to.row, selection.to.col);
+    }
+    hotInstance.render();
+  };
+
+  const handleWrapTextToggle = () => {
+    if (!hotInstance || getSelectedRange().length === 0) return;
+    
+    const firstCell = getSelectedRange()[0];
+    const fromRow = Math.min(firstCell.from.row, firstCell.to.row);
+    const fromCol = Math.min(firstCell.from.col, firstCell.to.col);
+    const firstCellMeta = hotInstance.getCellMeta(fromRow, fromCol);
+    const isWrapped = firstCellMeta.wordWrap === 'break-word';
+
+    applyMetaToSelection((row, col) => {
+        hotInstance.setCellMeta(row, col, 'wordWrap', isWrapped ? 'normal' : 'break-word');
+    });
+  };
+
   const handleDownload = () => {
     if (!hotInstance) return;
 
-    // Get data, including headers
     const colHeaders = hotInstance.getColHeader() as string[];
     const rowHeaders = hotInstance.getRowHeader() as (string | number)[];
     const data = hotInstance.getData();
 
-    // Create a new data array with all headers
     const exportData = [
       ['', ...colHeaders],
       ...data.map((row, i) => [rowHeaders[i] || '', ...row])
     ];
 
-    // Create a worksheet
     const ws = XLSX.utils.aoa_to_sheet(exportData);
-    
-    // Create a workbook
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
-    
-    // Trigger download
     XLSX.writeFile(wb, 'Sasha-Spreadsheet.xlsx');
   };
 
-  const handleBold = () => toggleCellClass('ht-cell-bold');
-  const handleItalic = () => toggleCellClass('ht-cell-italic');
-  const handleUnderline = () => toggleCellClass('ht-cell-underline');
-  const handleAlignLeft = () => applyCellMeta('className', 'htLeft');
-  const handleAlignCenter = () => applyCellMeta('className', 'htCenter');
-  const handleAlignRight = () => applyCellMeta('className', 'htRight');
+  const isEnabled = !!hotInstance;
 
   return (
     <TooltipProvider>
@@ -172,10 +184,10 @@ export function SpreadsheetToolbar({ hotInstance, onImport }: SpreadsheetToolbar
               <MenubarTrigger className="px-3 py-1.5">View</MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger className="px-3 py-1.5" onClick={handleDownload}>Download</MenubarTrigger>
+              <MenubarTrigger className="px-3 py-1.5" onClick={handleDownload} disabled={!isEnabled}>Download</MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger className="px-3 py-1.5" onClick={onImport}>Import</MenubarTrigger>
+              <MenubarTrigger className="px-3 py-1.5" onClick={onImport} disabled={!isEnabled}>Import</MenubarTrigger>
             </MenubarMenu>
           </div>
         </Menubar>
@@ -184,19 +196,19 @@ export function SpreadsheetToolbar({ hotInstance, onImport }: SpreadsheetToolbar
           {/* Clipboard */}
           <div className="flex items-center space-x-1">
             <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><ClipboardPaste /></Button></TooltipTrigger>
+              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={!isEnabled}><ClipboardPaste /></Button></TooltipTrigger>
               <TooltipContent><p>Paste</p></TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><Scissors /></Button></TooltipTrigger>
+              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={!isEnabled}><Scissors /></Button></TooltipTrigger>
               <TooltipContent><p>Cut</p></TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><Copy /></Button></TooltipTrigger>
+              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={!isEnabled}><Copy /></Button></TooltipTrigger>
               <TooltipContent><p>Copy</p></TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><Paintbrush /></Button></TooltipTrigger>
+              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={!isEnabled}><Paintbrush /></Button></TooltipTrigger>
               <TooltipContent><p>Format Painter</p></TooltipContent>
             </Tooltip>
           </div>
@@ -205,19 +217,19 @@ export function SpreadsheetToolbar({ hotInstance, onImport }: SpreadsheetToolbar
           {/* Font */}
           <div className="flex items-center space-x-1">
             <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleBold}><Bold /></Button></TooltipTrigger>
+              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleCellClass('ht-cell-bold')} disabled={!isEnabled}><Bold /></Button></TooltipTrigger>
               <TooltipContent><p>Bold</p></TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleItalic}><Italic /></Button></TooltipTrigger>
+              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleCellClass('ht-cell-italic')} disabled={!isEnabled}><Italic /></Button></TooltipTrigger>
               <TooltipContent><p>Italic</p></TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleUnderline}><Underline /></Button></TooltipTrigger>
+              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleCellClass('ht-cell-underline')} disabled={!isEnabled}><Underline /></Button></TooltipTrigger>
               <TooltipContent><p>Underline</p></TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><Palette /></Button></TooltipTrigger>
+              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={!isEnabled}><Palette /></Button></TooltipTrigger>
               <TooltipContent><p>Font Color</p></TooltipContent>
             </Tooltip>
           </div>
@@ -226,23 +238,23 @@ export function SpreadsheetToolbar({ hotInstance, onImport }: SpreadsheetToolbar
           {/* Alignment */}
           <div className="flex items-center space-x-1">
             <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAlignLeft}><AlignLeft /></Button></TooltipTrigger>
+              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setAlignment('htLeft')} disabled={!isEnabled}><AlignLeft /></Button></TooltipTrigger>
               <TooltipContent><p>Align Left</p></TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAlignCenter}><AlignCenter /></Button></TooltipTrigger>
+              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setAlignment('htCenter')} disabled={!isEnabled}><AlignCenter /></Button></TooltipTrigger>
               <TooltipContent><p>Center</p></TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAlignRight}><AlignRight /></Button></TooltipTrigger>
+              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setAlignment('htRight')} disabled={!isEnabled}><AlignRight /></Button></TooltipTrigger>
               <TooltipContent><p>Align Right</p></TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><WrapText /></Button></TooltipTrigger>
+              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleWrapTextToggle} disabled={!isEnabled}><WrapText /></Button></TooltipTrigger>
               <TooltipContent><p>Wrap Text</p></TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><Merge /></Button></TooltipTrigger>
+              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleMergeToggle} disabled={!isEnabled}><Merge /></Button></TooltipTrigger>
               <TooltipContent><p>Merge & Center</p></TooltipContent>
             </Tooltip>
           </div>
@@ -251,15 +263,15 @@ export function SpreadsheetToolbar({ hotInstance, onImport }: SpreadsheetToolbar
           {/* Editing */}
           <div className="flex items-center space-x-1">
              <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><Sigma /></Button></TooltipTrigger>
+              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={!isEnabled}><Sigma /></Button></TooltipTrigger>
               <TooltipContent><p>AutoSum</p></TooltipContent>
             </Tooltip>
              <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><Filter /></Button></TooltipTrigger>
+              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={!isEnabled}><Filter /></Button></TooltipTrigger>
               <TooltipContent><p>Sort & Filter</p></TooltipContent>
             </Tooltip>
              <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><Search /></Button></TooltipTrigger>
+              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={!isEnabled}><Search /></Button></TooltipTrigger>
               <TooltipContent><p>Find & Select</p></TooltipContent>
             </Tooltip>
           </div>

@@ -32,6 +32,8 @@ export function Spreadsheet({ data, hotRef }: SpreadsheetProps) {
         filters={true}
         dropdownMenu={true}
         comments={true}
+        mergeCells={true}
+        wordWrap={true}
         cell={[]}
       />
     </div>
