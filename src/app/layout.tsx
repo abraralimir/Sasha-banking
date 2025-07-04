@@ -15,6 +15,9 @@ import { MainNav } from '@/components/main-nav';
 export const metadata: Metadata = {
   title: 'Sasha Banking',
   description: 'Your intelligent banking assistant',
+  icons: {
+    icon: 'data:,',
+  },
 };
 
 export default function RootLayout({
