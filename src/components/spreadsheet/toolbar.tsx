@@ -4,7 +4,6 @@ import React from 'react';
 import type Handsontable from 'handsontable';
 import * as XLSX from 'xlsx';
 import {
-  ClipboardPaste,
   Scissors,
   Copy,
   Paintbrush,
@@ -39,15 +38,18 @@ import { Separator } from '@/components/ui/separator';
 interface SpreadsheetToolbarProps {
   hotInstance: Handsontable | null;
   onImport: () => void;
+  toggleFullscreen: () => void;
+  isFullscreen: boolean;
 }
 
-export function SpreadsheetToolbar({ hotInstance, onImport }: SpreadsheetToolbarProps) {
+export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, isFullscreen }: SpreadsheetToolbarProps) {
   
   const toggleCellClass = (classNameToToggle: string) => {
     if (!hotInstance) return;
     const selectedRange = hotInstance.getSelectedRangeLast();
     if (!selectedRange) return;
 
+    // Use the first cell to determine if the class should be added or removed
     const firstCellMeta = hotInstance.getCellMeta(selectedRange.from.row, selectedRange.from.col);
     const isApplied = (firstCellMeta.className || '').includes(classNameToToggle);
 
@@ -57,8 +59,10 @@ export function SpreadsheetToolbar({ hotInstance, onImport }: SpreadsheetToolbar
             let classNames = (currentMeta.className || '').split(' ').filter(Boolean);
             
             if (isApplied) {
+                // If the class is already applied, remove it
                 classNames = classNames.filter(cn => cn !== classNameToToggle);
             } else {
+                // If the class is not applied, add it
                 if (!classNames.includes(classNameToToggle)) {
                     classNames.push(classNameToToggle);
                 }
@@ -79,7 +83,9 @@ export function SpreadsheetToolbar({ hotInstance, onImport }: SpreadsheetToolbar
             const currentMeta = hotInstance.getCellMeta(row, col);
             let classNames = (currentMeta.className || '').split(' ').filter(Boolean);
             const alignments = ['htLeft', 'htCenter', 'htRight', 'htJustify'];
+            // Remove any existing alignment classes
             classNames = classNames.filter(c => !alignments.includes(c));
+            // Add the new alignment class
             classNames.push(alignment);
             hotInstance.setCellMeta(row, col, 'className', classNames.join(' '));
         }
@@ -93,11 +99,14 @@ export function SpreadsheetToolbar({ hotInstance, onImport }: SpreadsheetToolbar
     const selection = hotInstance.getSelectedRangeLast();
     if (!selection) return;
 
+    // Check if the selection is already part of a merged area
     const isMerged = mergePlugin.getMergedCell(selection.from.row, selection.from.col);
 
     if (isMerged) {
+      // If it's merged, unmerge it. `unmerge` takes the top-left cell of the merge area.
       mergePlugin.unmerge(selection.from.row, selection.from.col);
     } else {
+      // If it's not merged, merge the selection.
       mergePlugin.merge(selection.from.row, selection.from.col, selection.to.row, selection.to.col);
     }
     hotInstance.render();
@@ -109,6 +118,7 @@ export function SpreadsheetToolbar({ hotInstance, onImport }: SpreadsheetToolbar
     if (!selectedRange) return;
 
     const firstCellMeta = hotInstance.getCellMeta(selectedRange.from.row, selectedRange.from.col);
+    // Check if wordWrap is already set to 'break-word', which we use for wrapping
     const isWrapped = firstCellMeta.wordWrap === 'break-word';
 
     hotInstance.batch(() => {
@@ -116,6 +126,7 @@ export function SpreadsheetToolbar({ hotInstance, onImport }: SpreadsheetToolbar
             hotInstance.setCellMeta(row, col, 'wordWrap', isWrapped ? 'normal' : 'break-word');
         }
     });
+    // We need to re-render to apply word wrap changes
     hotInstance.render();
   };
 
@@ -165,10 +176,15 @@ export function SpreadsheetToolbar({ hotInstance, onImport }: SpreadsheetToolbar
               <MenubarTrigger className="px-3 py-1.5 cursor-not-allowed">View</MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
+              <MenubarTrigger className="px-3 py-1.5" onClick={toggleFullscreen}>
+                {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+              </MenubarTrigger>
+            </MenubarMenu>
+            <MenubarMenu>
               <MenubarTrigger className="px-3 py-1.5" onClick={handleDownload} disabled={!isEnabled}>Download</MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger className="px-3 py-1.5" onClick={onImport} disabled={!isEnabled}>Import</MenubarTrigger>
+              <MenubarTrigger className="px-3 py-1.5" onClick={onImport}>Import</MenubarTrigger>
             </MenubarMenu>
           </div>
         </Menubar>
@@ -177,7 +193,7 @@ export function SpreadsheetToolbar({ hotInstance, onImport }: SpreadsheetToolbar
           {/* Clipboard */}
           <div className="flex items-center space-x-1">
             <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={true}><ClipboardPaste /></Button></TooltipTrigger>
+              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={true}><div className="flex flex-col items-center"><Copy className="h-4 w-4" /><span className="text-[10px] -mt-1">Paste</span></div></Button></TooltipTrigger>
               <TooltipContent><p>Paste (Use Ctrl/Cmd+V)</p></TooltipContent>
             </Tooltip>
             <Tooltip>

@@ -9,7 +9,7 @@ import { LanguageToggle } from '@/components/language-toggle';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Spreadsheet } from '@/components/spreadsheet/spreadsheet';
 import { Button } from '@/components/ui/button';
-import { Loader2, Send, CornerDownLeft } from 'lucide-react';
+import { Loader2, Send } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -21,13 +21,7 @@ import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { User } from 'lucide-react';
 
-const initialData = [
-  ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-  ["Revenue", 5000, 5200, 5500, 5300, 5600, 5800],
-  ["Expenses", 3000, 3100, 3200, 3050, 3300, 3400],
-  ["Profit", 2000, 2100, 2300, 2250, 2300, 2400],
-  [],
-];
+const initialData = Array.from({ length: 50 }, () => Array(26).fill(''));
 
 const ganttTemplate = [
     ["Task", "Start Date", "End Date", "Duration", "Completion"],
@@ -55,16 +49,43 @@ export default function SpreadsheetPage() {
   const [hotInstance, setHotInstance] = useState<Handsontable | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fullscreenRef = useRef<HTMLDivElement>(null);
+
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     { role: 'assistant', content: "Hello! I'm Sasha. I can help you create, format, and analyze this spreadsheet. Just tell me what you need." }
   ]);
 
+  const handleFullscreenChange = () => {
+    setIsFullscreen(!!document.fullscreenElement);
+  };
+
+  const toggleFullscreen = () => {
+    if (!fullscreenRef.current) return;
+    if (!document.fullscreenElement) {
+        fullscreenRef.current.requestFullscreen().catch(err => {
+            alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+        });
+    } else {
+        document.exitFullscreen();
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+        document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
   useEffect(() => {
     if (hotRef.current) {
       const instance = hotRef.current.hotInstance;
       setHotInstance(instance);
-      if(instance.getSourceData() !== sheetData) {
+      // This ensures that when sheetData is updated (e.g., on import),
+      // the Handsontable instance is reloaded with the new data.
+      if (instance.getSourceData() !== sheetData) {
         instance.loadData(sheetData);
       }
     }
@@ -90,7 +111,7 @@ export default function SpreadsheetPage() {
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
             const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-            setSheetData(json as any[][]);
+            setSheetData(json as any[][]); // This now correctly triggers a re-render
             toast({
                 title: 'Import Successful',
                 description: `Successfully imported "${file.name}".`,
@@ -140,14 +161,13 @@ export default function SpreadsheetPage() {
               break;
             case 'clearSheet':
               const clearedData = Array.from({ length: 50 }, () => Array(26).fill(''));
-              setSheetData(clearedData);
               hotInstance.updateSettings({ cell: [], comments: false });
               hotInstance.getPlugin('comments').clearComments();
-              hotInstance.render();
+              setSheetData(clearedData); // Correctly update state
               break;
             case 'setData':
               if (op.params.data) {
-                setSheetData(op.params.data);
+                setSheetData(op.params.data); // Correctly update state
               }
               break;
             case 'formatCells':
@@ -196,7 +216,7 @@ export default function SpreadsheetPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background" dir={dir}>
+    <div ref={fullscreenRef} className="flex flex-col h-screen bg-background text-foreground" dir={dir}>
       <input
         type="file"
         ref={fileInputRef}
@@ -216,7 +236,12 @@ export default function SpreadsheetPage() {
         </div>
       </header>
       
-      <SpreadsheetToolbar hotInstance={hotInstance} onImport={handleImportClick} />
+      <SpreadsheetToolbar 
+        hotInstance={hotInstance} 
+        onImport={handleImportClick}
+        toggleFullscreen={toggleFullscreen}
+        isFullscreen={isFullscreen}
+      />
 
       <div className="flex flex-1 overflow-hidden">
         <main className="flex-1 overflow-auto">
@@ -285,5 +310,3 @@ export default function SpreadsheetPage() {
     </div>
   );
 }
-
-    
