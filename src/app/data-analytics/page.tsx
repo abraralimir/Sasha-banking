@@ -15,7 +15,7 @@ import { SashaAvatar } from '@/components/sasha-avatar';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { User } from 'lucide-react';
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 // This will be the AI flow for data analytics, which you'd create.
 // For now, we can use a placeholder function.
 // import { analyzeData } from '@/ai/flows/data-analytics';
