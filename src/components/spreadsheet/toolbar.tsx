@@ -20,6 +20,7 @@ import {
   Filter,
   Search,
 } from 'lucide-react';
+import { useLanguage } from '@/context/language-context';
 
 import {
   Menubar,
@@ -43,7 +44,8 @@ interface SpreadsheetToolbarProps {
 }
 
 export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, isFullscreen }: SpreadsheetToolbarProps) {
-  
+  const { t } = useLanguage();
+
   const toggleCellClass = (classNameToToggle: string) => {
     if (!hotInstance) return;
     const selectedRange = hotInstance.getSelectedRangeLast();
@@ -155,36 +157,36 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
         <Menubar className="border-none p-0 h-auto bg-transparent">
           <div className="flex items-center space-x-1 flex-wrap">
             <MenubarMenu>
-              <MenubarTrigger className="px-3 py-1.5 cursor-not-allowed">File</MenubarTrigger>
+              <MenubarTrigger className="px-3 py-1.5 cursor-not-allowed">{t('toolbarFile')}</MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger className="px-3 py-1.5 bg-muted">Home</MenubarTrigger>
+              <MenubarTrigger className="px-3 py-1.5 bg-muted">{t('toolbarHome')}</MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger className="px-3 py-1.5 cursor-not-allowed">Insert</MenubarTrigger>
+              <MenubarTrigger className="px-3 py-1.5 cursor-not-allowed">{t('toolbarInsert')}</MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger className="px-3 py-1.5 cursor-not-allowed">Formulas</MenubarTrigger>
+              <MenubarTrigger className="px-3 py-1.5 cursor-not-allowed">{t('toolbarFormulas')}</MenubarTrigger>
             </MenubarMenu>
              <MenubarMenu>
-              <MenubarTrigger className="px-3 py-1.5 cursor-not-allowed">Data</MenubarTrigger>
+              <MenubarTrigger className="px-3 py-1.5 cursor-not-allowed">{t('toolbarData')}</MenubarTrigger>
             </MenubarMenu>
              <MenubarMenu>
-              <MenubarTrigger className="px-3 py-1.5 cursor-not-allowed">Review</MenubarTrigger>
+              <MenubarTrigger className="px-3 py-1.5 cursor-not-allowed">{t('toolbarReview')}</MenubarTrigger>
             </MenubarMenu>
              <MenubarMenu>
-              <MenubarTrigger className="px-3 py-1.5 cursor-not-allowed">View</MenubarTrigger>
+              <MenubarTrigger className="px-3 py-1.5 cursor-not-allowed">{t('toolbarView')}</MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
               <MenubarTrigger className="px-3 py-1.5" onClick={toggleFullscreen}>
-                {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+                {isFullscreen ? t('toolbarExitFullscreen') : t('toolbarFullscreen')}
               </MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger className="px-3 py-1.5" onClick={handleDownload} disabled={!isEnabled}>Download</MenubarTrigger>
+              <MenubarTrigger className="px-3 py-1.5" onClick={handleDownload} disabled={!isEnabled}>{t('toolbarDownload')}</MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger className="px-3 py-1.5" onClick={onImport}>Import</MenubarTrigger>
+              <MenubarTrigger className="px-3 py-1.5" onClick={onImport}>{t('toolbarImport')}</MenubarTrigger>
             </MenubarMenu>
           </div>
         </Menubar>
@@ -193,20 +195,20 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
           {/* Clipboard */}
           <div className="flex items-center space-x-1">
             <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={true}><div className="flex flex-col items-center"><Copy className="h-4 w-4" /><span className="text-[10px] -mt-1">Paste</span></div></Button></TooltipTrigger>
-              <TooltipContent><p>Paste (Use Ctrl/Cmd+V)</p></TooltipContent>
+              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={true}><div className="flex flex-col items-center"><Copy className="h-4 w-4" /><span className="text-[10px] -mt-1">{t('tooltipPaste').split(' ')[0]}</span></div></Button></TooltipTrigger>
+              <TooltipContent><p>{t('tooltipPaste')}</p></TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleCut} disabled={!isEnabled}><Scissors /></Button></TooltipTrigger>
-              <TooltipContent><p>Cut</p></TooltipContent>
+              <TooltipContent><p>{t('tooltipCut')}</p></TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleCopy} disabled={!isEnabled}><Copy /></Button></TooltipTrigger>
-              <TooltipContent><p>Copy</p></TooltipContent>
+              <TooltipContent><p>{t('tooltipCopy')}</p></TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={true}><Paintbrush /></Button></TooltipTrigger>
-              <TooltipContent><p>Format Painter (Coming Soon)</p></TooltipContent>
+              <TooltipContent><p>{t('tooltipFormatPainter')}</p></TooltipContent>
             </Tooltip>
           </div>
           <Separator orientation="vertical" className="h-6" />
@@ -215,19 +217,19 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
           <div className="flex items-center space-x-1">
             <Tooltip>
               <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleCellClass('ht-cell-bold')} disabled={!isEnabled}><Bold /></Button></TooltipTrigger>
-              <TooltipContent><p>Bold</p></TooltipContent>
+              <TooltipContent><p>{t('tooltipBold')}</p></TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleCellClass('ht-cell-italic')} disabled={!isEnabled}><Italic /></Button></TooltipTrigger>
-              <TooltipContent><p>Italic</p></TooltipContent>
+              <TooltipContent><p>{t('tooltipItalic')}</p></TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleCellClass('ht-cell-underline')} disabled={!isEnabled}><Underline /></Button></TooltipTrigger>
-              <TooltipContent><p>Underline</p></TooltipContent>
+              <TooltipContent><p>{t('tooltipUnderline')}</p></TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={true}><Palette /></Button></TooltipTrigger>
-              <TooltipContent><p>Font Color (Coming Soon)</p></TooltipContent>
+              <TooltipContent><p>{t('tooltipFontColor')}</p></TooltipContent>
             </Tooltip>
           </div>
           <Separator orientation="vertical" className="h-6" />
@@ -236,23 +238,23 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
           <div className="flex items-center space-x-1">
             <Tooltip>
               <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setAlignment('htLeft')} disabled={!isEnabled}><AlignLeft /></Button></TooltipTrigger>
-              <TooltipContent><p>Align Left</p></TooltipContent>
+              <TooltipContent><p>{t('tooltipAlignLeft')}</p></TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setAlignment('htCenter')} disabled={!isEnabled}><AlignCenter /></Button></TooltipTrigger>
-              <TooltipContent><p>Center</p></TooltipContent>
+              <TooltipContent><p>{t('tooltipCenter')}</p></TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setAlignment('htRight')} disabled={!isEnabled}><AlignRight /></Button></TooltipTrigger>
-              <TooltipContent><p>Align Right</p></TooltipContent>
+              <TooltipContent><p>{t('tooltipAlignRight')}</p></TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleWrapTextToggle} disabled={!isEnabled}><WrapText /></Button></TooltipTrigger>
-              <TooltipContent><p>Wrap Text</p></TooltipContent>
+              <TooltipContent><p>{t('tooltipWrapText')}</p></TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleMergeToggle} disabled={!isEnabled}><Merge /></Button></TooltipTrigger>
-              <TooltipContent><p>Merge & Center</p></TooltipContent>
+              <TooltipContent><p>{t('tooltipMergeCenter')}</p></TooltipContent>
             </Tooltip>
           </div>
           <Separator orientation="vertical" className="h-6" />
@@ -261,15 +263,15 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
           <div className="flex items-center space-x-1">
              <Tooltip>
               <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={true}><Sigma /></Button></TooltipTrigger>
-              <TooltipContent><p>AutoSum (Coming Soon)</p></TooltipContent>
+              <TooltipContent><p>{t('tooltipAutoSum')}</p></TooltipContent>
             </Tooltip>
              <Tooltip>
               <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={true}><Filter /></Button></TooltipTrigger>
-              <TooltipContent><p>Sort & Filter (Coming Soon)</p></TooltipContent>
+              <TooltipContent><p>{t('tooltipSortFilter')}</p></TooltipContent>
             </Tooltip>
              <Tooltip>
               <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={true}><Search /></Button></TooltipTrigger>
-              <TooltipContent><p>Find & Select (Coming Soon)</p></TooltipContent>
+              <TooltipContent><p>{t('tooltipFindSelect')}</p></TooltipContent>
             </Tooltip>
           </div>
         </div>

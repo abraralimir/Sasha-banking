@@ -54,9 +54,13 @@ export default function SpreadsheetPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(true);
 
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    { role: 'assistant', content: "Hello! I'm Sasha. I can help you create, format, and analyze this spreadsheet. Just tell me what you need." }
-  ]);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+
+  useEffect(() => {
+    setChatMessages([
+      { role: 'assistant', content: t('sashaSpreadsheetHello') }
+    ]);
+  }, [t]);
 
   const handleFullscreenChange = () => {
     setIsFullscreen(!!document.fullscreenElement);
@@ -84,8 +88,6 @@ export default function SpreadsheetPage() {
     if (hotRef.current) {
       const instance = hotRef.current.hotInstance;
       setHotInstance(instance);
-      // This ensures that when sheetData is updated (e.g., on import),
-      // the Handsontable instance is reloaded with the new data.
       if (instance.getSourceData() !== sheetData) {
         instance.loadData(sheetData);
       }
@@ -112,18 +114,18 @@ export default function SpreadsheetPage() {
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
             const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-            setSheetData(json as any[][]); // This now correctly triggers a re-render
+            setSheetData(json as any[][]);
             toast({
-                title: 'Import Successful',
-                description: `Successfully imported "${file.name}".`,
+                title: t('importSuccessTitle'),
+                description: t('importSuccessDesc', { fileName: file.name }),
             });
-            setChatMessages(prev => [...prev, { role: 'assistant', content: `I've loaded "${file.name}" into the spreadsheet. How can I help you with it?` }]);
+            setChatMessages(prev => [...prev, { role: 'assistant', content: t('sashaSpreadsheetFileLoaded', { fileName: file.name }) }]);
         } catch (error) {
             console.error("Error importing file:", error);
             toast({
                 variant: 'destructive',
-                title: 'Import Failed',
-                description: 'There was an error processing your Excel file.',
+                title: t('importFailedTitle'),
+                description: t('importFailedDesc'),
             });
         }
     };
@@ -164,11 +166,11 @@ export default function SpreadsheetPage() {
               const clearedData = Array.from({ length: 50 }, () => Array(26).fill(''));
               hotInstance.updateSettings({ cell: [], comments: false });
               hotInstance.getPlugin('comments').clearComments();
-              setSheetData(clearedData); // Correctly update state
+              setSheetData(clearedData);
               break;
             case 'setData':
               if (op.params.data) {
-                setSheetData(op.params.data); // Correctly update state
+                setSheetData(op.params.data);
               }
               break;
             case 'formatCells':
@@ -195,7 +197,6 @@ export default function SpreadsheetPage() {
               }
               break;
             case 'info':
-              // No data change, the message is already in the chat.
               break;
           }
         }
@@ -204,7 +205,7 @@ export default function SpreadsheetPage() {
 
     } catch (error) {
       console.error(error);
-      const errorMessage = "Sorry, I ran into an issue. Please try that again.";
+      const errorMessage = t('sashaSpreadsheetError');
       setChatMessages(prev => [...prev, { role: 'assistant', content: errorMessage }]);
       toast({
         variant: 'destructive',
@@ -230,12 +231,12 @@ export default function SpreadsheetPage() {
           <SidebarTrigger />
         </div>
         <h1 className="text-xl font-semibold tracking-tight justify-self-center">
-          Spreadsheet
+          {t('spreadsheetTitle')}
         </h1>
         <div className="justify-self-end flex items-center gap-2">
            <Button variant="ghost" size="icon" onClick={() => setIsChatOpen(!isChatOpen)}>
             <MessageSquare className="h-5 w-5" />
-            <span className="sr-only">{isChatOpen ? "Hide Chat" : "Show Chat"}</span>
+            <span className="sr-only">{isChatOpen ? t('hideChat') : t('showChat')}</span>
           </Button>
           <LanguageToggle />
         </div>
@@ -254,18 +255,18 @@ export default function SpreadsheetPage() {
         </main>
         
         {isChatOpen && (
-            <aside className="w-[350px] border-l bg-background flex flex-col h-full animate-in slide-in-from-right-sm duration-300">
+            <aside className={cn("w-[350px] border-l bg-background flex flex-col h-full animate-in duration-300", dir === 'ltr' ? 'slide-in-from-right-sm' : 'slide-in-from-left-sm')}>
                 <div className="p-4 border-b flex items-center justify-between">
-                    <h2 className="text-lg font-semibold tracking-tight">Chat with Sasha</h2>
+                    <h2 className="text-lg font-semibold tracking-tight">{t('chatWithSasha')}</h2>
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsChatOpen(false)}>
                         <X className="h-4 w-4" />
-                        <span className="sr-only">Close chat</span>
+                        <span className="sr-only">{t('closeChat')}</span>
                     </Button>
                 </div>
                 <ScrollArea className="flex-1 p-4">
                     <div className="space-y-4">
                         {chatMessages.map((message, index) => (
-                            <div key={index} className={cn('flex items-start gap-3 animate-in fade-in', { 'justify-end': message.role === 'user' })}>
+                            <div key={index} className={cn('flex items-start gap-3 animate-in fade-in', { 'justify-end flex-row-reverse': message.role === 'user' })}>
                                 {message.role === 'assistant' && <SashaAvatar className="w-8 h-8 shrink-0" />}
                                 <div className={cn('rounded-lg p-3 text-sm max-w-xs shadow-sm', {
                                     'bg-primary text-primary-foreground': message.role === 'assistant',
@@ -281,7 +282,7 @@ export default function SpreadsheetPage() {
                             </div>
                         ))}
                         {isLoading && (
-                            <div className="flex items-start gap-3">
+                            <div className={cn("flex items-start gap-3", {'justify-end flex-row-reverse': dir === 'rtl'})}>
                                 <SashaAvatar className="w-8 h-8 shrink-0" />
                                 <div className="bg-primary text-primary-foreground rounded-lg p-3 shadow-sm flex items-center space-x-1">
                                     <span className="w-2 h-2 bg-primary-foreground/50 rounded-full animate-pulse delay-0 duration-1000"></span>
@@ -298,7 +299,7 @@ export default function SpreadsheetPage() {
                         <Textarea
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
-                            placeholder="e.g., Make row 1 bold and blue"
+                            placeholder={t('spreadsheetPlaceholder')}
                             className="pr-12 text-base resize-none"
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -309,9 +310,9 @@ export default function SpreadsheetPage() {
                             rows={1}
                             disabled={isLoading}
                         />
-                        <Button type="submit" size="icon" className="absolute top-1/2 right-2 transform -translate-y-1/2 h-8 w-8" disabled={isLoading || !prompt.trim()}>
+                        <Button type="submit" size="icon" className={cn("absolute top-1/2 transform -translate-y-1/2 h-8 w-8", dir === 'ltr' ? 'right-2' : 'left-2')} disabled={isLoading || !prompt.trim()}>
                             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                            <span className="sr-only">Send</span>
+                            <span className="sr-only">{t('send')}</span>
                         </Button>
                     </form>
                 </div>
