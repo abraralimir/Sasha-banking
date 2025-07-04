@@ -70,15 +70,13 @@ const dataAnalyticsPrompt = ai.definePrompt({
 4.  **Suggest Next Steps:** Proactively suggest a follow-up action.
 
 **Current Dataset Context:**
-{{#if (eq fileType "csv")}}
-The user has uploaded the following dataset in CSV format. Use this as the primary source for your analysis.
+The user has uploaded a file of type \`{{{fileType}}}\`.
+If the file type is \`csv\`, use the following CSV content for your analysis.
 \`\`\`csv
 {{{fileContent}}}
 \`\`\`
-{{else}}
-The user has uploaded a PDF document. Use this as the primary source for your analysis.
+If the file type is \`pdf\`, use the following PDF document for your analysis.
 {{media url=fileContent}}
-{{/if}}
 
 **User's Request:**
 {{{prompt}}}

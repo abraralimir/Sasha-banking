@@ -80,15 +80,13 @@ const generateDashboardPrompt = ai.definePrompt({
 - **Be Smart:** Choose the right visualization for the data. Don't just list columns; aggregate, calculate, and find meaningful insights.
 
 **Input Data:**
-{{#if (eq fileType "csv")}}
-The user has uploaded the following dataset in CSV format.
+The user has uploaded a file of type \`{{{fileType}}}\`.
+If the file type is \`csv\`, use the following CSV content for your analysis.
 \`\`\`csv
 {{{fileContent}}}
 \`\`\`
-{{else}}
-The user has uploaded a PDF document. Extract the key tabular data and insights to build the dashboard.
+If the file type is \`pdf\`, use the following PDF document for your analysis.
 {{media url=fileContent}}
-{{/if}}
 
 Now, analyze the data and generate the structured JSON for the dashboard layout.
 `,
