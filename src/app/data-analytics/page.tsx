@@ -38,10 +38,25 @@ export default function DataAnalyticsPage() {
   const [fileName, setFileName] = useState<string | null>(null);
 
   useEffect(() => {
-    setChatMessages([
-      { role: 'assistant', content: t('sashaDAHello') }
-    ]);
-  }, [t]);
+    try {
+        const savedFileData = localStorage.getItem('sasha-da-file-data');
+        const savedFileName = localStorage.getItem('sasha-da-file-name');
+        if (savedFileData && savedFileName) {
+            setFileData(savedFileData);
+            setFileName(savedFileName);
+            toast({
+                title: t('documentLoadedTitle'),
+                description: t('documentLoadedDesc', { fileName: savedFileName }),
+            });
+            setChatMessages([{ role: 'assistant', content: t('sashaDAFileLoaded', { fileName: savedFileName }) }]);
+        } else {
+            setChatMessages([{ role: 'assistant', content: t('sashaDAHello') }]);
+        }
+    } catch (error) {
+        console.error("Failed to access localStorage:", error);
+        setChatMessages([{ role: 'assistant', content: t('sashaDAHello') }]);
+    }
+  }, [t, toast]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -68,6 +83,18 @@ export default function DataAnalyticsPage() {
             // Convert to CSV string to pass to the AI model
             const csvString = XLSX.utils.sheet_to_csv(worksheet);
             setFileData(csvString);
+            
+            try {
+              localStorage.setItem('sasha-da-file-data', csvString);
+              localStorage.setItem('sasha-da-file-name', file.name);
+            } catch (error) {
+              console.error("Failed to save DA data to localStorage:", error);
+              toast({
+                  variant: 'destructive',
+                  title: t('sessionSaveErrorTitle'),
+                  description: t('sessionSaveErrorDesc')
+              });
+            }
             
             toast({
                 title: t('importSuccessTitle'),
@@ -173,7 +200,7 @@ export default function DataAnalyticsPage() {
                     <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
                         <Card><CardHeader><CardTitle>{t('daKpiCard1')}</CardTitle></CardHeader><CardContent><p className="text-3xl font-bold">1,402</p></CardContent></Card>
                         <Card><CardHeader><CardTitle>{t('daKpiCard2')}</CardTitle></CardHeader><CardContent><p className="text-3xl font-bold">$2.3M</p></CardContent></Card>
-                        <Card className="md:col-span-2 h-64 flex items-center justify-center"><p className="text-muted-foreground">{t('daChartPlaceholder')}</p></Card>
+                        <Card className="md:col-span-2"><CardContent className="h-64 flex items-center justify-center"><p className="text-muted-foreground">{t('daChartPlaceholder')}</p></CardContent></Card>
                     </div>
                 </div>
             )}
