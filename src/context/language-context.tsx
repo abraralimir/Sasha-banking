@@ -223,6 +223,11 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     daKpiCard1: "Total Rows",
     daKpiCard2: "Total Sales",
     daChartPlaceholder: "Charts and visuals will appear here",
+    refreshSession: "Clear & Reset Session",
+    fullscreen: "Fullscreen",
+    exitFullscreen: "Exit Fullscreen",
+    sessionClearedTitle: "Session Cleared",
+    sessionClearedDesc: "The data file and chat have been reset.",
   },
   ar: {
     pageTitle: 'ساشا المصرفية',
@@ -328,7 +333,7 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     gsChatStepTitle: "١. ابدأ محادثة",
     gsChatStepDesc: "انتقل إلى صفحة <strong>الدردشة</strong>. يمكنك البدء في التحدث إلى ساشا على الفور. لتحليل أقوى، استخدم أزرار التحميل في شريط الرسائل لتوفير ملف PDF أو CSV كسياق لمحادثتك.",
     gsSpreadsheetStepTitle: "٢. تحكم في جدول بياناتك",
-    gsSpreadsheetStepDesc: "اذهب إلى صفحة <strong>جدول البيانات</strong>. استخدم الشريط الجانبي للدردشة المدمج لإعطاء أوامر لساشا. يمكنك أيضًا استيراد ملفات Excel الخاصة بك باستخدام شريط الأدوات لجعل ساشا تعمل مع بياناتك الخاصة.",
+    gsSpreadsheetDesc: "اذهب إلى صفحة <strong>جدول البيانات</strong>. استخدم الشريط الجانبي للدردشة المدمج لإعطاء أوامر لساشا. يمكنك أيضًا استيراد ملفات Excel الخاصة بك باستخدام شريط الأدوات لجعل ساشا تعمل مع بياناتك الخاصة.",
     gsDAStepTitle: "٣. حلل بياناتك",
     gsDAStepDesc: "توجه إلى صفحة <strong>تحليل البيانات</strong>. قم بتحميل مجموعة البيانات الخاصة بك (Excel، CSV) واستخدم الدردشة لتطلب من ساشا الكشف عن الاتجاهات وإنشاء رؤى واقتراح تصورات.",
     
@@ -362,7 +367,7 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     csSpreadsheetFeature8: "استيراد تلقائي للبيانات من مصادر الويب",
     csSpreadsheetFeature9: "تحرير تعاوني مباشر بمساعدة الذكاء الاصطناعي",
     csSpreadsheetFeature10: "سجل إصدارات كامل مع ملخصات بالذكاء الاصطناعي",
-
+    
     comingSoonDATitle: "مستقبل التحليلات: محرك ذكاء أعمال وكيلي",
     comingSoonDADesc: "نحن نعمل على تطوير ساشا لتصبح منصة ذكاء أعمال أصلية للذكاء الاصطناعي تنافس الأدوات التقليدية.",
     csDAFeature1: "إنشاء لوحة معلومات تفاعلية من الدردشة",
@@ -435,6 +440,11 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     daKpiCard1: "إجمالي الصفوف",
     daKpiCard2: "إجمالي المبيعات",
     daChartPlaceholder: "ستظهر المخططات والمرئيات هنا",
+    refreshSession: "مسح وإعادة تعيين الجلسة",
+    fullscreen: "ملء الشاشة",
+    exitFullscreen: "الخروج من وضع ملء الشاشة",
+    sessionClearedTitle: "تم مسح الجلسة",
+    sessionClearedDesc: "تمت إعادة تعيين ملف البيانات والمحادثة.",
   },
 };
 

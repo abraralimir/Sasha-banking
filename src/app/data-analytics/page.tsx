@@ -6,7 +6,7 @@ import * as XLSX from 'xlsx';
 import { LanguageToggle } from '@/components/language-toggle';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Loader2, Send, MessageSquare, X, FileUp, Bot } from 'lucide-react';
+import { Loader2, Send, MessageSquare, X, FileUp, Bot, RefreshCw, Maximize, Minimize } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -17,6 +17,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { User } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { dataAnalytics } from '@/ai/flows/data-analytics';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type ChatMessage = {
   role: 'user' | 'assistant';
@@ -30,12 +31,14 @@ export default function DataAnalyticsPage() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fullscreenRef = useRef<HTMLDivElement>(null);
 
   const [isChatOpen, setIsChatOpen] = useState(true);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   
   const [fileData, setFileData] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     try {
@@ -61,6 +64,45 @@ export default function DataAnalyticsPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages, isLoading]);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+        setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+        document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!fullscreenRef.current) return;
+    if (!document.fullscreenElement) {
+        fullscreenRef.current.requestFullscreen().catch(err => {
+            alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+        });
+    } else {
+        document.exitFullscreen();
+    }
+  };
+
+  const handleClearSession = () => {
+    setIsLoading(true);
+    setFileData(null);
+    setFileName(null);
+    setChatMessages([{ role: 'assistant', content: t('sashaDAHello') }]);
+    try {
+        localStorage.removeItem('sasha-da-file-data');
+        localStorage.removeItem('sasha-da-file-name');
+    } catch (error) {
+        console.error("Failed to clear localStorage:", error);
+    }
+    toast({
+        title: t('sessionClearedTitle'),
+        description: t('sessionClearedDesc'),
+    });
+    setIsLoading(false);
+  };
 
   const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -151,7 +193,7 @@ export default function DataAnalyticsPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background text-foreground" dir={dir}>
+    <div ref={fullscreenRef} className="flex flex-col h-screen bg-background text-foreground" dir={dir}>
        <input
         type="file"
         ref={fileInputRef}
@@ -167,6 +209,26 @@ export default function DataAnalyticsPage() {
           {t('dataAnalyticsTitle')}
         </h1>
         <div className="justify-self-end flex items-center gap-2">
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" onClick={handleClearSession} disabled={isLoading}>
+                        <RefreshCw className="h-5 w-5" />
+                        <span className="sr-only">{t('refreshSession')}</span>
+                    </Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>{t('refreshSession')}</p></TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" onClick={toggleFullscreen}>
+                        {isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+                        <span className="sr-only">{isFullscreen ? t('exitFullscreen') : t('fullscreen')}</span>
+                    </Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>{isFullscreen ? t('exitFullscreen') : t('fullscreen')}</p></TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
            <Button variant="ghost" size="icon" onClick={() => setIsChatOpen(!isChatOpen)}>
             <MessageSquare className="h-5 w-5" />
             <span className="sr-only">{isChatOpen ? t('hideChat') : t('showChat')}</span>
