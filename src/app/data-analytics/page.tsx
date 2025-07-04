@@ -13,7 +13,7 @@ import { useLanguage } from '@/context/language-context';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { generateDashboard, type DashboardLayout } from '@/ai/flows/generate-dashboard';
-import { Tooltip, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { KpiCard } from '@/components/analytics/kpi-card';
 import { AnalyticsBarChart } from '@/components/analytics/analytics-bar-chart';
 import { AnalyticsPieChart } from '@/components/analytics/analytics-pie-chart';
