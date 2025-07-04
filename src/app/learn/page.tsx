@@ -1,6 +1,6 @@
 'use client';
 
-import { MessageCircle, Sheet, BookOpen, Rocket, Wand, ListChecks } from 'lucide-react';
+import { MessageCircle, Sheet, BookOpen, Rocket, Wand, ListChecks, BrainCircuit, Bot } from 'lucide-react';
 import { LanguageToggle } from '@/components/language-toggle';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useLanguage } from '@/context/language-context';
@@ -40,13 +40,10 @@ export default function LearnPage() {
       description: t('gsSpreadsheetStepDesc'),
     },
   ];
+  
+  const sashaFeatures = Array.from({ length: 15 }, (_, i) => t(`csSashaFeature${i + 1}`));
+  const spreadsheetFeatures = Array.from({ length: 10 }, (_, i) => t(`csSpreadsheetFeature${i + 1}`));
 
-  const comingSoonFeatures = [
-    t('csFeature1'),
-    t('csFeature2'),
-    t('csFeature3'),
-    t('csFeature4'),
-  ];
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground" dir={dir}>
@@ -109,21 +106,44 @@ export default function LearnPage() {
                 ))}
             </CardContent>
           </Card>
-
+          
           <Card>
             <CardHeader>
-              <CardTitle>{t('comingSoonTitle')}</CardTitle>
-              <CardDescription>{t('comingSoonDesc')}</CardDescription>
+              <div className="flex items-center gap-3">
+                <BrainCircuit className="w-7 h-7 text-primary" />
+                <CardTitle>{t('comingSoonSashaTitle')}</CardTitle>
+              </div>
+              <CardDescription>{t('comingSoonSashaDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
-                <ul className="space-y-3">
-                    {comingSoonFeatures.map((feature, index) => (
-                        <li key={index} className="flex items-center gap-3">
-                            <Rocket className="w-5 h-5 text-primary/70"/>
-                            <span className="text-muted-foreground">{feature}</span>
-                        </li>
-                    ))}
-                </ul>
+              <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                  {sashaFeatures.map((feature, index) => (
+                      <li key={index} className="flex items-start gap-3">
+                          <Rocket className="w-5 h-5 mt-0.5 text-primary/70 shrink-0"/>
+                          <span className="text-muted-foreground">{feature}</span>
+                      </li>
+                  ))}
+              </ul>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <Bot className="w-7 h-7 text-primary" />
+                <CardTitle>{t('comingSoonSpreadsheetTitle')}</CardTitle>
+              </div>
+              <CardDescription>{t('comingSoonSpreadsheetDesc')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                  {spreadsheetFeatures.map((feature, index) => (
+                      <li key={index} className="flex items-start gap-3">
+                          <Rocket className="w-5 h-5 mt-0.5 text-primary/70 shrink-0"/>
+                          <span className="text-muted-foreground">{feature}</span>
+                      </li>
+                  ))}
+              </ul>
             </CardContent>
           </Card>
 
