@@ -1,6 +1,6 @@
 'use client';
 
-import { MessageCircle, Sheet, BookOpen, Rocket, Wand, ListChecks, BrainCircuit, Bot } from 'lucide-react';
+import { MessageCircle, Sheet, BookOpen, Rocket, Wand, ListChecks, BrainCircuit, Bot, ShieldCheck, LineChart, FileCheck as FileCheckIcon, Briefcase } from 'lucide-react';
 import { LanguageToggle } from '@/components/language-toggle';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useLanguage } from '@/context/language-context';
@@ -28,6 +28,11 @@ export default function LearnPage() {
       title: t('learnAITitle'),
       description: t('learnAIDesc'),
     },
+    {
+      icon: ShieldCheck,
+      title: t('learnSecurityTitle'),
+      description: t('learnSecurityDesc'),
+    }
   ];
 
   const gettingStartedSteps = [
@@ -43,6 +48,24 @@ export default function LearnPage() {
   
   const sashaFeatures = Array.from({ length: 15 }, (_, i) => t(`csSashaFeature${i + 1}`));
   const spreadsheetFeatures = Array.from({ length: 10 }, (_, i) => t(`csSpreadsheetFeature${i + 1}`));
+  
+  const whoBenefits = [
+    {
+      icon: LineChart,
+      title: t('learnRoleAnalystTitle'),
+      description: t('learnRoleAnalystDesc'),
+    },
+    {
+      icon: FileCheckIcon,
+      title: t('learnRoleOfficerTitle'),
+      description: t('learnRoleOfficerDesc'),
+    },
+    {
+      icon: Briefcase,
+      title: t('learnRoleExecutiveTitle'),
+      description: t('learnRoleExecutiveDesc'),
+    },
+  ];
 
 
   return (
@@ -87,6 +110,25 @@ export default function LearnPage() {
                     </AccordionItem>
                 ))}
               </Accordion>
+            </CardContent>
+          </Card>
+          
+           <Card>
+            <CardHeader>
+              <CardTitle>{t('learnWhoBenefitsTitle')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {whoBenefits.map((item, index) => (
+                <div key={index} className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-muted text-primary flex items-center justify-center">
+                    <item.icon className="w-5 h-5" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="font-semibold">{item.title}</h3>
+                    <p className="text-muted-foreground">{item.description}</p>
+                  </div>
+                </div>
+              ))}
             </CardContent>
           </Card>
 
