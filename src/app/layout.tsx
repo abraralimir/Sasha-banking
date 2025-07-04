@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/sidebar';
 import { SashaAvatar } from '@/components/sasha-avatar';
 import { MainNav } from '@/components/main-nav';
+import { Analytics } from '@vercel/analytics/react';
 
 export const metadata: Metadata = {
   title: 'Sasha Banking',
@@ -53,6 +54,7 @@ export default function RootLayout({
           </SidebarProvider>
           <Toaster />
         </LanguageProvider>
+        <Analytics />
       </body>
     </html>
   );
