@@ -51,8 +51,18 @@ export default function DataAnalyticsPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
-    // We don't load previous sessions for this page as the dashboard is generative
-    setChatMessages([{ role: 'assistant', content: t('sashaDAHello') }]);
+    const savedContent = localStorage.getItem('sasha-da-content');
+    const savedType = localStorage.getItem('sasha-da-type') as 'csv' | 'pdf' | null;
+    const savedName = localStorage.getItem('sasha-da-name');
+    if (savedContent && savedType && savedName) {
+      setFileContent(savedContent);
+      setFileType(savedType);
+      setFileName(savedName);
+      setChatMessages([{ role: 'assistant', content: t('sashaDAFileLoaded', { fileName: savedName }) }]);
+      handleGenerateDashboard(savedContent, savedType);
+    } else {
+      setChatMessages([{ role: 'assistant', content: t('sashaDAHello') }]);
+    }
   }, [t]);
 
   useEffect(() => {
@@ -86,6 +96,9 @@ export default function DataAnalyticsPage() {
     setFileName(null);
     setDashboardLayout(null);
     setChatMessages([{ role: 'assistant', content: t('sashaDAHello') }]);
+    localStorage.removeItem('sasha-da-content');
+    localStorage.removeItem('sasha-da-type');
+    localStorage.removeItem('sasha-da-name');
     toast({
         title: t('sessionClearedTitle'),
         description: t('sessionClearedDesc'),
@@ -96,7 +109,11 @@ export default function DataAnalyticsPage() {
     setIsDashboardLoading(true);
     setDashboardLayout(null);
     try {
-      const layout = await generateDashboard({ fileContent: content, fileType: type, language });
+      const payload = type === 'pdf' 
+        ? { pdfDataUri: content } 
+        : { csvContent: content };
+      
+      const layout = await generateDashboard({ ...payload, language });
       setDashboardLayout(layout);
     } catch (error) {
       console.error("Error generating dashboard:", error);
@@ -105,18 +122,31 @@ export default function DataAnalyticsPage() {
         title: t('genericErrorTitle'),
         description: t('daDashboardGenError'),
       });
-      setFileContent(null); // Clear file on error
+      setFileContent(null);
+      localStorage.removeItem('sasha-da-content');
+      localStorage.removeItem('sasha-da-type');
+      localStorage.removeItem('sasha-da-name');
     } finally {
       setIsDashboardLoading(false);
     }
   };
+  
+  const setFile = (content: string, type: 'csv' | 'pdf', name: string) => {
+    setFileContent(content);
+    setFileType(type);
+    setFileName(name);
+    localStorage.setItem('sasha-da-content', content);
+    localStorage.setItem('sasha-da-type', type);
+    localStorage.setItem('sasha-da-name', name);
+    setChatMessages([{ role: 'assistant', content: t('sashaDAFileLoaded', { fileName: name }) }]);
+    handleGenerateDashboard(content, type);
+  }
 
   const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     handleClearSession();
-    setFileName(file.name);
     toast({
         title: t('daFileProcessingTitle'),
         description: t('daFileProcessingDesc', { fileName: file.name }),
@@ -125,16 +155,12 @@ export default function DataAnalyticsPage() {
     const reader = new FileReader();
     
     if (file.type === 'application/pdf') {
-        setFileType('pdf');
         reader.readAsDataURL(file);
         reader.onload = (event) => {
             const dataUri = event.target?.result as string;
-            setFileContent(dataUri);
-            setChatMessages([{ role: 'assistant', content: t('sashaDAFileLoaded', { fileName: file.name }) }]);
-            handleGenerateDashboard(dataUri, 'pdf');
+            setFile(dataUri, 'pdf', file.name);
         };
     } else {
-        setFileType('csv');
         reader.readAsBinaryString(file);
         reader.onload = (event) => {
             try {
@@ -143,22 +169,18 @@ export default function DataAnalyticsPage() {
                 const sheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[sheetName];
                 const csvString = XLSX.utils.sheet_to_csv(worksheet);
-                setFileContent(csvString);
-                setChatMessages(prev => [...prev, { role: 'assistant', content: t('sashaDAFileLoaded', { fileName: file.name }) }]);
-                handleGenerateDashboard(csvString, 'csv');
+                setFile(csvString, 'csv', file.name);
             } catch (error) {
                 console.error("Error importing file:", error);
                 toast({ variant: 'destructive', title: t('importFailedTitle'), description: t('importFailedDesc') });
-                setFileName(null);
-                setFileType(null);
+                handleClearSession();
             }
         };
     }
 
     reader.onerror = () => {
         toast({ variant: 'destructive', title: t('importFailedTitle'), description: t('importFailedDesc') });
-        setFileName(null);
-        setFileType(null);
+        handleClearSession();
     }
 
     if(e.target) e.target.value = '';
@@ -175,10 +197,13 @@ export default function DataAnalyticsPage() {
     setIsLoading(true);
 
     try {
+      const payload = fileType === 'pdf' 
+        ? { pdfDataUri: fileContent } 
+        : { csvContent: fileContent };
+
       const response = await dataAnalytics({
         prompt: currentPrompt,
-        fileContent: fileContent,
-        fileType: fileType,
+        ...payload,
         language,
       });
       

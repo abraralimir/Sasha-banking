@@ -32,8 +32,8 @@ const ChartSchema = z.union([
 
 const DataAnalyticsInputSchema = z.object({
   prompt: z.string().describe('The natural language command from the user.'),
-  fileContent: z.string().describe('The content of the data file, either as a CSV string or a PDF data URI.'),
-  fileType: z.enum(['csv', 'pdf']).describe('The type of the uploaded file.'),
+  csvContent: z.string().optional().describe('The content of the data file as a CSV string.'),
+  pdfDataUri: z.string().optional().describe('The content of the data file as a PDF data URI.'),
   language: z.enum(['en', 'ar']).default('en').describe('The language for the response, either English (en) or Arabic (ar).'),
 });
 export type DataAnalyticsInput = z.infer<typeof DataAnalyticsInputSchema>;
@@ -70,13 +70,16 @@ const dataAnalyticsPrompt = ai.definePrompt({
 4.  **Suggest Next Steps:** Proactively suggest a follow-up action.
 
 **Current Dataset Context:**
-The user has uploaded a file of type \`{{{fileType}}}\`.
-If the file type is \`csv\`, use the following CSV content for your analysis.
+{{#if csvContent}}
+The user has uploaded a CSV file. Use the following CSV content for your analysis.
 \`\`\`csv
-{{{fileContent}}}
+{{{csvContent}}}
 \`\`\`
-If the file type is \`pdf\`, use the following PDF document for your analysis.
-{{media url=fileContent}}
+{{/if}}
+{{#if pdfDataUri}}
+The user has uploaded a PDF document. Use it as the context for your analysis.
+{{media url=pdfDataUri}}
+{{/if}}
 
 **User's Request:**
 {{{prompt}}}

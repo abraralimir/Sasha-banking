@@ -12,8 +12,8 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateDashboardInputSchema = z.object({
-  fileContent: z.string().describe('The content of the data file, either as a CSV string or a PDF data URI.'),
-  fileType: z.enum(['csv', 'pdf']).describe('The type of the uploaded file.'),
+  csvContent: z.string().optional().describe('The content of the data file as a CSV string.'),
+  pdfDataUri: z.string().optional().describe('The content of the data file as a PDF data URI.'),
   language: z.enum(['en', 'ar']).default('en').describe('The language for the response, either English (en) or Arabic (ar).'),
 });
 export type GenerateDashboardInput = z.infer<typeof GenerateDashboardInputSchema>;
@@ -65,28 +65,32 @@ const generateDashboardPrompt = ai.definePrompt({
   name: 'generateDashboardPrompt',
   input: {schema: GenerateDashboardInputSchema},
   output: {schema: GenerateDashboardOutputSchema},
-  prompt: `You are Sasha, a world-class Business Intelligence (BI) dashboard architect. Your task is to analyze a dataset from a user-uploaded file and automatically design a professional, insightful dashboard.
+  prompt: `You are Sasha, a world-class Business Intelligence (BI) dashboard architect. Your task is to analyze a dataset and design a professional dashboard.
+Your entire output MUST be a single, valid JSON object that strictly adheres to the output schema. Do not include any conversational text, markdown, or explanations.
 
 **Core Directives:**
-- **Language:** All text in your response (titles, descriptions, etc.) MUST be in the following language: {{{language}}}.
-- **Analyze Deeply:** Examine the provided data to understand its structure, key metrics, and relationships. Identify the most important trends, summaries, and data points that a business analyst would find valuable.
-- **Design a Dashboard:** Based on your analysis, generate a structured dashboard layout.
-  - Create a concise, descriptive 'title' and 'description' for the entire dashboard.
-  - Populate the 'items' array with 4 to 6 dashboard elements (KPIs, bar charts, pie charts, tables).
+- **Language:** All text within the JSON output (titles, descriptions, etc.) MUST be in the following language: {{{language}}}.
+- **Analyze Deeply:** Examine the provided data to understand its structure, key metrics, and relationships. You WILL identify the most important trends, summaries, and data points.
+- **Design a Dashboard:** Based on your analysis, you WILL generate a structured dashboard layout.
+  - You WILL create a concise, descriptive 'title' and 'description' for the entire dashboard.
+  - You WILL populate the 'items' array with 4 to 6 of the most insightful dashboard elements (KPIs, bar charts, pie charts, tables).
   - **KPIs:** Use for single, important numbers (e.g., "Total Revenue," "Average Transaction Value").
   - **Bar Charts:** Use to compare values across categories (e.g., "Sales by Region").
   - **Pie Charts:** Use to show proportions of a whole (e.g., "Market Share by Product"). Only use if there are 2-6 categories.
   - **Tables:** Use to display a small, representative sample of the most important raw data. Do not show more than 10 rows.
-- **Be Smart:** Choose the right visualization for the data. Don't just list columns; aggregate, calculate, and find meaningful insights.
+- **Be Smart:** You WILL choose the right visualization for the data. You must aggregate, calculate, and find meaningful insights, not just list columns.
 
 **Input Data:**
-The user has uploaded a file of type \`{{{fileType}}}\`.
-If the file type is \`csv\`, use the following CSV content for your analysis.
+{{#if csvContent}}
+The user has uploaded a CSV file. Use the following CSV content for your analysis.
 \`\`\`csv
-{{{fileContent}}}
+{{{csvContent}}}
 \`\`\`
-If the file type is \`pdf\`, use the following PDF document for your analysis.
-{{media url=fileContent}}
+{{/if}}
+{{#if pdfDataUri}}
+The user has uploaded a PDF document. Use it as the context for your analysis.
+{{media url=pdfDataUri}}
+{{/if}}
 
 Now, analyze the data and generate the structured JSON for the dashboard layout.
 `,
