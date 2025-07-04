@@ -101,7 +101,7 @@ export function ImageGenerationDialog({ open, onOpenChange, onImageGenerated }: 
             {t('imageDialogDesc')}
           </DialogDescription>
           <p className="text-xs text-muted-foreground !mt-3">
-            {t('pollinationsDisclaimer')}
+            {t('imageGenDisclaimer')}
           </p>
         </DialogHeader>
         <div className="py-4 min-h-[192px]">
