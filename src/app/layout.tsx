@@ -12,6 +12,7 @@ import {
 import { SashaAvatar } from '@/components/sasha-avatar';
 import { MainNav } from '@/components/main-nav';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 export const metadata: Metadata = {
   title: 'Sasha Banking',
@@ -55,6 +56,7 @@ export default function RootLayout({
           <Toaster />
         </LanguageProvider>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
