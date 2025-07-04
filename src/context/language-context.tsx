@@ -87,11 +87,11 @@ const translations: { [key in Language]: { [key: string]: string } } = {
 
     // Nav
     chatTitle: 'Chat',
-    learnTitle: 'Learn',
+    learnTitle: 'About',
     spreadsheetTitle: 'Spreadsheet',
 
     // Learn Page
-    learnPageTitle: 'Learn About Sasha',
+    learnPageTitle: 'About Sasha',
     learnIntro: 'Sasha is an advanced, AI-powered financial strategist and banking assistant designed to bring institutional-grade analysis and agentic task execution to your fingertips. Interact naturally, get deep insights, and automate complex tasks with ease.',
     learnCapabilitiesTitle: "Sasha's Core Capabilities",
     learnChatTitle: 'Institutional-Grade Financial Intelligence',
@@ -263,11 +263,11 @@ const translations: { [key in Language]: { [key: string]: string } } = {
 
     // Nav
     chatTitle: 'الدردشة',
-    learnTitle: 'تعلم',
+    learnTitle: 'حول ساشا',
     spreadsheetTitle: 'جدول البيانات',
 
     // Learn Page
-    learnPageTitle: 'تعرف على ساشا',
+    learnPageTitle: 'حول ساشا',
     learnIntro: 'ساشا هي خبيرة استراتيجية مالية ومساعدة مصرفية متقدمة تعمل بالذكاء الاصطناعي، مصممة لتوفر لك تحليلات على مستوى المؤسسات وتنفيذ مهام وكيلية بكل سهولة. تفاعل بشكل طبيعي، واحصل على رؤى عميقة، وقم بأتمتة المهام المعقدة.',
     learnCapabilitiesTitle: "قدرات ساشا الأساسية",
     learnChatTitle: 'ذكاء مالي من الطراز المؤسسي',
