@@ -13,7 +13,7 @@ import {z} from 'genkit';
 
 const ChartSchema = z.union([
   z.object({
-    type: z.literal('bar'),
+    type: z.enum(['bar']),
     title: z.string().describe('The title of the bar chart.'),
     data: z.array(z.object({
         name: z.string().describe("The label for the x-axis category."),
@@ -21,7 +21,7 @@ const ChartSchema = z.union([
     })).describe('Data for the bar chart.'),
   }),
   z.object({
-    type: z.literal('pie'),
+    type: z.enum(['pie']),
     title: z.string().describe('The title of the pie chart.'),
     data: z.array(z.object({
         name: z.string().describe("The label for the slice."),

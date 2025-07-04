@@ -20,13 +20,13 @@ export type GenerateDashboardInput = z.infer<typeof GenerateDashboardInputSchema
 
 const DashboardItemSchema = z.union([
     z.object({
-        type: z.literal('kpi'),
+        type: z.enum(['kpi']),
         title: z.string().describe('The title of the Key Performance Indicator.'),
         value: z.string().describe('The calculated value of the KPI.'),
         description: z.string().optional().describe('A small description or context for the KPI.'),
     }),
     z.object({
-        type: z.literal('bar'),
+        type: z.enum(['bar']),
         title: z.string().describe('The title of the bar chart.'),
         data: z.array(z.object({
             name: z.string().describe("The label for the x-axis category."),
@@ -34,7 +34,7 @@ const DashboardItemSchema = z.union([
         })).describe('The dataset for the bar chart.'),
     }),
     z.object({
-        type: z.literal('pie'),
+        type: z.enum(['pie']),
         title: z.string().describe('The title of the pie chart.'),
         data: z.array(z.object({
             name: z.string().describe("The label for the slice."),
@@ -42,7 +42,7 @@ const DashboardItemSchema = z.union([
         })).describe('The dataset for the pie chart.'),
     }),
     z.object({
-        type: z.literal('table'),
+        type: z.enum(['table']),
         title: z.string().describe('The title of the table.'),
         headers: z.array(z.string()).describe('The column headers for the table.'),
         rows: z.array(z.array(z.union([z.string(), z.number()]))).describe('The data for the rows, as a 2D array.'),
