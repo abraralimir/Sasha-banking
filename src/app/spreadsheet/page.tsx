@@ -75,6 +75,7 @@ export default function SpreadsheetPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fullscreenRef = useRef<HTMLDivElement>(null);
+  const rendererRegistered = useRef(false);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(true);
@@ -87,6 +88,38 @@ export default function SpreadsheetPage() {
       setHotInstance(instance);
     }
   }, []);
+
+  useEffect(() => {
+    if (hotInstance && !rendererRegistered.current) {
+      const HandsontableConstructor = hotInstance.constructor as typeof Handsontable;
+      
+      const customStyleRenderer: Handsontable.renderers.Base = function (
+        instance,
+        td,
+        row,
+        col,
+        prop,
+        value,
+        cellProperties
+      ) {
+        (HandsontableConstructor.renderers.get('text') as any).apply(this, arguments);
+
+        const customStyle = cellProperties.customStyle;
+        if (customStyle) {
+          if (customStyle.color) {
+            td.style.color = customStyle.color;
+          }
+          if (customStyle.backgroundColor) {
+            td.style.backgroundColor = customStyle.backgroundColor;
+          }
+        }
+      };
+
+      HandsontableConstructor.renderers.registerRenderer('customStyleRenderer', customStyleRenderer);
+      rendererRegistered.current = true;
+      hotInstance.render();
+    }
+  }, [hotInstance]);
 
   useEffect(() => {
     if (hotInstance) {
@@ -105,7 +138,6 @@ export default function SpreadsheetPage() {
     const isCurrentlyFullscreen = !!document.fullscreenElement;
     setIsFullscreen(isCurrentlyFullscreen);
     if (hotInstance) {
-      // Defer the render call to allow the DOM to update
       setTimeout(() => {
         hotInstance.render();
       }, 0);
