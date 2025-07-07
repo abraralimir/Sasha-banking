@@ -211,14 +211,14 @@ const translations: { [key in Language]: { [key: string]: string } } = {
 
     // Data Analytics Page
     daUploadPromptTitle: "AI-Powered Data Dashboard",
-    daUploadPromptDesc: "Upload your data file (XLSX, CSV) to have Sasha analyze it and generate an interactive dashboard.",
+    daUploadPromptDesc: "Upload your data file (XLSX, CSV, or PDF) to have Sasha analyze it and generate an interactive dashboard.",
     daUploadButton: "Upload Data File",
     daGeneratingDashboardTitle: "Generating AI Dashboard...",
     daGeneratingDashboardDesc: "Please wait while Sasha analyzes your data and builds your dashboard.",
     analysisResultTitle: "Analysis Result",
     daResetButton: "Analyze Another File",
     daSummaryTitle: "AI Summary",
-    daUnsupportedFileType: 'Unsupported file type. Please upload a CSV or XLSX file.',
+    daUnsupportedFileType: 'Unsupported file type. Please upload a CSV, XLSX, or PDF file.',
     daAnalysisFailedDesc: 'The analysis failed. The file might be corrupted, in an unsupported format, or the AI model is currently unavailable.',
     daKeyInsightsTitle: 'Key Insights',
     daDownloadPdfButton: 'Download PDF',
@@ -425,14 +425,14 @@ const translations: { [key in Language]: { [key: string]: string } } = {
 
     // Data Analytics Page
     daUploadPromptTitle: "لوحة معلومات مدعومة بالذكاء الاصطناعي",
-    daUploadPromptDesc: "قم بتحميل ملف البيانات الخاص بك (XLSX ،CSV) لتقوم ساشا بتحليله وإنشاء لوحة معلومات تفاعلية.",
+    daUploadPromptDesc: "قم بتحميل ملف البيانات الخاص بك (XLSX، CSV، أو PDF) لتقوم ساشا بتحليله وإنشاء لوحة معلومات تفاعلية.",
     daUploadButton: "تحميل ملف البيانات",
     daGeneratingDashboardTitle: "جاري إنشاء لوحة معلومات الذكاء الاصطناعي...",
     daGeneratingDashboardDesc: "يرجى الانتظار بينما تقوم ساشا بتحليل بياناتك وبناء لوحة معلوماتك.",
     analysisResultTitle: "نتيجة التحليل",
     daResetButton: "تحليل ملف آخر",
     daSummaryTitle: "ملخص الذكاء الاصطناعي",
-    daUnsupportedFileType: 'نوع ملف غير مدعوم. يرجى تحميل ملف CSV أو XLSX.',
+    daUnsupportedFileType: 'نوع ملف غير مدعوم. يرجى تحميل ملف CSV أو XLSX أو PDF.',
     daAnalysisFailedDesc: 'فشل التحليل. قد يكون الملف تالفًا أو بتنسيق غير مدعوم أو أن نموذج الذكاء الاصطناعي غير متاح حاليًا.',
     daKeyInsightsTitle: 'رؤى رئيسية',
     daDownloadPdfButton: 'تحميل PDF',

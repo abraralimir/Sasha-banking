@@ -12,7 +12,6 @@ import {
   Legend,
   ArcElement
 } from 'chart.js';
-import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -123,24 +122,23 @@ export default function DataAnalyticsPage() {
     setFileName(file.name);
 
     try {
-      if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.csv')) {
-        throw new Error(t('daUnsupportedFileType'));
+      if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.csv') && !file.name.endsWith('.pdf')) {
+        toast({
+            variant: 'destructive',
+            title: t('daUnsupportedFileType'),
+            description: 'Please upload a CSV, XLSX, or PDF file.',
+        });
+        setIsLoading(false);
+        handleClear();
+        return;
       }
 
       const reader = new FileReader();
       reader.onload = async (event) => {
         try {
-            const binaryStr = event.target?.result;
-            const workbook = XLSX.read(binaryStr, { type: 'binary' });
-            const sheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[sheetName];
-            const csvData = XLSX.utils.sheet_to_csv(worksheet);
-
-            if (csvData.length === 0) {
-                throw new Error("Spreadsheet is empty or could not be parsed.");
-            }
+            const dataUri = event.target?.result as string;
             
-            const result = await generateDashboard({ csvData, language });
+            const result = await generateDashboard({ fileDataUri: dataUri, language });
             setDashboardData(result);
 
         } catch (error: any) {
@@ -156,7 +154,7 @@ export default function DataAnalyticsPage() {
             if(e.target) e.target.value = '';
         }
       };
-      reader.readAsBinaryString(file);
+      reader.readAsDataURL(file);
 
     } catch (error: any) {
       console.error("File upload failed:", error);
@@ -177,7 +175,7 @@ export default function DataAnalyticsPage() {
         ref={fileInputRef}
         onChange={handleFileUpload}
         className="hidden"
-        accept=".xlsx,.csv"
+        accept=".xlsx,.csv,.pdf"
       />
       <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background">
         <div className="justify-self-start flex items-center gap-2">
