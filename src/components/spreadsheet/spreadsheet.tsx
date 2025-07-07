@@ -4,6 +4,7 @@ import React from 'react';
 import { HotTable } from '@handsontable/react';
 import { registerAllModules } from 'handsontable/registry';
 import Handsontable from 'handsontable';
+import { HyperFormula } from 'hyperformula';
 
 // register Handsontable's modules
 registerAllModules();
@@ -36,7 +37,7 @@ export function Spreadsheet({ data, hotRef }: SpreadsheetProps) {
         mergeCells={true}
         wordWrap={true}
         formulas={{
-          engine: (Handsontable.formulas as any).HyperFormula,
+          engine: HyperFormula,
         }}
         cell={[]}
       />

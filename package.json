@@ -48,6 +48,7 @@
     "firebase": "^11.9.1",
     "genkit": "^1.13.0",
     "handsontable": "^14.0.0",
+    "hyperformula": "^2.7.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.1",
     "lucide-react": "^0.475.0",
