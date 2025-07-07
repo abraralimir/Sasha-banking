@@ -51,7 +51,7 @@ const spreadsheetAssistantPrompt = ai.definePrompt({
 2.  **Financial Analysis & Modeling**: To create models (profit projections, budgets), use the \`setTemplate\` command (e.g., 'budget') or generate a custom model with \`setData\` and formulas. To analyze trends, use the \`createChart\` command.
 3.  **Financial Statements Preparation**: To generate a Balance Sheet, Income Statement (P&L), or Cash Flow Statement, use the \`setTemplate\` command with the corresponding template name ('balanceSheet', 'incomeStatement', 'cashFlow').
 4.  **Budgeting & Forecasting**: To create a budget, use the \`setTemplate\` command with 'budget'. For forecasting, use \`setData\` to insert formulas like \`=TREND(...)\` or \`=FORECAST(...)\`.
-5.  **Reconciliations**: To find discrepancies between two columns, iterate through the \`sheetData\`, identify non-matching rows, and generate a \`formatCells\` operation with a highlight color (e.g., light red '#F8D7DA') for those rows. You can also generate formulas using \`VLOOKUP\`, \`INDEX/MATCH\`, and \`IF\`.
+5.  **Reconciliations**: To find discrepancies between two columns, iterate through the \`sheetData\`, identify non-matching rows, and generate a \`formatCells\` operation with a highlight color (e.g., set className to 'ht-bg-light-red') for those rows. You can also generate formulas using \`VLOOKUP\`, \`INDEX/MATCH\`, and \`IF\`.
 6.  **Tax & Compliance Reports**: Prepare tax calculation sheets using \`setData\`. Use \`formatCells\` with a specific color to create alerts based on conditions.
 7.  **Automation via Templates**: The most efficient automation is using the \`setTemplate\` command for: 'invoice', 'payroll', 'expenseReimbursement'.
 8.  **Auditing & Internal Controls**: To lock cells, use the \`formatCells\` command and set the \`readOnly: true\` property for the desired range.
@@ -65,9 +65,11 @@ const spreadsheetAssistantPrompt = ai.definePrompt({
     *   'params': { "range": { "row": 0, "col": 0, "row2": 0, "col2": 0 }, "properties": { ... } }
     *   **Properties:**
         *   'bold', 'italic', 'underline', 'readOnly': boolean
-        *   'color', 'backgroundColor': hex string (e.g., light blue: '#D1E7FF', light green: '#D4EDDA')
         *   'numericFormat': { "pattern": "$0,0.00" } for currency, or "0.00%" for percentage.
         *   'alignment': 'htLeft' | 'htCenter' | 'htRight'
+        *   'className': A string of CSS classes to apply. Use this for coloring.
+            *   Available Background Colors: 'ht-bg-light-red', 'ht-bg-light-green', 'ht-bg-light-blue', 'ht-bg-light-yellow'.
+            *   Available Text Colors: 'ht-text-dark-red', 'ht-text-dark-green', 'ht-text-dark-blue', 'ht-text-black', 'ht-text-white'.
 4.  **'createChart'**: Generates a chart from data in the sheet. You MUST determine the A1-style ranges from the sheet data.
     *   'params': { "type": "pie" | "bar", "title": "Chart Title", "dataRange": { "labels": "A2:A10", "data": "B2:B10" } }
 5.  **'clearSheet'**: Clears all data and formatting.
@@ -83,7 +85,7 @@ const spreadsheetAssistantPrompt = ai.definePrompt({
 **IMPORTANT RULES:**
 - **Prioritize Templates:** If a user asks for an "invoice" or "balance sheet", your first choice should be the \`setTemplate\` command.
 - **Dynamic Ranges:** NEVER hardcode cell ranges. Always inspect the \`sheetData\` to find the correct row and column indexes for your operations. For example, to bold a header, find the row and column of that header first.
-- **Colors:** Use modern, pleasant hex codes (e.g., light blue: #D1E7FF, light green: #D4EDDA, light yellow: #FFF3CD, light red: #F8D7DA).
+- **Colors:** Use the specified 'className' property for all coloring requests. For example, to make a cell background green, use \`"className": "ht-bg-light-green"\`.
 - **Currency:** When a user mentions dollars, pounds, euros, etc., apply the currency format using \`numericFormat\`.
 
 **Current Spreadsheet Data (for context):**

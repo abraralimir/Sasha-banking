@@ -75,7 +75,6 @@ export default function SpreadsheetPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fullscreenRef = useRef<HTMLDivElement>(null);
-  const rendererRegistered = useRef(false);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(true);
@@ -89,40 +88,6 @@ export default function SpreadsheetPage() {
     }
   }, []);
 
-  useEffect(() => {
-    if (hotInstance && !rendererRegistered.current) {
-      const HandsontableConstructor = hotInstance.constructor as typeof Handsontable;
-  
-      // Define the renderer function
-      const customStyleRenderer = function (
-        instance: Handsontable,
-        td: HTMLTableCellElement,
-        row: number,
-        col: number,
-        prop: string | number,
-        value: any,
-        cellProperties: Handsontable.CellProperties
-      ) {
-        // Use the 'text' renderer as a base
-        (HandsontableConstructor.renderers.get('text') as any).apply(this, arguments);
-  
-        const customStyle = (cellProperties as any).customStyle;
-        if (customStyle) {
-          if (customStyle.color) {
-            td.style.color = customStyle.color;
-          }
-          if (customStyle.backgroundColor) {
-            td.style.backgroundColor = customStyle.backgroundColor;
-          }
-        }
-      };
-      
-      HandsontableConstructor.renderers.registerRenderer('customStyleRenderer', customStyleRenderer);
-      rendererRegistered.current = true;
-      hotInstance.render();
-    }
-  }, [hotInstance]);
-  
   useEffect(() => {
     if (hotInstance) {
       hotInstance.loadData(sheetData);
@@ -140,7 +105,7 @@ export default function SpreadsheetPage() {
     const isCurrentlyFullscreen = !!document.fullscreenElement;
     setIsFullscreen(isCurrentlyFullscreen);
     if (hotInstance) {
-      // Re-render the table after a short delay to ensure DOM is updated
+      // Force a re-render to fix context menu positioning issues
       setTimeout(() => {
         hotInstance.render();
       }, 0);
@@ -332,7 +297,7 @@ export default function SpreadsheetPage() {
             case 'setTemplate':
               const template = templates.find(t => t.id === op.params.templateName);
               if (template) {
-                newData = template.data;
+                newData = JSON.parse(JSON.stringify(template.data));
                 setCharts([]);
               }
               break;
@@ -358,9 +323,9 @@ export default function SpreadsheetPage() {
               if (range && properties) {
                 for (let row = range.row; row <= range.row2; row++) {
                   for (let col = range.col; col <= range.col2; col++) {
-                    const cellProperties: Handsontable.CellProperties = {};
+                    const currentMeta = hotInstance.getCellMeta(row, col) || {};
+                    let classNames = (currentMeta.className || '').split(' ').filter(Boolean);
                     
-                    let classNames = (hotInstance.getCellMeta(row, col).className || '').split(' ').filter(Boolean);
                     const alignments = ['htLeft', 'htCenter', 'htRight', 'htJustify'];
                     classNames = classNames.filter(c => !alignments.includes(c));
                     if (properties.alignment) classNames.push(properties.alignment);
@@ -374,24 +339,35 @@ export default function SpreadsheetPage() {
                     if (properties.underline) classNames.push('ht-cell-underline');
                     else classNames = classNames.filter(c => c !== 'ht-cell-underline');
 
-                    cellProperties.className = classNames.join(' ');
+                    // Handle background and text color classes
+                    if (properties.className) {
+                        const newClasses = properties.className.split(' ');
+                        const bgClass = newClasses.find(c => c.startsWith('ht-bg-'));
+                        const textClass = newClasses.find(c => c.startsWith('ht-text-'));
+                        
+                        // Remove old color classes before adding new ones
+                        classNames = classNames.filter(c => !c.startsWith('ht-bg-'));
+                        classNames = classNames.filter(c => !c.startsWith('ht-text-'));
+
+                        if (bgClass) classNames.push(bgClass);
+                        if (textClass) classNames.push(textClass);
+                    }
+
+                    hotInstance.setCellMeta(row, col, 'className', classNames.join(' '));
                     
                     if (properties.readOnly !== undefined) {
-                      cellProperties.readOnly = properties.readOnly;
+                      hotInstance.setCellMeta(row, col, 'readOnly', properties.readOnly);
                     }
 
                     if (properties.numericFormat) {
-                      cellProperties.type = 'numeric';
-                      cellProperties.numericFormat = properties.numericFormat;
+                      hotInstance.setCellMeta(row, col, 'type', 'numeric');
+                      hotInstance.setCellMeta(row, col, 'numericFormat', properties.numericFormat);
+                    } else {
+                       // If we are applying non-numeric formatting, ensure the type isn't stuck on numeric
+                       if (hotInstance.getCellMeta(row, col).type === 'numeric' && !properties.numericFormat) {
+                           hotInstance.setCellMeta(row, col, 'type', 'text');
+                       }
                     }
-
-                    hotInstance.setCellMeta(row, col, 'renderer', 'customStyleRenderer');
-                    hotInstance.setCellMeta(row, col, 'customStyle', {
-                        color: properties.color,
-                        backgroundColor: properties.backgroundColor,
-                    });
-                    
-                    hotInstance.setCellMetaObject(row, col, { ...hotInstance.getCellMeta(row, col), ...cellProperties });
                   }
                 }
               }

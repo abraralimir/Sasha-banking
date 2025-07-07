@@ -54,10 +54,22 @@ interface SpreadsheetToolbarProps {
   onSetTemplate: (templateData: any[][]) => void;
 }
 
+const colorPalette = [
+    { name: 'Light Red', className: 'ht-bg-light-red' },
+    { name: 'Light Green', className: 'ht-bg-light-green' },
+    { name: 'Light Blue', className: 'ht-bg-light-blue' },
+    { name: 'Light Yellow', className: 'ht-bg-light-yellow' },
+    { name: 'Dark Red Text', className: 'ht-text-dark-red' },
+    { name: 'Dark Green Text', className: 'ht-text-dark-green' },
+    { name: 'Dark Blue Text', className: 'ht-text-dark-blue' },
+    { name: 'Black Text', className: 'ht-text-black' },
+];
+
+
 export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, isFullscreen, onSetTemplate }: SpreadsheetToolbarProps) {
   const { t } = useLanguage();
 
-  const toggleCellClass = (classNameToToggle: string) => {
+  const toggleCellClass = (classNameToToggle: string, classPrefix?: string) => {
     if (!hotInstance) return;
     const selectedRange = hotInstance.getSelectedRangeLast();
     if (!selectedRange) return;
@@ -68,10 +80,14 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
                 const currentMeta = hotInstance.getCellMeta(row, col);
                 let classNames = (currentMeta.className || '').split(' ').filter(Boolean);
                 
-                if (classNames.includes(classNameToToggle)) {
-                    classNames = classNames.filter(cn => cn !== classNameToToggle);
-                } else {
+                if(classPrefix) {
+                    classNames = classNames.filter(cn => !cn.startsWith(classPrefix));
+                }
+                
+                if (!classNames.includes(classNameToToggle)) {
                     classNames.push(classNameToToggle);
+                } else if (!classPrefix) { // Only toggle off if not a prefix-based class
+                     classNames = classNames.filter(cn => cn !== classNameToToggle);
                 }
                 hotInstance.setCellMeta(row, col, 'className', classNames.join(' '));
             }
@@ -79,6 +95,7 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
     });
     hotInstance.render();
   };
+
 
   const setAlignment = (alignment: 'htLeft' | 'htCenter' | 'htRight' | 'htJustify') => {
     if (!hotInstance) return;
@@ -98,27 +115,6 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
     });
     hotInstance.render();
   };
-  
-  const setCellColor = (colorType: 'color' | 'backgroundColor', colorValue: string | null) => {
-    if (!hotInstance) return;
-    const selectedRange = hotInstance.getSelectedRangeLast();
-    if (!selectedRange) return;
-
-    hotInstance.batch(() => {
-        for (let row = selectedRange.from.row; row <= selectedRange.to.row; row++) {
-            for (let col = selectedRange.from.col; col <= selectedRange.to.col; col++) {
-                hotInstance.setCellMeta(row, col, 'renderer', 'customStyleRenderer');
-                const existingStyle = hotInstance.getCellMeta(row, col).customStyle || {};
-                hotInstance.setCellMeta(row, col, 'customStyle', {
-                    ...existingStyle,
-                    [colorType]: colorValue
-                });
-            }
-        }
-    });
-    hotInstance.render();
-};
-
 
   const handleMergeToggle = () => {
     if (!hotInstance) return;
@@ -259,28 +255,30 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
               <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleCellClass('ht-cell-underline')} disabled={!isEnabled}><Underline /></Button></TooltipTrigger>
               <TooltipContent><p>{t('tooltipUnderline')}</p></TooltipContent>
             </Tooltip>
-             <DropdownMenu>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" disabled={!isEnabled}><Palette /></Button>
-                        </DropdownMenuTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent><p>{t('tooltipFillColor')}</p></TooltipContent>
-                </Tooltip>
-                <DropdownMenuContent>
-                    <div className="p-2 grid grid-cols-5 gap-1">
-                        {['#FFFFFF', '#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#F8D7DA', '#D4EDDA'].map(color => (
-                            <DropdownMenuItem key={color} className="p-0 h-6 w-6 cursor-pointer" onSelect={() => setCellColor('backgroundColor', color)}>
-                                <div className="h-full w-full border" style={{ backgroundColor: color }} />
-                            </DropdownMenuItem>
-                        ))}
-                         <DropdownMenuItem className="p-0 h-6 w-6 cursor-pointer" onSelect={() => setCellColor('backgroundColor', null)}>
-                            <div className="h-full w-full border text-xs flex items-center justify-center">X</div>
-                        </DropdownMenuItem>
-                    </div>
-                </DropdownMenuContent>
-            </DropdownMenu>
+            <DropdownMenu>
+              <Tooltip>
+                  <TooltipTrigger asChild>
+                      <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" disabled={!isEnabled}><Palette /></Button>
+                      </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent><p>{t('tooltipFillColor')}</p></TooltipContent>
+              </Tooltip>
+              <DropdownMenuContent>
+                  <div className="p-2 grid grid-cols-4 gap-1">
+                      {colorPalette.map(color => (
+                          <DropdownMenuItem key={color.className} className="p-0 h-6 w-6 cursor-pointer" onSelect={() => toggleCellClass(color.className, color.className.startsWith('ht-bg-') ? 'ht-bg-' : 'ht-text-')} >
+                              <div title={color.name} className={cn("h-full w-full border", color.className.startsWith('ht-bg-') ? color.className.replace('ht-bg-', 'bg-') : 'flex items-center justify-center ' + color.className.replace('ht-text-','text-'))}>
+                                {color.className.startsWith('ht-text-') && 'A'}
+                              </div>
+                          </DropdownMenuItem>
+                      ))}
+                        <DropdownMenuItem className="p-0 h-6 w-6 cursor-pointer" onSelect={() => { toggleCellClass('', 'ht-bg-'); toggleCellClass('', 'ht-text-'); } }>
+                          <div className="h-full w-full border text-xs flex items-center justify-center">X</div>
+                      </DropdownMenuItem>
+                  </div>
+              </DropdownMenuContent>
+          </DropdownMenu>
           </div>
           <Separator orientation="vertical" className="h-6" />
 

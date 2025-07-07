@@ -3,6 +3,8 @@
 import React from 'react';
 import { HotTable } from '@handsontable/react';
 import { registerAllModules } from 'handsontable/registry';
+import 'handsontable/dist/handsontable.full.min.css';
+import Handsontable from 'handsontable';
 import { HyperFormula } from 'hyperformula';
 
 // register Handsontable's modules

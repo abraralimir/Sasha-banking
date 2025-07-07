@@ -89,13 +89,27 @@
 
 /* Custom cell formatting */
 .ht-cell-bold {
-  font-weight: 700;
+  font-weight: 700 !important;
 }
 
 .ht-cell-italic {
-  font-style: italic;
+  font-style: italic !important;
 }
 
 .ht-cell-underline {
-  text-decoration: underline;
+  text-decoration: underline !important;
 }
+
+/* Background Colors */
+.ht-bg-light-red { background-color: #F8D7DA !important; }
+.ht-bg-light-green { background-color: #D4EDDA !important; }
+.ht-bg-light-blue { background-color: #D1E7FF !important; }
+.ht-bg-light-yellow { background-color: #FFF3CD !important; }
+.ht-bg-light-gray { background-color: #f8f9fa !important; }
+
+/* Text Colors */
+.ht-text-dark-red { color: #721c24 !important; }
+.ht-text-dark-green { color: #155724 !important; }
+.ht-text-dark-blue { color: #004085 !important; }
+.ht-text-black { color: #000000 !important; }
+.ht-text-white { color: #ffffff !important; }
