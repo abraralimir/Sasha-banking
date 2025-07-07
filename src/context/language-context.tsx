@@ -221,6 +221,10 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     daUnsupportedFileType: 'Unsupported file type. Please upload a CSV or XLSX file.',
     daAnalysisFailedDesc: 'The analysis failed. The file might be corrupted, in an unsupported format, or the AI model is currently unavailable.',
     daKeyInsightsTitle: 'Key Insights',
+    daDownloadPdfButton: 'Download PDF',
+    daGeneratingPdfTitle: 'Generating PDF Report...',
+    daPdfGenerationFailedTitle: 'PDF Generation Failed',
+    daPdfGenerationFailedDesc: 'An error occurred while trying to create the PDF report.',
   },
   ar: {
     pageTitle: 'ساشا المصرفية',
@@ -431,6 +435,10 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     daUnsupportedFileType: 'نوع ملف غير مدعوم. يرجى تحميل ملف CSV أو XLSX.',
     daAnalysisFailedDesc: 'فشل التحليل. قد يكون الملف تالفًا أو بتنسيق غير مدعوم أو أن نموذج الذكاء الاصطناعي غير متاح حاليًا.',
     daKeyInsightsTitle: 'رؤى رئيسية',
+    daDownloadPdfButton: 'تحميل PDF',
+    daGeneratingPdfTitle: 'جاري إنشاء تقرير PDF...',
+    daPdfGenerationFailedTitle: 'فشل إنشاء PDF',
+    daPdfGenerationFailedDesc: 'حدث خطأ أثناء محاولة إنشاء تقرير PDF.',
   },
 };
 

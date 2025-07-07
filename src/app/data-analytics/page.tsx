@@ -13,11 +13,13 @@ import {
   ArcElement
 } from 'chart.js';
 import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 import { LanguageToggle } from '@/components/language-toggle';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Loader2, FileUp, Bot, RefreshCw, Lightbulb, FileText, BarChart3, PieChart } from 'lucide-react';
+import { Loader2, FileUp, Bot, RefreshCw, Lightbulb, FileText, BarChart3, PieChart, Download } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/context/language-context';
 import { useToast } from '@/hooks/use-toast';
@@ -43,8 +45,10 @@ export default function DataAnalyticsPage() {
   const { t, language, dir } = useLanguage();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dashboardRef = useRef<HTMLDivElement>(null);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [dashboardData, setDashboardData] = useState<GenerateDashboardOutput | null>(null);
   const [fileName, setFileName] = useState('');
   
@@ -54,6 +58,60 @@ export default function DataAnalyticsPage() {
     if (fileInputRef.current) {
         fileInputRef.current.value = '';
     }
+  };
+
+  const handleDownloadPdf = () => {
+    const input = dashboardRef.current;
+    if (!input || !dashboardData) return;
+
+    setIsDownloading(true);
+    toast({ title: t('daGeneratingPdfTitle') });
+
+    html2canvas(input, {
+        scale: 2,
+        useCORS: true,
+        windowWidth: input.scrollWidth,
+        windowHeight: input.scrollHeight
+    }).then((canvas) => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+            orientation: 'p',
+            unit: 'mm',
+            format: 'a4'
+        });
+
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+
+        const ratio = canvasWidth / canvasHeight;
+        const imgHeight = pdfWidth / ratio;
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+        heightLeft -= pdfHeight;
+
+        while (heightLeft > 0) {
+            position -= pdfHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+            heightLeft -= pdfHeight;
+        }
+        
+        pdf.save(`${dashboardData.title.replace(/\s/g, '_')}_Report.pdf`);
+    }).catch(err => {
+        console.error("PDF generation failed:", err);
+        toast({
+            variant: 'destructive',
+            title: t('daPdfGenerationFailedTitle'),
+            description: t('daPdfGenerationFailedDesc'),
+        });
+    }).finally(() => {
+        setIsDownloading(false);
+    });
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,10 +188,18 @@ export default function DataAnalyticsPage() {
         </h1>
         <div className="justify-self-end flex items-center gap-2">
           {fileName && !isLoading && (
-             <Button variant="outline" size="sm" onClick={handleClear}>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                {t('daResetButton')}
-            </Button>
+             <div className="flex items-center gap-2">
+                {dashboardData && (
+                    <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={isDownloading}>
+                        {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                        {t('daDownloadPdfButton')}
+                    </Button>
+                )}
+                <Button variant="outline" size="sm" onClick={handleClear}>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    {t('daResetButton')}
+                </Button>
+             </div>
           )}
           <LanguageToggle />
         </div>
@@ -166,7 +232,7 @@ export default function DataAnalyticsPage() {
                     <p className="text-muted-foreground">{t('daGeneratingDashboardDesc')}</p>
                 </div>
             ) : dashboardData && (
-                <div className="animate-in fade-in-50 duration-500 space-y-6">
+                <div ref={dashboardRef} className="animate-in fade-in-50 duration-500 space-y-6">
                     <Card>
                         <CardHeader>
                             <CardTitle>{dashboardData.title}</CardTitle>
