@@ -18,30 +18,25 @@ import { useToast } from '@/hooks/use-toast';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
-class PipelineSingleton {
-    static task = 'summarization';
-    static model = 'Xenova/t5-small';
-    static instance: any | null = null;
-
-    static async getInstance(progress_callback?: (progress: any) => void) {
-        if (this.instance === null) {
-            const { pipeline } = await import('@xenova/transformers');
-            this.instance = await pipeline(this.task, this.model, { progress_callback });
-        }
-        return this.instance;
-    }
-}
-
 export default function DataAnalyticsPage() {
   const { t, dir } = useLanguage();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const summarizerPipelineRef = useRef<any>(null);
 
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [summary, setSummary] = useState('');
   const [chartData, setChartData] = useState<any>(null);
   const [fileName, setFileName] = useState('');
+
+  const getSummarizer = async (progress_callback?: (progress: any) => void) => {
+    if (!summarizerPipelineRef.current) {
+      const { pipeline } = await import('@xenova/transformers');
+      summarizerPipelineRef.current = await pipeline('summarization', 'Xenova/t5-small', { progress_callback });
+    }
+    return summarizerPipelineRef.current;
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -75,7 +70,7 @@ export default function DataAnalyticsPage() {
         const fullText = pages.join('\n');
         
         setLoadingMessage(t('daSummarizingPdf'));
-        const summarizer = await PipelineSingleton.getInstance((p: any) => {
+        const summarizer = await getSummarizer((p: any) => {
             if (p.status === 'progress') {
                 const progress = (p.progress || 0).toFixed(2);
                 setLoadingMessage(`${t('daSummarizingPdf')} (${progress}%)`);
@@ -115,7 +110,7 @@ export default function DataAnalyticsPage() {
         });
 
         setLoadingMessage(t('daGeneratingSummary'));
-        const summarizer = await PipelineSingleton.getInstance();
+        const summarizer = await getSummarizer();
         const analysisText = `Analysis of ${fileName}: The dataset has ${df.shape[0]} rows and ${df.shape[1]} columns. Columns are: ${df.columns.join(', ')}. The analysis of column "${categoricalColumn}" shows various categories.`;
         const output = await summarizer(analysisText, {
             max_length: 150,
