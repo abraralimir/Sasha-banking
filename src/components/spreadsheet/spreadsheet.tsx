@@ -3,7 +3,7 @@
 import React from 'react';
 import { HotTable } from '@handsontable/react';
 import { registerAllModules } from 'handsontable/registry';
-import type Handsontable from 'handsontable';
+import Handsontable from 'handsontable';
 
 // register Handsontable's modules
 registerAllModules();
