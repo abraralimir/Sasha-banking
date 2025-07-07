@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { CornerDownLeft, Mic, FileUp, FileText, XCircle, Loader2, Wand2 } from 'lucide-react';
+import { CornerDownLeft, Mic, FileUp, FileText, XCircle, Loader2, Wand2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -60,6 +60,7 @@ export default function ChatPage() {
   const [pdfRenderContent, setPdfRenderContent] = useState<React.ReactNode | null>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const [isImageGenOpen, setIsImageGenOpen] = useState(false);
+  const [isNewSessionDialogOpen, setIsNewSessionDialogOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -365,6 +366,29 @@ export default function ChatPage() {
     setMessages(prev => [...prev, imageMessage]);
   };
 
+  const handleNewSession = () => {
+    setMessages([{ id: '1', role: 'assistant', content: t('initialMessage') }]);
+    try {
+      localStorage.removeItem('sasha-chat-history');
+    } catch (error) {
+      console.error("Failed to clear localStorage:", error);
+    }
+    
+    setCsvData(null);
+    setCsvFileName(null);
+    setPdfData(null);
+    setPdfFileName(null);
+
+    setInput('');
+    setIsLoading(false);
+
+    toast({
+        title: t('newSessionTitle'),
+        description: t('newSessionDesc'),
+    });
+    setIsNewSessionDialogOpen(false);
+  };
+
   const PdfReportComponent = ({ report, type, lang }: { report: ReportToDownload; type: ReportType; lang: 'en' | 'ar' }) => {
     const selectedTitles = getTranslatedTitles(lang, report);
     const isRtl = lang === 'ar';
@@ -455,7 +479,18 @@ export default function ChatPage() {
             <SidebarTrigger />
           </div>
           <h1 className="text-xl font-semibold tracking-tight justify-self-center">{t('pageTitle')}</h1>
-          <div className="justify-self-end">
+          <div className="justify-self-end flex items-center gap-2">
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" onClick={() => setIsNewSessionDialogOpen(true)}>
+                        <RefreshCw className="h-5 w-5" />
+                        <span className="sr-only">{t('newSessionButton')}</span>
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>{t('newSessionButton')}</p>
+                </TooltipContent>
+            </Tooltip>
             <LanguageToggle />
           </div>
         </header>
@@ -571,6 +606,19 @@ export default function ChatPage() {
             </form>
           </div>
         </footer>
+
+        <AlertDialog open={isNewSessionDialogOpen} onOpenChange={setIsNewSessionDialogOpen}>
+            <AlertDialogContent dir={dir}>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>{t('newSessionConfirmTitle')}</AlertDialogTitle>
+                    <AlertDialogDescription>{t('newSessionConfirmDescChat')}</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleNewSession}>{t('newSessionConfirmButton')}</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
         
         <AlertDialog open={!!downloadInfo} onOpenChange={(open) => !open && setDownloadInfo(null)}>
             <AlertDialogContent dir={dir}>

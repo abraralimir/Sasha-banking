@@ -8,7 +8,7 @@ import {
   LinearScale, 
   BarElement, 
   Title, 
-  Tooltip, 
+  Tooltip as ChartTooltip, 
   Legend,
   ArcElement
 } from 'chart.js';
@@ -23,8 +23,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useLanguage } from '@/context/language-context';
 import { useToast } from '@/hooks/use-toast';
 import { generateDashboard, type GenerateDashboardOutput } from '@/ai/flows/generate-dashboard';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, ChartTooltip, Legend);
 
 // Helper function to get random colors for pie chart
 const getPieChartColors = (numColors: number) => {
@@ -62,6 +63,10 @@ export default function DataAnalyticsPage() {
     if (fileInputRef.current) {
         fileInputRef.current.value = '';
     }
+    toast({
+        title: t('newSessionTitle'),
+        description: t('newSessionDescDA'),
+    });
   };
 
   const handleDownloadPdf = () => {
@@ -190,6 +195,21 @@ export default function DataAnalyticsPage() {
           {t('dataAnalyticsTitle')}
         </h1>
         <div className="justify-self-end flex items-center gap-2">
+          {fileName && !isLoading && (
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" onClick={handleClear}>
+                            <RefreshCw className="h-5 w-5" />
+                            <span className="sr-only">{t('newSessionButton')}</span>
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>{t('newSessionButton')}</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+          )}
           <LanguageToggle />
         </div>
       </header>
@@ -282,17 +302,11 @@ export default function DataAnalyticsPage() {
       </main>
       <footer className="p-4 border-t shrink-0 bg-background">
         <div className="max-w-7xl mx-auto flex justify-end">
-          {fileName && !isLoading && (
+          {dashboardData && !isLoading && (
             <div className="flex items-center gap-2">
-              {dashboardData && (
-                <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={isDownloading}>
-                  {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-                  {t('daDownloadPdfButton')}
-                </Button>
-              )}
-              <Button variant="outline" size="sm" onClick={handleClear}>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                {t('daResetButton')}
+              <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={isDownloading}>
+                {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                {t('daDownloadPdfButton')}
               </Button>
             </div>
           )}

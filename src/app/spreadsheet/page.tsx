@@ -21,7 +21,7 @@ import { LanguageToggle } from '@/components/language-toggle';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Spreadsheet } from '@/components/spreadsheet/spreadsheet';
 import { Button } from '@/components/ui/button';
-import { Loader2, Send, MessageSquare, X } from 'lucide-react';
+import { Loader2, Send, MessageSquare, X, RefreshCw } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -34,6 +34,17 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { User } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { templates } from '@/lib/spreadsheet-templates';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 ChartJS.register(
   CategoryScale,
@@ -81,6 +92,7 @@ export default function SpreadsheetPage() {
   const [isChatOpen, setIsChatOpen] = useState(true);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [charts, setCharts] = useState<ChartData[]>([]);
+  const [isNewSessionDialogOpen, setIsNewSessionDialogOpen] = useState(false);
 
   useEffect(() => {
     if (hotRef.current) {
@@ -477,6 +489,37 @@ export default function SpreadsheetPage() {
     }
   };
 
+  const handleNewSession = () => {
+    if (!hotInstance) return;
+
+    hotInstance.batch(() => {
+        hotInstance.updateSettings({
+            mergeCells: [],
+            cell: [],
+        });
+        const commentsPlugin = hotInstance.getPlugin('comments');
+        if (commentsPlugin && typeof commentsPlugin.clearComments === 'function') {
+            try {
+                commentsPlugin.clearComments();
+            } catch (e) {
+                console.warn("Could not clear comments during session reset.");
+            }
+        }
+    });
+    setSheetData(initialData);
+
+    setCharts([]);
+    setChatMessages([{ role: 'assistant', content: t('sashaSpreadsheetHello') }]);
+    setPrompt('');
+    setIsLoading(false);
+
+    toast({
+        title: t('newSessionTitle'),
+        description: t('newSessionDescSpreadsheet'),
+    });
+    setIsNewSessionDialogOpen(false);
+  };
+
 
   return (
     <div
@@ -499,6 +542,19 @@ export default function SpreadsheetPage() {
           {t('spreadsheetTitle')}
         </h1>
         <div className="justify-self-end flex items-center gap-2">
+           <TooltipProvider>
+              <Tooltip>
+                  <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" onClick={() => setIsNewSessionDialogOpen(true)}>
+                          <RefreshCw className="h-5 w-5" />
+                          <span className="sr-only">{t('newSessionButton')}</span>
+                      </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                      <p>{t('newSessionButton')}</p>
+                  </TooltipContent>
+              </Tooltip>
+          </TooltipProvider>
           <Button
             variant="ghost"
             size="icon"
@@ -687,6 +743,19 @@ export default function SpreadsheetPage() {
           </aside>
         )}
       </div>
+
+       <AlertDialog open={isNewSessionDialogOpen} onOpenChange={setIsNewSessionDialogOpen}>
+          <AlertDialogContent dir={dir}>
+              <AlertDialogHeader>
+                  <AlertDialogTitle>{t('newSessionConfirmTitle')}</AlertDialogTitle>
+                  <AlertDialogDescription>{t('newSessionConfirmDescSpreadsheet')}</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                  <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleNewSession}>{t('newSessionConfirmButton')}</AlertDialogAction>
+              </AlertDialogFooter>
+          </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
