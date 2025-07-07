@@ -6,7 +6,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Toolti
 import * as XLSX from 'xlsx';
 import * as pdfjsLib from 'pdfjs-dist';
 import * as dfd from 'danfojs';
-import { pipeline, type SummarizationPipeline } from '@xenova/transformers';
+import type { SummarizationPipeline } from '@xenova/transformers';
 
 import { LanguageToggle } from '@/components/language-toggle';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -26,6 +26,7 @@ class PipelineSingleton {
 
     static async getInstance(progress_callback?: (progress: any) => void) {
         if (this.instance === null) {
+            const { pipeline } = await import('@xenova/transformers');
             this.instance = await pipeline(this.task, this.model, { progress_callback });
         }
         return this.instance;
