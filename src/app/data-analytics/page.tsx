@@ -29,9 +29,14 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tool
 // Helper function to get random colors for pie chart
 const getPieChartColors = (numColors: number) => {
     const colors = [
-        'hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))',
-        'hsl(var(--chart-4))', 'hsl(var(--chart-5))', 'hsl(222.2, 47.4%, 11.2%)',
-        'hsl(210, 40%, 96.1%)', 'hsl(0, 84.2%, 60.2%)'
+      'hsl(12, 76%, 61%)',
+      'hsl(173, 58%, 39%)',
+      'hsl(197, 37%, 24%)',
+      'hsl(43, 74%, 66%)',
+      'hsl(27, 87%, 67%)',
+      'hsl(222.2, 47.4%, 11.2%)',
+      'hsl(210, 40%, 96.1%)',
+      'hsl(0, 84.2%, 60.2%)',
     ];
     let result = [];
     for (let i = 0; i < numColors; i++) {
