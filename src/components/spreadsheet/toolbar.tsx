@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -22,6 +23,12 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Menubar,
   MenubarContent,
@@ -252,28 +259,28 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
               <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleCellClass('ht-cell-underline')} disabled={!isEnabled}><Underline /></Button></TooltipTrigger>
               <TooltipContent><p>{t('tooltipUnderline')}</p></TooltipContent>
             </Tooltip>
-             <MenubarMenu>
+             <DropdownMenu>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <MenubarTrigger asChild>
+                        <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8" disabled={!isEnabled}><Palette /></Button>
-                        </MenubarTrigger>
+                        </DropdownMenuTrigger>
                     </TooltipTrigger>
                     <TooltipContent><p>{t('tooltipFillColor')}</p></TooltipContent>
                 </Tooltip>
-                <MenubarContent>
+                <DropdownMenuContent>
                     <div className="p-2 grid grid-cols-5 gap-1">
                         {['#FFFFFF', '#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#F8D7DA', '#D4EDDA'].map(color => (
-                            <MenubarItem key={color} className="p-0 h-6 w-6" onSelect={() => setCellColor('backgroundColor', color)}>
+                            <DropdownMenuItem key={color} className="p-0 h-6 w-6 cursor-pointer" onSelect={() => setCellColor('backgroundColor', color)}>
                                 <div className="h-full w-full border" style={{ backgroundColor: color }} />
-                            </MenubarItem>
+                            </DropdownMenuItem>
                         ))}
-                         <MenubarItem className="p-0 h-6 w-6" onSelect={() => setCellColor('backgroundColor', null)}>
+                         <DropdownMenuItem className="p-0 h-6 w-6 cursor-pointer" onSelect={() => setCellColor('backgroundColor', null)}>
                             <div className="h-full w-full border text-xs flex items-center justify-center">X</div>
-                        </MenubarItem>
+                        </DropdownMenuItem>
                     </div>
-                </MenubarContent>
-            </MenubarMenu>
+                </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           <Separator orientation="vertical" className="h-6" />
 
