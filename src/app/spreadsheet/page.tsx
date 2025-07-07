@@ -81,30 +81,6 @@ type ChartData = {
   };
 };
 
-const customStyleRenderer: Handsontable.renderers.Base = function (
-  instance,
-  td,
-  row,
-  col,
-  prop,
-  value,
-  cellProperties
-) {
-  // Use the built-in text renderer to handle the basic cell drawing.
-  Handsontable.renderers.TextRenderer.apply(this, [instance, td, row, col, prop, value, cellProperties]);
-
-  // Apply our custom styles from the cell's metadata.
-  const { style } = cellProperties as any;
-  if (style) {
-    if (style.color) {
-      td.style.color = style.color;
-    }
-    if (style.backgroundColor) {
-      td.style.backgroundColor = style.backgroundColor;
-    }
-  }
-};
-
 export default function SpreadsheetPage() {
   const { t, language, dir } = useLanguage();
   const [sheetData, setSheetData] = useState<any[][]>(initialData);
@@ -122,17 +98,15 @@ export default function SpreadsheetPage() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [charts, setCharts] = useState<ChartData[]>([]);
 
-  // This effect sets the hotInstance from the ref once the component mounts
   useEffect(() => {
     if (hotRef.current) {
       const instance = hotRef.current.hotInstance;
       setHotInstance(instance);
     }
-  }, []); // Runs once on mount
+  }, []);
 
-  // This effect loads new data into the table when sheetData state changes.
   useEffect(() => {
-    if (hotInstance && hotInstance.getSourceData() !== sheetData) {
+    if (hotInstance) {
       hotInstance.loadData(sheetData);
     }
   }, [sheetData, hotInstance]);
@@ -144,7 +118,13 @@ export default function SpreadsheetPage() {
   }, [t]);
 
   const handleFullscreenChange = () => {
-    setIsFullscreen(!!document.fullscreenElement);
+    const isCurrentlyFullscreen = !!document.fullscreenElement;
+    setIsFullscreen(isCurrentlyFullscreen);
+    if (hotInstance) {
+      setTimeout(() => {
+        hotInstance.render();
+      }, 100);
+    }
   };
 
   const toggleFullscreen = () => {
@@ -165,7 +145,7 @@ export default function SpreadsheetPage() {
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
-  }, []);
+  }, [hotInstance]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -306,12 +286,14 @@ export default function SpreadsheetPage() {
           { role: 'assistant', content: firstConfirmation },
         ]);
       } else {
-        setIsLoading(false); // No action taken, stop loading
+        setIsLoading(false);
         return;
       }
-
+      
+      let newData: any[][] | null = null;
+      let finalDataForCharts: any[][] = currentData;
+      
       hotInstance.batch(() => {
-        let newData: any[][] | null = null;
         for (const op of response.operations) {
           switch (op.command) {
             case 'createGantt':
@@ -323,7 +305,9 @@ export default function SpreadsheetPage() {
                 Array(26).fill('')
               );
               hotInstance.updateSettings({ cell: [], comments: false });
-              hotInstance.getPlugin('comments').clearComments();
+              if (hotInstance.getPlugin('comments')?.clearComments) {
+                hotInstance.getPlugin('comments').clearComments();
+              }
               newData = clearedData;
               setCharts([]);
               break;
@@ -338,91 +322,79 @@ export default function SpreadsheetPage() {
               if (range && properties) {
                 for (let row = range.row; row <= range.row2; row++) {
                   for (let col = range.col; col <= range.col2; col++) {
-                    const currentMeta = hotInstance.getCellMeta(row, col) || {};
-                    let classNames = (currentMeta.className || '')
-                      .split(' ')
-                      .filter(Boolean);
-
-                    const alignments = [
-                      'htLeft',
-                      'htCenter',
-                      'htRight',
-                      'htJustify',
-                    ];
-                    classNames = classNames.filter(
-                      (c) => !alignments.includes(c)
-                    );
-                    if (properties.alignment)
-                      classNames.push(properties.alignment);
+                    let classNames = (hotInstance.getCellMeta(row, col).className || '').split(' ').filter(Boolean);
+                    
+                    const alignments = ['htLeft', 'htCenter', 'htRight', 'htJustify'];
+                    classNames = classNames.filter(c => !alignments.includes(c));
+                    if (properties.alignment) classNames.push(properties.alignment);
 
                     if (properties.bold) classNames.push('ht-cell-bold');
                     else classNames = classNames.filter(c => c !== 'ht-cell-bold');
-
+                    
                     if (properties.italic) classNames.push('ht-cell-italic');
-                     else classNames = classNames.filter(c => c !== 'ht-cell-italic');
-
+                    else classNames = classNames.filter(c => c !== 'ht-cell-italic');
+                    
                     if (properties.underline) classNames.push('ht-cell-underline');
-                     else classNames = classNames.filter(c => c !== 'ht-cell-underline');
+                    else classNames = classNames.filter(c => c !== 'ht-cell-underline');
 
-                    hotInstance.setCellMeta(
-                      row,
-                      col,
-                      'className',
-                      classNames.join(' ')
-                    );
+                    hotInstance.setCellMeta(row, col, 'className', classNames.join(' '));
 
-                    if (properties.color || properties.backgroundColor) {
-                      const style = (currentMeta as any).style || {};
-                      if (properties.color) style.color = properties.color;
-                      if (properties.backgroundColor)
-                        style.backgroundColor = properties.backgroundColor;
-                      hotInstance.setCellMeta(row, col, 'style', style);
-                      hotInstance.setCellMeta(
-                        row,
-                        col,
-                        'renderer',
-                        customStyleRenderer
-                      );
+                    const currentBg = hotInstance.getCellMeta(row, col).backgroundColor;
+                    if (properties.backgroundColor) {
+                      hotInstance.setCellMeta(row, col, 'backgroundColor', properties.backgroundColor);
+                    }
+                    if (properties.color) {
+                      hotInstance.setCellMeta(row, col, 'renderer', function(instance, td, ...args) {
+                        (Handsontable.renderers.getRenderer('text') as any).apply(this, [instance, td, ...args]);
+                        td.style.color = properties.color;
+                        if (properties.backgroundColor || currentBg) {
+                          td.style.backgroundColor = properties.backgroundColor || currentBg;
+                        }
+                      });
+                    } else if (properties.backgroundColor) {
+                       hotInstance.setCellMeta(row, col, 'renderer', function(instance, td, ...args) {
+                        (Handsontable.renderers.getRenderer('text') as any).apply(this, [instance, td, ...args]);
+                        td.style.backgroundColor = properties.backgroundColor;
+                      });
                     }
 
                     if (properties.numericFormat) {
-                      hotInstance.setCellMeta(
-                        row,
-                        col,
-                        'type',
-                        'numeric'
-                      );
-                      hotInstance.setCellMeta(
-                        row,
-                        col,
-                        'numericFormat',
-                        properties.numericFormat
-                      );
+                      hotInstance.setCellMeta(row, col, 'type', 'numeric');
+                      hotInstance.setCellMeta(row, col, 'numericFormat', properties.numericFormat);
                     }
                   }
                 }
               }
               break;
             case 'createChart':
-              const { type, title, dataRange } = op.params;
-              const newChart: ChartData = {
-                type,
-                title,
-                data: convertA1RangeToChartData(
-                  dataRange,
-                  newData ?? currentData
-                ),
-              };
-              setCharts((prev) => [...prev, newChart]);
+              // This command does not modify data, but we need to create a chart
               break;
             case 'info':
               break;
           }
         }
-        if (newData) {
-          setSheetData(newData);
-        }
       });
+      
+      if (newData) {
+          setSheetData(newData);
+          finalDataForCharts = newData;
+      }
+      
+      // Handle chart creation outside the batch update
+      const chartOps = response.operations.filter(op => op.command === 'createChart');
+      if(chartOps.length > 0) {
+        const newCharts: ChartData[] = [];
+        for (const op of chartOps) {
+          const { type, title, dataRange } = op.params;
+          newCharts.push({
+            type,
+            title,
+            data: convertA1RangeToChartData(dataRange, finalDataForCharts),
+          });
+        }
+        setCharts(prev => [...prev, ...newCharts]);
+      }
+
       hotInstance.render();
     } catch (error) {
       console.error(error);
@@ -440,6 +412,7 @@ export default function SpreadsheetPage() {
       setIsLoading(false);
     }
   };
+
 
   return (
     <div
@@ -491,9 +464,15 @@ export default function SpreadsheetPage() {
           {charts.length > 0 && (
             <ScrollArea className="flex-shrink-0 border-t bg-muted/40 max-h-96">
               <section className="p-4">
-                <h2 className="text-lg font-semibold mb-4 text-center">
-                  {t('chartsTitle', 'Charts')}
-                </h2>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-semibold text-center flex-grow">
+                    {t('chartsTitle', 'Charts')}
+                  </h2>
+                   <Button variant="ghost" size="icon" onClick={() => setCharts([])} className="h-7 w-7">
+                      <X className="h-4 w-4" />
+                      <span className="sr-only">Close charts</span>
+                   </Button>
+                </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {charts.map((chart, index) => (
                     <Card key={index} className="shadow-lg">
