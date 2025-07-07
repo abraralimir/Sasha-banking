@@ -179,9 +179,9 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
           <div className="flex items-center space-x-1 flex-wrap">
             <MenubarMenu>
               <MenubarTrigger>{t('toolbarTemplates')}</MenubarTrigger>
-              <MenubarContent>
+              <MenubarContent className="z-[999]">
                 {templates.map((template) => (
-                  <MenubarItem key={template.id} onClick={() => onSetTemplate(template.data)}>
+                  <MenubarItem key={template.id} onSelect={() => onSetTemplate(template.data)}>
                     {t(template.name)}
                   </MenubarItem>
                 ))}
