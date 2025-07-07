@@ -24,6 +24,8 @@ import { useLanguage } from '@/context/language-context';
 
 import {
   Menubar,
+  MenubarContent,
+  MenubarItem,
   MenubarMenu,
   MenubarTrigger,
 } from '@/components/ui/menubar';
@@ -35,15 +37,17 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
+import { templates } from '@/lib/spreadsheet-templates';
 
 interface SpreadsheetToolbarProps {
   hotInstance: Handsontable | null;
   onImport: () => void;
   toggleFullscreen: () => void;
   isFullscreen: boolean;
+  onSetTemplate: (templateData: any[][]) => void;
 }
 
-export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, isFullscreen }: SpreadsheetToolbarProps) {
+export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, isFullscreen, onSetTemplate }: SpreadsheetToolbarProps) {
   const { t } = useLanguage();
 
   const toggleCellClass = (classNameToToggle: string) => {
@@ -87,6 +91,27 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
     });
     hotInstance.render();
   };
+  
+  const setCellColor = (colorType: 'color' | 'backgroundColor', colorValue: string | null) => {
+    if (!hotInstance) return;
+    const selectedRange = hotInstance.getSelectedRangeLast();
+    if (!selectedRange) return;
+
+    hotInstance.batch(() => {
+        for (let row = selectedRange.from.row; row <= selectedRange.to.row; row++) {
+            for (let col = selectedRange.from.col; col <= selectedRange.to.col; col++) {
+                hotInstance.setCellMeta(row, col, 'renderer', 'customStyleRenderer');
+                const existingStyle = hotInstance.getCellMeta(row, col).customStyle || {};
+                hotInstance.setCellMeta(row, col, 'customStyle', {
+                    ...existingStyle,
+                    [colorType]: colorValue
+                });
+            }
+        }
+    });
+    hotInstance.render();
+};
+
 
   const handleMergeToggle = () => {
     if (!hotInstance) return;
@@ -94,12 +119,15 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
     const selection = hotInstance.getSelectedRangeLast();
     if (!selection) return;
 
-    const isMerged = mergePlugin.isMerged(selection.from.row, selection.from.col, selection.to.row, selection.to.col);
+    const isMerged = mergePlugin.isMerged(selection.from.row, selection.from.col);
 
     if (isMerged) {
-      mergePlugin.unmerge(selection.from.row, selection.from.col, selection.to.row, selection.to.col);
+        const mergeInfo = mergePlugin.getMerge(selection.from.row, selection.from.col);
+        if (mergeInfo) {
+            mergePlugin.unmerge(mergeInfo.row, mergeInfo.col);
+        }
     } else {
-      mergePlugin.merge(selection.from.row, selection.from.col, selection.to.row, selection.to.col);
+        mergePlugin.merge(selection.from.row, selection.from.col, selection.to.row, selection.to.col);
     }
     hotInstance.render();
   };
@@ -147,7 +175,14 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
         <Menubar className="border-none p-0 h-auto bg-transparent">
           <div className="flex items-center space-x-1 flex-wrap">
             <MenubarMenu>
-              <MenubarTrigger className="px-3 py-1.5 cursor-not-allowed">{t('toolbarFile')}</MenubarTrigger>
+              <MenubarTrigger>{t('toolbarTemplates')}</MenubarTrigger>
+              <MenubarContent>
+                {templates.map((template) => (
+                  <MenubarItem key={template.id} onClick={() => onSetTemplate(template.data)}>
+                    {t(template.name)}
+                  </MenubarItem>
+                ))}
+              </MenubarContent>
             </MenubarMenu>
             <MenubarMenu>
               <MenubarTrigger className="px-3 py-1.5 bg-muted">{t('toolbarHome')}</MenubarTrigger>
@@ -217,10 +252,28 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
               <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleCellClass('ht-cell-underline')} disabled={!isEnabled}><Underline /></Button></TooltipTrigger>
               <TooltipContent><p>{t('tooltipUnderline')}</p></TooltipContent>
             </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={true}><Palette /></Button></TooltipTrigger>
-              <TooltipContent><p>{t('tooltipFontColor')}</p></TooltipContent>
-            </Tooltip>
+             <MenubarMenu>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <MenubarTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" disabled={!isEnabled}><Palette /></Button>
+                        </MenubarTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent><p>{t('tooltipFillColor')}</p></TooltipContent>
+                </Tooltip>
+                <MenubarContent>
+                    <div className="p-2 grid grid-cols-5 gap-1">
+                        {['#FFFFFF', '#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#F8D7DA', '#D4EDDA'].map(color => (
+                            <MenubarItem key={color} className="p-0 h-6 w-6" onSelect={() => setCellColor('backgroundColor', color)}>
+                                <div className="h-full w-full border" style={{ backgroundColor: color }} />
+                            </MenubarItem>
+                        ))}
+                         <MenubarItem className="p-0 h-6 w-6" onSelect={() => setCellColor('backgroundColor', null)}>
+                            <div className="h-full w-full border text-xs flex items-center justify-center">X</div>
+                        </MenubarItem>
+                    </div>
+                </MenubarContent>
+            </MenubarMenu>
           </div>
           <Separator orientation="vertical" className="h-6" />
 

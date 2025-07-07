@@ -1,9 +1,8 @@
-
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { HotTable } from '@handsontable/react';
-import Handsontable from 'handsontable';
+import type Handsontable from 'handsontable';
 import * as XLSX from 'xlsx';
 import { Bar, Pie } from 'react-chartjs-2';
 import {
@@ -33,6 +32,7 @@ import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { User } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { templates } from '@/lib/spreadsheet-templates';
 
 ChartJS.register(
   CategoryScale,
@@ -45,23 +45,6 @@ ChartJS.register(
 );
 
 const initialData = Array.from({ length: 50 }, () => Array(26).fill(''));
-
-const ganttTemplate = [
-  ['Task', 'Start Date', 'End Date', 'Duration', 'Completion'],
-  ['Project Kick-off', '2024-01-01', '2024-01-02', 2, '100%'],
-  [
-    'Requirement Gathering',
-    '2024-01-03',
-    '2024-01-10',
-    8,
-    '100%',
-  ],
-  ['Design Phase', '2024-01-11', '2024-01-20', 10, '80%'],
-  ['Development', '2024-01-21', '2024-03-10', 50, '30%'],
-  ['Testing', '2024-03-11', '2024-03-25', 15, '0%'],
-  ['Deployment', '2024-03-26', '2024-03-31', 6, '0%'],
-  [],
-];
 
 type ChatMessage = {
   role: 'user' | 'assistant';
@@ -108,6 +91,7 @@ export default function SpreadsheetPage() {
   useEffect(() => {
     if (hotInstance) {
       hotInstance.loadData(sheetData);
+      hotInstance.render();
     }
   }, [sheetData, hotInstance]);
 
@@ -117,15 +101,16 @@ export default function SpreadsheetPage() {
     ]);
   }, [t]);
 
-  const handleFullscreenChange = () => {
+  const handleFullscreenChange = useCallback(() => {
     const isCurrentlyFullscreen = !!document.fullscreenElement;
     setIsFullscreen(isCurrentlyFullscreen);
     if (hotInstance) {
+      // Defer the render call to allow the DOM to update
       setTimeout(() => {
         hotInstance.render();
-      }, 100);
+      }, 0);
     }
-  };
+  }, [hotInstance]);
 
   const toggleFullscreen = () => {
     if (!fullscreenRef.current) return;
@@ -145,7 +130,7 @@ export default function SpreadsheetPage() {
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
-  }, [hotInstance]);
+  }, [handleFullscreenChange]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -230,7 +215,14 @@ export default function SpreadsheetPage() {
           defval: ''
         });
 
-        setSheetData(json as any[][]);
+        const paddedData = json.map(row => {
+            const newRow = [...(row as any[])];
+            while (newRow.length < 26) newRow.push('');
+            return newRow;
+        });
+        while(paddedData.length < 50) paddedData.push(Array(26).fill(''));
+        
+        setSheetData(paddedData);
 
         toast({
           title: t('importSuccessTitle'),
@@ -254,6 +246,15 @@ export default function SpreadsheetPage() {
     };
     reader.readAsBinaryString(file);
     if (e.target) e.target.value = '';
+  };
+  
+  const handleSetTemplate = (templateData: any[][]) => {
+    setCharts([]);
+    setSheetData(templateData);
+    toast({
+        title: t('templateAppliedTitle'),
+        description: t('templateAppliedDesc'),
+    });
   };
 
   const handleSashaSubmit = async (e?: React.FormEvent) => {
@@ -285,9 +286,6 @@ export default function SpreadsheetPage() {
           ...prev,
           { role: 'assistant', content: firstConfirmation },
         ]);
-      } else {
-        setIsLoading(false);
-        return;
       }
       
       let newData: any[][] | null = null;
@@ -296,9 +294,12 @@ export default function SpreadsheetPage() {
       hotInstance.batch(() => {
         for (const op of response.operations) {
           switch (op.command) {
-            case 'createGantt':
-              newData = ganttTemplate;
-              setCharts([]);
+            case 'setTemplate':
+              const template = templates.find(t => t.id === op.params.templateName);
+              if (template) {
+                newData = template.data;
+                setCharts([]);
+              }
               break;
             case 'clearSheet':
               const clearedData = Array.from({ length: 50 }, () =>
@@ -322,8 +323,9 @@ export default function SpreadsheetPage() {
               if (range && properties) {
                 for (let row = range.row; row <= range.row2; row++) {
                   for (let col = range.col; col <= range.col2; col++) {
-                    let classNames = (hotInstance.getCellMeta(row, col).className || '').split(' ').filter(Boolean);
+                    const cellProperties: Handsontable.CellProperties = {};
                     
+                    let classNames = (hotInstance.getCellMeta(row, col).className || '').split(' ').filter(Boolean);
                     const alignments = ['htLeft', 'htCenter', 'htRight', 'htJustify'];
                     classNames = classNames.filter(c => !alignments.includes(c));
                     if (properties.alignment) classNames.push(properties.alignment);
@@ -337,38 +339,29 @@ export default function SpreadsheetPage() {
                     if (properties.underline) classNames.push('ht-cell-underline');
                     else classNames = classNames.filter(c => c !== 'ht-cell-underline');
 
-                    hotInstance.setCellMeta(row, col, 'className', classNames.join(' '));
-
-                    const currentBg = hotInstance.getCellMeta(row, col).backgroundColor;
-                    if (properties.backgroundColor) {
-                      hotInstance.setCellMeta(row, col, 'backgroundColor', properties.backgroundColor);
-                    }
-                    if (properties.color) {
-                      hotInstance.setCellMeta(row, col, 'renderer', function(instance, td, ...args) {
-                        (Handsontable.renderers.getRenderer('text') as any).apply(this, [instance, td, ...args]);
-                        td.style.color = properties.color;
-                        if (properties.backgroundColor || currentBg) {
-                          td.style.backgroundColor = properties.backgroundColor || currentBg;
-                        }
-                      });
-                    } else if (properties.backgroundColor) {
-                       hotInstance.setCellMeta(row, col, 'renderer', function(instance, td, ...args) {
-                        (Handsontable.renderers.getRenderer('text') as any).apply(this, [instance, td, ...args]);
-                        td.style.backgroundColor = properties.backgroundColor;
-                      });
+                    cellProperties.className = classNames.join(' ');
+                    
+                    if (properties.readOnly !== undefined) {
+                      cellProperties.readOnly = properties.readOnly;
                     }
 
                     if (properties.numericFormat) {
-                      hotInstance.setCellMeta(row, col, 'type', 'numeric');
-                      hotInstance.setCellMeta(row, col, 'numericFormat', properties.numericFormat);
+                      cellProperties.type = 'numeric';
+                      cellProperties.numericFormat = properties.numericFormat;
                     }
+
+                    hotInstance.setCellMeta(row, col, 'renderer', 'customStyleRenderer');
+                    hotInstance.setCellMeta(row, col, 'customStyle', {
+                        color: properties.color,
+                        backgroundColor: properties.backgroundColor,
+                    });
+                    
+                    hotInstance.setCellMetaObject(row, col, { ...hotInstance.getCellMeta(row, col), ...cellProperties });
                   }
                 }
               }
               break;
             case 'createChart':
-              // This command does not modify data, but we need to create a chart
-              break;
             case 'info':
               break;
           }
@@ -380,7 +373,6 @@ export default function SpreadsheetPage() {
           finalDataForCharts = newData;
       }
       
-      // Handle chart creation outside the batch update
       const chartOps = response.operations.filter(op => op.command === 'createChart');
       if(chartOps.length > 0) {
         const newCharts: ChartData[] = [];
@@ -454,6 +446,7 @@ export default function SpreadsheetPage() {
         onImport={handleImportClick}
         toggleFullscreen={toggleFullscreen}
         isFullscreen={isFullscreen}
+        onSetTemplate={handleSetTemplate}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -462,11 +455,11 @@ export default function SpreadsheetPage() {
             <Spreadsheet data={sheetData} hotRef={hotRef} />
           </div>
           {charts.length > 0 && (
-            <ScrollArea className="flex-shrink-0 border-t bg-muted/40 max-h-96">
+            <ScrollArea className="flex-shrink-0 border-t bg-muted/40 max-h-[45vh]">
               <section className="p-4">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-lg font-semibold text-center flex-grow">
-                    {t('chartsTitle', 'Charts')}
+                    {t('chartsTitle')}
                   </h2>
                    <Button variant="ghost" size="icon" onClick={() => setCharts([])} className="h-7 w-7">
                       <X className="h-4 w-4" />
@@ -479,7 +472,7 @@ export default function SpreadsheetPage() {
                       <CardHeader>
                         <CardTitle>{chart.title}</CardTitle>
                       </CardHeader>
-                      <CardContent className="h-[400px]">
+                      <CardContent className="h-[350px]">
                         {chart.type === 'bar' ? (
                           <Bar
                             data={chart.data}
