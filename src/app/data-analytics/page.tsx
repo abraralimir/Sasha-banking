@@ -187,20 +187,6 @@ export default function DataAnalyticsPage() {
           {t('dataAnalyticsTitle')}
         </h1>
         <div className="justify-self-end flex items-center gap-2">
-          {fileName && !isLoading && (
-             <div className="flex items-center gap-2">
-                {dashboardData && (
-                    <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={isDownloading}>
-                        {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-                        {t('daDownloadPdfButton')}
-                    </Button>
-                )}
-                <Button variant="outline" size="sm" onClick={handleClear}>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    {t('daResetButton')}
-                </Button>
-             </div>
-          )}
           <LanguageToggle />
         </div>
       </header>
@@ -291,6 +277,24 @@ export default function DataAnalyticsPage() {
             )}
         </div>
       </main>
+      <footer className="p-4 border-t shrink-0 bg-background">
+        <div className="max-w-7xl mx-auto flex justify-end">
+          {fileName && !isLoading && (
+            <div className="flex items-center gap-2">
+              {dashboardData && (
+                <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={isDownloading}>
+                  {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                  {t('daDownloadPdfButton')}
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={handleClear}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                {t('daResetButton')}
+              </Button>
+            </div>
+          )}
+        </div>
+      </footer>
     </div>
   );
 }
