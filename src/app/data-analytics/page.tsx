@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useRef } from 'react';
@@ -43,12 +42,14 @@ export default function DataAnalyticsPage() {
   const [pieChartData, setPieChartData] = useState<any>(null);
   
   // This line must be inside the component to run only on the client
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+  if (typeof window !== 'undefined') {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+  }
 
   const getSummarizer = async (progress_callback?: (progress: any) => void) => {
     if (summarizerPipelineRef.current === null) {
-      const { pipeline } = await import('@xenova/transformers');
-      summarizerPipelineRef.current = await pipeline('summarization', 'Xenova/t5-small', { progress_callback });
+      const transformers = await import('@xenova/transformers');
+      summarizerPipelineRef.current = await transformers.pipeline('summarization', 'Xenova/t5-small', { progress_callback });
     }
     return summarizerPipelineRef.current;
   };
