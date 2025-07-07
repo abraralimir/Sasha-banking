@@ -4,6 +4,17 @@ import React, { useState, useRef, useEffect } from 'react';
 import type { HotTable } from '@handsontable/react';
 import type Handsontable from 'handsontable';
 import * as XLSX from 'xlsx';
+import { Bar, Pie } from 'react-chartjs-2';
+import { 
+  Chart as ChartJS, 
+  CategoryScale, 
+  LinearScale, 
+  BarElement, 
+  Title, 
+  Tooltip, 
+  Legend,
+  ArcElement
+} from 'chart.js';
 
 import { LanguageToggle } from '@/components/language-toggle';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -20,6 +31,9 @@ import { SashaAvatar } from '@/components/sasha-avatar';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { User } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
 const initialData = Array.from({ length: 50 }, () => Array(26).fill(''));
 
@@ -39,6 +53,35 @@ type ChatMessage = {
   content: string;
 }
 
+type ChartData = {
+  type: 'bar' | 'pie';
+  title: string;
+  data: {
+    labels: string[];
+    datasets: {
+      label: string;
+      data: number[];
+      backgroundColor: string[];
+    }[];
+  };
+};
+
+// Define custom renderer once
+const customStyleRenderer = (instance: Handsontable, td: HTMLTableCellElement, row: number, col: number, prop: string | number, value: any, cellProperties: Handsontable.CellProperties) => {
+  Handsontable.renderers.TextRenderer.apply(this, [instance, td, row, col, prop, value, cellProperties]);
+
+  const { style } = cellProperties as any; // Cast to any to access custom meta
+  if (style) {
+    if (style.color) td.style.color = style.color;
+    if (style.backgroundColor) td.style.backgroundColor = style.backgroundColor;
+  }
+};
+
+// Register it before component render
+if (typeof window !== 'undefined') {
+  Handsontable.renderers.registerRenderer('customStyleRenderer', customStyleRenderer);
+}
+
 export default function SpreadsheetPage() {
   const { t, language, dir } = useLanguage();
   const [sheetData, setSheetData] = useState<any[][]>(initialData);
@@ -53,8 +96,8 @@ export default function SpreadsheetPage() {
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(true);
-
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [charts, setCharts] = useState<ChartData[]>([]);
 
   useEffect(() => {
     setChatMessages([
@@ -101,20 +144,70 @@ export default function SpreadsheetPage() {
   const handleImportClick = () => {
     fileInputRef.current?.click();
   };
+  
+  const getChartColors = (numColors: number) => {
+    const colors = [
+      'hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))',
+      'hsl(var(--chart-4))', 'hsl(var(--chart-5))', 'hsl(222.2, 47.4%, 11.2%)'
+    ];
+    let result = [];
+    for (let i = 0; i < numColors; i++) {
+        result.push(colors[i % colors.length]);
+    }
+    return result;
+  }
+
+  const convertA1RangeToChartData = (dataRange: { labels: string; data: string | string[] }, currentSheetData: any[][]) => {
+      const { labels: labelsRange, data: dataRanges } = dataRange;
+
+      const labelsCoords = XLSX.utils.decode_range(labelsRange);
+      const labels = [];
+      for (let R = labelsCoords.s.r; R <= labelsCoords.e.r; ++R) {
+        labels.push(currentSheetData[R]?.[labelsCoords.s.c] ?? '');
+      }
+
+      const datasets = (Array.isArray(dataRanges) ? dataRanges : [dataRanges]).map(range => {
+        const dataCoords = XLSX.utils.decode_range(range);
+        const data = [];
+        const headerRow = dataCoords.s.r > 0 ? dataCoords.s.r - 1 : 0;
+        const label = currentSheetData[headerRow]?.[dataCoords.s.c] ?? 'Dataset';
+        
+        for (let R = dataCoords.s.r; R <= dataCoords.e.r; ++R) {
+          const cellValue = currentSheetData[R]?.[dataCoords.s.c];
+          let val = 0;
+          if(typeof cellValue === 'string') {
+            val = parseFloat(cellValue.replace(/[^0-9.-]+/g,""));
+          } else if (typeof cellValue === 'number') {
+            val = cellValue;
+          }
+          data.push(isNaN(val) ? 0 : val);
+        }
+        return {
+          label: label,
+          data: data,
+          backgroundColor: getChartColors(data.length),
+        };
+      });
+
+      return { labels, datasets };
+  };
 
   const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setCharts([]);
 
     const reader = new FileReader();
     reader.onload = (event) => {
         try {
             const data = event.target?.result;
-            const workbook = XLSX.read(data, { type: 'binary' });
+            const workbook = XLSX.read(data, { type: 'binary', cellNF: true });
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
-            const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            const json = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false });
+            
             setSheetData(json as any[][]);
+
             toast({
                 title: t('importSuccessTitle'),
                 description: t('importSuccessDesc', { fileName: file.name }),
@@ -152,25 +245,29 @@ export default function SpreadsheetPage() {
       });
       
       const firstConfirmation = response.operations.find(op => op.confirmation)?.confirmation;
-      const confirmationMessage = firstConfirmation || "I've processed your request.";
-
-      setChatMessages(prev => [...prev, { role: 'assistant', content: confirmationMessage }]);
+      if(firstConfirmation) {
+        setChatMessages(prev => [...prev, { role: 'assistant', content: firstConfirmation }]);
+      }
       
       hotInstance.batch(() => {
+        let newData: any[][] | null = null;
         for (const op of response.operations) {
           switch (op.command) {
             case 'createGantt':
-              setSheetData(ganttTemplate);
+              newData = ganttTemplate;
+              setCharts([]);
               break;
             case 'clearSheet':
               const clearedData = Array.from({ length: 50 }, () => Array(26).fill(''));
               hotInstance.updateSettings({ cell: [], comments: false });
               hotInstance.getPlugin('comments').clearComments();
-              setSheetData(clearedData);
+              newData = clearedData;
+              setCharts([]);
               break;
             case 'setData':
               if (op.params.data) {
-                setSheetData(op.params.data);
+                newData = op.params.data;
+                setCharts([]);
               }
               break;
             case 'formatCells':
@@ -178,27 +275,49 @@ export default function SpreadsheetPage() {
               if (range && properties) {
                 for (let row = range.row; row <= range.row2; row++) {
                     for (let col = range.col; col <= range.col2; col++) {
-                        const cell = hotInstance.getCell(row, col);
-                        if (cell) {
-                            let className = cell.className || '';
-                            const style = cell.style || {};
+                        const currentMeta = hotInstance.getCellMeta(row, col) || {};
+                        let classNames = (currentMeta.className || '').split(' ').filter(Boolean);
+                        
+                        // Handle alignments by removing old and adding new
+                        const alignments = ['htLeft', 'htCenter', 'htRight', 'htJustify'];
+                        classNames = classNames.filter(c => !alignments.includes(c));
+                        if(properties.alignment) classNames.push(properties.alignment);
 
-                            if (properties.bold) className += ' ht-cell-bold';
-                            if (properties.italic) className += ' ht-cell-italic';
-                            if (properties.underline) className += ' ht-cell-underline';
-                            if (properties.color) style.color = properties.color;
-                            if (properties.backgroundColor) style.backgroundColor = properties.backgroundColor;
+                        if (properties.bold) classNames.push('ht-cell-bold');
+                        if (properties.italic) classNames.push('ht-cell-italic');
+                        if (properties.underline) classNames.push('ht-cell-underline');
+                        hotInstance.setCellMeta(row, col, 'className', classNames.join(' '));
 
-                            hotInstance.setCellMeta(row, col, 'className', className.trim());
-                            hotInstance.setCellMeta(row, col, 'style', style);
+                        if (properties.color || properties.backgroundColor) {
+                          const style = (currentMeta as any).style || {};
+                          if (properties.color) style.color = properties.color;
+                          if (properties.backgroundColor) style.backgroundColor = properties.backgroundColor;
+                          hotInstance.setCellMeta(row, col, 'style', style);
+                          hotInstance.setCellMeta(row, col, 'renderer', 'customStyleRenderer');
+                        }
+
+                        if (properties.numericFormat) {
+                          hotInstance.setCellMeta(row, col, 'numericFormat', properties.numericFormat);
                         }
                     }
                 }
               }
               break;
+            case 'createChart':
+                const { type, title, dataRange } = op.params;
+                const newChart: ChartData = {
+                  type,
+                  title,
+                  data: convertA1RangeToChartData(dataRange, newData ?? currentData),
+                };
+                setCharts(prev => [...prev, newChart]);
+              break;
             case 'info':
               break;
           }
+        }
+        if (newData) {
+          setSheetData(newData);
         }
       });
       hotInstance.render();
@@ -250,8 +369,35 @@ export default function SpreadsheetPage() {
       />
 
       <div className="flex flex-1 overflow-hidden">
-        <main className="flex-1 overflow-auto">
-          <Spreadsheet data={sheetData} hotRef={hotRef} />
+        <main className="flex-1 overflow-auto flex flex-col">
+          <div className="flex-grow">
+            <Spreadsheet data={sheetData} hotRef={hotRef} />
+          </div>
+           {charts.length > 0 && (
+            <ScrollArea className="flex-shrink-0 border-t bg-muted/40 max-h-96">
+                <section className="p-4">
+                  <h2 className="text-lg font-semibold mb-4 text-center">{t('chartsTitle', 'Charts')}</h2>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {charts.map((chart, index) => (
+                      <Card key={index} className="shadow-lg">
+                        <CardHeader>
+                          <CardTitle>{chart.title}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="h-[400px]">
+                          {chart.type === 'bar' ? (
+                              <Bar data={chart.data} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }} />
+                          ) : (
+                              <div className="h-full w-full flex items-center justify-center">
+                                <Pie data={chart.data} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }} />
+                              </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </section>
+            </ScrollArea>
+          )}
         </main>
         
         {isChatOpen && (

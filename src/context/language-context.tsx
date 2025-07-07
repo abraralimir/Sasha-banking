@@ -208,6 +208,7 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     tooltipAutoSum: "AutoSum (Coming Soon)",
     tooltipSortFilter: "Sort & Filter (Coming Soon)",
     tooltipFindSelect: "Find & Select (Coming Soon)",
+    chartsTitle: "Charts",
 
     // Data Analytics Page
     daUploadPromptTitle: "AI-Powered Data Dashboard",
@@ -422,6 +423,7 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     tooltipAutoSum: "جمع تلقائي (قريباً)",
     tooltipSortFilter: "فرز وتصفية (قريباً)",
     tooltipFindSelect: "بحث وتحديد (قريباً)",
+    chartsTitle: "المخططات",
 
     // Data Analytics Page
     daUploadPromptTitle: "لوحة معلومات مدعومة بالذكاء الاصطناعي",

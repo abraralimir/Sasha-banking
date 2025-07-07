@@ -51,25 +51,19 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
     const selectedRange = hotInstance.getSelectedRangeLast();
     if (!selectedRange) return;
 
-    // Use the first cell to determine if the class should be added or removed
-    const firstCellMeta = hotInstance.getCellMeta(selectedRange.from.row, selectedRange.from.col);
-    const isApplied = (firstCellMeta.className || '').includes(classNameToToggle);
-
     hotInstance.batch(() => {
-        for (const [row, col] of selectedRange.forAll()) {
-            const currentMeta = hotInstance.getCellMeta(row, col);
-            let classNames = (currentMeta.className || '').split(' ').filter(Boolean);
-            
-            if (isApplied) {
-                // If the class is already applied, remove it
-                classNames = classNames.filter(cn => cn !== classNameToToggle);
-            } else {
-                // If the class is not applied, add it
-                if (!classNames.includes(classNameToToggle)) {
+        for (let row = selectedRange.from.row; row <= selectedRange.to.row; row++) {
+            for (let col = selectedRange.from.col; col <= selectedRange.to.col; col++) {
+                const currentMeta = hotInstance.getCellMeta(row, col);
+                let classNames = (currentMeta.className || '').split(' ').filter(Boolean);
+                
+                if (classNames.includes(classNameToToggle)) {
+                    classNames = classNames.filter(cn => cn !== classNameToToggle);
+                } else {
                     classNames.push(classNameToToggle);
                 }
+                hotInstance.setCellMeta(row, col, 'className', classNames.join(' '));
             }
-            hotInstance.setCellMeta(row, col, 'className', classNames.join(' '));
         }
     });
     hotInstance.render();
@@ -81,15 +75,14 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
      if (!selectedRange) return;
 
     hotInstance.batch(() => {
-        for (const [row, col] of selectedRange.forAll()) {
-            const currentMeta = hotInstance.getCellMeta(row, col);
-            let classNames = (currentMeta.className || '').split(' ').filter(Boolean);
+        for (let row = selectedRange.from.row; row <= selectedRange.to.row; row++) {
+          for (let col = selectedRange.from.col; col <= selectedRange.to.col; col++) {
+            let classNames = (hotInstance.getCellMeta(row, col).className || '').split(' ').filter(Boolean);
             const alignments = ['htLeft', 'htCenter', 'htRight', 'htJustify'];
-            // Remove any existing alignment classes
             classNames = classNames.filter(c => !alignments.includes(c));
-            // Add the new alignment class
             classNames.push(alignment);
             hotInstance.setCellMeta(row, col, 'className', classNames.join(' '));
+          }
         }
     });
     hotInstance.render();
@@ -101,14 +94,11 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
     const selection = hotInstance.getSelectedRangeLast();
     if (!selection) return;
 
-    // Check if the selection is already part of a merged area
-    const isMerged = mergePlugin.getMergedCell(selection.from.row, selection.from.col);
+    const isMerged = mergePlugin.isMerged(selection.from.row, selection.from.col, selection.to.row, selection.to.col);
 
     if (isMerged) {
-      // If it's merged, unmerge it. `unmerge` takes the top-left cell of the merge area.
-      mergePlugin.unmerge(selection.from.row, selection.from.col);
+      mergePlugin.unmerge(selection.from.row, selection.from.col, selection.to.row, selection.to.col);
     } else {
-      // If it's not merged, merge the selection.
       mergePlugin.merge(selection.from.row, selection.from.col, selection.to.row, selection.to.col);
     }
     hotInstance.render();
@@ -120,15 +110,15 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
     if (!selectedRange) return;
 
     const firstCellMeta = hotInstance.getCellMeta(selectedRange.from.row, selectedRange.from.col);
-    // Check if wordWrap is already set to 'break-word', which we use for wrapping
     const isWrapped = firstCellMeta.wordWrap === 'break-word';
 
     hotInstance.batch(() => {
-        for (const [row, col] of selectedRange.forAll()) {
-            hotInstance.setCellMeta(row, col, 'wordWrap', isWrapped ? 'normal' : 'break-word');
+        for (let row = selectedRange.from.row; row <= selectedRange.to.row; row++) {
+            for (let col = selectedRange.from.col; col <= selectedRange.to.col; col++) {
+                hotInstance.setCellMeta(row, col, 'wordWrap', isWrapped ? 'normal' : 'break-word');
+            }
         }
     });
-    // We need to re-render to apply word wrap changes
     hotInstance.render();
   };
 
