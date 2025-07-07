@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
@@ -259,7 +260,10 @@ export default function SpreadsheetPage() {
             mergeCells: [],
             cell: [],
         });
-        hotInstance.getPlugin('comments').clearComments();
+        const commentsPlugin = hotInstance.getPlugin('comments');
+        if (commentsPlugin && typeof commentsPlugin.clearComments === 'function') {
+          commentsPlugin.clearComments();
+        }
         
         // Load new data first
         setSheetData(template.data);
@@ -331,8 +335,9 @@ export default function SpreadsheetPage() {
                 Array(26).fill('')
               );
               hotInstance.updateSettings({ cell: [], comments: false, mergeCells: [] });
-              if (hotInstance.getPlugin('comments')?.clearComments) {
-                hotInstance.getPlugin('comments').clearComments();
+              const commentsPlugin = hotInstance.getPlugin('comments');
+              if (commentsPlugin && typeof commentsPlugin.clearComments === 'function') {
+                commentsPlugin.clearComments();
               }
               newData = clearedData;
               setCharts([]);
@@ -541,7 +546,7 @@ export default function SpreadsheetPage() {
         {isChatOpen && (
           <aside
             className={cn(
-              'w-[350px] border-l bg-background flex flex-col h-full animate-in duration-300',
+              'w-[350px] border-l bg-background flex flex-col h-full animate-in duration-300 z-30',
               dir === 'ltr'
                 ? 'slide-in-from-right-sm'
                 : 'slide-in-from-left-sm'
