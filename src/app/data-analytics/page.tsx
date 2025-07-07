@@ -6,7 +6,6 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Toolti
 import * as XLSX from 'xlsx';
 import * as pdfjsLib from 'pdfjs-dist';
 import * as dfd from 'danfojs';
-import type { SummarizationPipeline } from '@xenova/transformers';
 
 import { LanguageToggle } from '@/components/language-toggle';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -22,7 +21,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.vers
 class PipelineSingleton {
     static task = 'summarization';
     static model = 'Xenova/t5-small';
-    static instance: SummarizationPipeline | null = null;
+    static instance: any | null = null;
 
     static async getInstance(progress_callback?: (progress: any) => void) {
         if (this.instance === null) {
