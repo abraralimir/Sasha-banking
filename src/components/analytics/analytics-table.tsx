@@ -1,38 +1,10 @@
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from '@/components/ui/table';
+'use server';
 
-interface AnalyticsTableProps {
-  headers: string[];
-  rows: (string | number)[][];
-}
+import { config } from 'dotenv';
+config();
 
-export function AnalyticsTable({ headers, rows }: AnalyticsTableProps) {
-  return (
-    <div className="w-full overflow-auto" style={{maxHeight: '400px'}}>
-        <Table>
-        <TableHeader>
-            <TableRow>
-            {headers.map((header, index) => (
-                <TableHead key={index}>{header}</TableHead>
-            ))}
-            </TableRow>
-        </TableHeader>
-        <TableBody>
-            {rows.map((row, rowIndex) => (
-            <TableRow key={rowIndex}>
-                {row.map((cell, cellIndex) => (
-                <TableCell key={cellIndex}>{cell}</TableCell>
-                ))}
-            </TableRow>
-            ))}
-        </TableBody>
-        </Table>
-    </div>
-  );
-}
+import '@/ai/flows/summarize-chat-history.ts';
+import '@/ai/flows/chat.ts';
+import '@/ai/flows/analyze-loan.ts';
+import '@/ai/flows/analyze-financial-statement.ts';
+import '@/ai/flows/spreadsheet-assistant.ts';

@@ -1,237 +1,159 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
+import { Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import * as pdfjsLib from 'pdfjs-dist';
+import * as dfd from 'danfojs';
+import { pipeline, type SummarizationPipeline } from '@xenova/transformers';
 
 import { LanguageToggle } from '@/components/language-toggle';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Loader2, Bot, RefreshCw, Maximize, Minimize, FileUp, Download } from 'lucide-react';
+import { Loader2, FileUp, Bot, RefreshCw } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/context/language-context';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { generateDashboard, type DashboardLayout } from '@/ai/flows/generate-dashboard';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { KpiCard } from '@/components/analytics/kpi-card';
-import { AnalyticsBarChart } from '@/components/analytics/analytics-bar-chart';
-import { AnalyticsPieChart } from '@/components/analytics/analytics-pie-chart';
-import { AnalyticsTable } from '@/components/analytics/analytics-table';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+
+class PipelineSingleton {
+    static task = 'summarization';
+    static model = 'Xenova/t5-small';
+    static instance: SummarizationPipeline | null = null;
+
+    static async getInstance(progress_callback?: (progress: any) => void) {
+        if (this.instance === null) {
+            this.instance = await pipeline(this.task, this.model, { progress_callback });
+        }
+        return this.instance;
+    }
+}
 
 export default function DataAnalyticsPage() {
-  const { t, language, dir } = useLanguage();
+  const { t, dir } = useLanguage();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const fullscreenRef = useRef<HTMLDivElement>(null);
-  const dashboardRef = useRef<HTMLDivElement>(null);
 
-  const [isDashboardLoading, setIsDashboardLoading] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
-  
-  const [fileContent, setFileContent] = useState<string | null>(null);
-  const [fileType, setFileType] = useState<'csv' | 'pdf' | null>(null);
-  const [fileName, setFileName] = useState<string | null>(null);
-  const [dashboardLayout, setDashboardLayout] = useState<DashboardLayout | null>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
+  const [summary, setSummary] = useState('');
+  const [chartData, setChartData] = useState<any>(null);
+  const [fileName, setFileName] = useState('');
 
-  // Removed useEffect that loaded from localStorage to prevent quota errors.
-
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-        setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => {
-        document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    };
-  }, []);
-
-  const toggleFullscreen = () => {
-    if (!fullscreenRef.current) return;
-    if (!document.fullscreenElement) {
-        fullscreenRef.current.requestFullscreen().catch(err => {
-            alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-        });
-    } else {
-        document.exitFullscreen();
-    }
-  };
-
-  const handleClearSession = () => {
-    setFileContent(null);
-    setFileType(null);
-    setFileName(null);
-    setDashboardLayout(null);
-    // Removed localStorage clearing to align with not setting it
-    toast({
-        title: t('sessionClearedTitle'),
-        description: t('sessionClearedDesc'),
-    });
-  };
-  
-  const handleGenerateDashboard = async (content: string, type: 'csv' | 'pdf') => {
-    setIsDashboardLoading(true);
-    setDashboardLayout(null);
-    try {
-      const payload = type === 'pdf' 
-        ? { pdfDataUri: content, language } 
-        : { csvContent: content, language };
-      
-      const layout = await generateDashboard(payload);
-      setDashboardLayout(layout);
-    } catch (error) {
-      console.error("Error generating dashboard:", error);
-      toast({
-        variant: 'destructive',
-        title: t('genericErrorTitle'),
-        description: t('daDashboardGenError'),
-      });
-      handleClearSession();
-    } finally {
-      setIsDashboardLoading(false);
-    }
-  };
-  
-  const setFile = (content: string, type: 'csv' | 'pdf', name: string) => {
-    setFileContent(content);
-    setFileType(type);
-    setFileName(name);
-    // Removed saving to localStorage to prevent quota errors with large files
-    handleGenerateDashboard(content, type);
-  }
-
-  const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    handleClearSession();
-    toast({
-        title: t('daFileProcessingTitle'),
-        description: t('daFileProcessingDesc', { fileName: file.name }),
-    });
+    setIsLoading(true);
+    setSummary('');
+    setChartData(null);
+    setFileName(file.name);
 
-    const reader = new FileReader();
-    
-    if (file.type === 'application/pdf') {
-        reader.readAsDataURL(file);
-        reader.onload = (event) => {
-            const dataUri = event.target?.result as string;
-            setFile(dataUri, 'pdf', file.name);
-        };
-    } else {
-        reader.readAsBinaryString(file);
-        reader.onload = (event) => {
-            try {
-                const data = event.target?.result;
-                const workbook = XLSX.read(data, { type: 'binary' });
-                const sheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[sheetName];
-                const csvString = XLSX.utils.sheet_to_csv(worksheet);
-                setFile(csvString, 'csv', file.name);
-            } catch (error) {
-                console.error("Error importing file:", error);
-                toast({ variant: 'destructive', title: t('importFailedTitle'), description: t('importFailedDesc') });
-                handleClearSession();
-            }
-        };
-    }
+    try {
+      let jsonData: any[] = [];
 
-    reader.onerror = () => {
-        toast({ variant: 'destructive', title: t('importFailedTitle'), description: t('importFailedDesc') });
-        handleClearSession();
-    }
-
-    if(e.target) e.target.value = '';
-  };
-  
-  const handleDownloadPdf = () => {
-    if (!dashboardRef.current || isDownloading) return;
-
-    setIsDownloading(true);
-    toast({
-        title: t('generatingPdf'),
-    });
-
-    html2canvas(dashboardRef.current, {
-        useCORS: true,
-        scale: 2,
-        backgroundColor: null, // Use transparent background, so parent page background is used
-    }).then((canvas) => {
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-        const canvasWidth = canvas.width;
-        const canvasHeight = canvas.height;
-        const ratio = canvasWidth / canvasHeight;
-        
-        let imgWidth = pdfWidth;
-        let imgHeight = imgWidth / ratio;
-        let heightLeft = imgHeight;
-        let position = 0;
-
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pdfHeight;
-
-        while (heightLeft > 0) {
-          position = heightLeft - imgHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-          heightLeft -= pdfHeight;
+      if (file.name.endsWith('.xlsx') || file.name.endsWith('.csv')) {
+        setLoadingMessage(t('daParsingFile'));
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        jsonData = XLSX.utils.sheet_to_json(sheet);
+      
+      } else if (file.name.endsWith('.pdf')) {
+        setLoadingMessage(t('daParsingFile'));
+        const data = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data }).promise;
+        const pages = [];
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          pages.push(textContent.items.map((item: any) => item.str).join(' '));
         }
+        const fullText = pages.join('\n');
         
-        pdf.save(`${dashboardLayout?.title.replace(/ /g, '_') || 'dashboard'}.pdf`);
-    }).catch(err => {
-        console.error("PDF Generation Error:", err);
-        toast({
-            variant: 'destructive',
-            title: t('genericErrorTitle'),
-            description: t('pdfGenError'),
+        setLoadingMessage(t('daSummarizingPdf'));
+        const summarizer = await PipelineSingleton.getInstance((p: any) => {
+            if (p.status === 'progress') {
+                const progress = (p.progress || 0).toFixed(2);
+                setLoadingMessage(`${t('daSummarizingPdf')} (${progress}%)`);
+            }
         });
-    }).finally(() => {
-        setIsDownloading(false);
-    });
-  };
+        const output = await summarizer(fullText, {
+            max_length: 200,
+            min_length: 30,
+        });
+        setSummary(output[0].summary_text);
+        setIsLoading(false);
+        return;
+      }
 
-  const renderDashboardItem = (item: DashboardLayout['items'][0], index: number) => {
-    switch (item.type) {
-      case 'kpi':
-        return <KpiCard key={index} title={item.title} value={item.value} description={item.description} />;
-      case 'bar':
-        return (
-          <Card key={index} className="col-span-1 md:col-span-2">
-            <CardHeader><CardTitle>{item.title}</CardTitle></CardHeader>
-            <CardContent><AnalyticsBarChart data={item.data} /></CardContent>
-          </Card>
-        );
-      case 'pie':
-        return (
-          <Card key={index} className="col-span-1">
-            <CardHeader><CardTitle>{item.title}</CardTitle></CardHeader>
-            <CardContent><AnalyticsPieChart data={item.data} /></CardContent>
-          </Card>
-        );
-      case 'table':
-        return (
-          <Card key={index} className="col-span-1 md:col-span-3">
-            <CardHeader><CardTitle>{item.title}</CardTitle></CardHeader>
-            <CardContent><AnalyticsTable headers={item.headers} rows={item.rows} /></CardContent>
-          </Card>
-        );
-      default:
-        return null;
+      if (jsonData.length > 0) {
+        setLoadingMessage(t('daAnalyzingData'));
+        const df = new dfd.DataFrame(jsonData);
+        
+        let categoricalColumn = df.columns.find(col => df[col].dtype === 'string');
+        if (!categoricalColumn) {
+            categoricalColumn = df.columns[1] || df.columns[0];
+        }
+
+        const valueCounts = df[categoricalColumn].valueCounts();
+        
+        setChartData({
+          labels: valueCounts.index.slice(0, 15),
+          datasets: [
+            {
+              label: t('daChartLabel', { column: categoricalColumn }),
+              data: valueCounts.values.slice(0, 15),
+              backgroundColor: 'hsl(var(--primary) / 0.6)',
+              borderColor: 'hsl(var(--primary))',
+              borderWidth: 1,
+            },
+          ],
+        });
+
+        setLoadingMessage(t('daGeneratingSummary'));
+        const summarizer = await PipelineSingleton.getInstance();
+        const analysisText = `Analysis of ${fileName}: The dataset has ${df.shape[0]} rows and ${df.shape[1]} columns. Columns are: ${df.columns.join(', ')}. The analysis of column "${categoricalColumn}" shows various categories.`;
+        const output = await summarizer(analysisText, {
+            max_length: 150,
+            min_length: 25,
+        });
+        setSummary(output[0].summary_text);
+      }
+    } catch (error) {
+      console.error("Analysis failed:", error);
+      toast({
+        variant: 'destructive',
+        title: t('analysisFailedTitle'),
+        description: t('daAnalysisFailedDesc'),
+      });
+    } finally {
+      setIsLoading(false);
+      setLoadingMessage('');
+      if(e.target) e.target.value = '';
     }
   };
-  
+
+  const handleClear = () => {
+    setSummary('');
+    setChartData(null);
+    setFileName('');
+    if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+    }
+  };
+
   return (
-    <div ref={fullscreenRef} className="flex flex-col h-screen bg-background text-foreground" dir={dir}>
-       <input
+    <div className="flex flex-col h-screen bg-background text-foreground" dir={dir}>
+      <input
         type="file"
         ref={fileInputRef}
-        onChange={handleFileImport}
+        onChange={handleFileUpload}
         className="hidden"
-        accept=".xlsx, .xls, .csv, .pdf"
+        accept=".xlsx,.xls,.csv,.pdf"
       />
       <header className="grid grid-cols-3 items-center p-4 border-b shrink-0">
         <div className="justify-self-start flex items-center gap-2">
@@ -241,81 +163,74 @@ export default function DataAnalyticsPage() {
           {t('dataAnalyticsTitle')}
         </h1>
         <div className="justify-self-end flex items-center gap-2">
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={handleClearSession} disabled={isDashboardLoading || isDownloading}>
-                        <RefreshCw className="h-5 w-5" />
-                        <span className="sr-only">{t('refreshSession')}</span>
-                    </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>{t('refreshSession')}</p></TooltipContent>
-                </Tooltip>
-                 <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" onClick={handleDownloadPdf} disabled={isDownloading || !dashboardLayout}>
-                          {isDownloading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Download className="h-5 w-5" />}
-                          <span className="sr-only">{t('downloadDashboard')}</span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>{t('downloadDashboard')}</p></TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={toggleFullscreen}>
-                        {isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
-                        <span className="sr-only">{isFullscreen ? t('exitFullscreen') : t('fullscreen')}</span>
-                    </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>{isFullscreen ? t('exitFullscreen') : t('fullscreen')}</p></TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
           <LanguageToggle />
         </div>
       </header>
 
       <main className="flex-1 overflow-auto p-4 md:p-6">
-          {!fileContent ? (
-               <Card className="w-full max-w-lg mx-auto text-center shadow-lg animate-in fade-in-50 duration-500">
-                  <CardHeader>
-                      <div className="mx-auto bg-primary/10 text-primary p-3 rounded-full mb-4">
-                          <Bot className="w-10 h-10" />
-                      </div>
-                      <CardTitle>{t('daUploadPromptTitle')}</CardTitle>
-                      <CardDescription>{t('daUploadPromptDesc')}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                      <Button onClick={() => fileInputRef.current?.click()}>
-                          <FileUp className="mr-2 h-4 w-4" />
-                          {t('daUploadButton')}
-                      </Button>
-                  </CardContent>
-               </Card>
-          ) : isDashboardLoading ? (
-              <div className="flex flex-col items-center justify-center h-full text-center">
-                  <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
-                  <h2 className="text-xl font-semibold">{t('daGeneratingDashboardTitle')}</h2>
-                  <p className="text-muted-foreground">{t('daGeneratingDashboardDesc')}</p>
-              </div>
-          ) : dashboardLayout ? (
-              <div ref={dashboardRef} className="max-w-4xl mx-auto animate-in fade-in-50 duration-500 space-y-6 bg-background p-4 sm:p-6">
-                  <div className="text-center">
-                    <h1 className="text-3xl font-bold tracking-tight">{dashboardLayout.title}</h1>
-                    <p className="mt-2 text-lg text-muted-foreground">{dashboardLayout.executiveSummary}</p>
-                  </div>
-                   <Card>
-                      <CardHeader>
-                          <CardTitle>{t('detailedAnalysisTitle')}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                          <p className="whitespace-pre-wrap text-muted-foreground">{dashboardLayout.detailedAnalysis}</p>
-                      </CardContent>
+          <div className="max-w-4xl mx-auto space-y-6">
+            {!fileName ? (
+                 <Card className="w-full max-w-lg mx-auto text-center shadow-lg animate-in fade-in-50 duration-500">
+                    <CardHeader>
+                        <div className="mx-auto bg-primary/10 text-primary p-3 rounded-full mb-4">
+                            <Bot className="w-10 h-10" />
+                        </div>
+                        <CardTitle>{t('daUploadPromptTitle')}</CardTitle>
+                        <CardDescription>{t('daUploadPromptDesc')}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Button onClick={() => fileInputRef.current?.click()}>
+                            <FileUp className="mr-2 h-4 w-4" />
+                            {t('daUploadButton')}
+                        </Button>
+                    </CardContent>
+                 </Card>
+            ) : isLoading ? (
+                <div className="flex flex-col items-center justify-center h-full text-center">
+                    <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
+                    <h2 className="text-xl font-semibold">{loadingMessage || t('daGeneratingDashboardTitle')}</h2>
+                    <p className="text-muted-foreground">{t('daGeneratingDashboardDesc')}</p>
+                </div>
+            ) : (
+                <div className="animate-in fade-in-50 duration-500 space-y-6">
+                    <Card>
+                        <CardHeader className="flex-row items-center justify-between">
+                            <div>
+                                <CardTitle>{t('analysisResultTitle')}</CardTitle>
+                                <CardDescription>{fileName}</CardDescription>
+                            </div>
+                            <Button variant="outline" onClick={handleClear}>
+                                <RefreshCw className="mr-2 h-4 w-4" />
+                                {t('daResetButton')}
+                            </Button>
+                        </CardHeader>
                     </Card>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                     {dashboardLayout.items.map(renderDashboardItem)}
-                  </div>
-              </div>
-          ) : null}
+
+                    {summary && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>{t('daSummaryTitle')}</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-muted-foreground">{summary}</p>
+                            </CardContent>
+                        </Card>
+                    )}
+                    {chartData && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>{t('daChartTitle')}</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="h-[400px]">
+                                    <Bar data={chartData} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }} />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
+            )}
+          </div>
       </main>
     </div>
   );
