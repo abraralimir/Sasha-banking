@@ -81,6 +81,30 @@ type ChartData = {
   };
 };
 
+const customStyleRenderer: Handsontable.renderers.Base = function (
+  instance,
+  td,
+  row,
+  col,
+  prop,
+  value,
+  cellProperties
+) {
+  // Use the built-in text renderer to handle the basic cell drawing.
+  Handsontable.renderers.TextRenderer.apply(this, [instance, td, row, col, prop, value, cellProperties]);
+
+  // Apply our custom styles from the cell's metadata.
+  const { style } = cellProperties as any;
+  if (style) {
+    if (style.color) {
+      td.style.color = style.color;
+    }
+    if (style.backgroundColor) {
+      td.style.backgroundColor = style.backgroundColor;
+    }
+  }
+};
+
 export default function SpreadsheetPage() {
   const { t, language, dir } = useLanguage();
   const [sheetData, setSheetData] = useState<any[][]>(initialData);
@@ -105,44 +129,6 @@ export default function SpreadsheetPage() {
       setHotInstance(instance);
     }
   }, []); // Runs once on mount
-
-  // This effect registers the custom renderer once the hotInstance is available.
-  useEffect(() => {
-    if (hotInstance) {
-      const HandsontableConstructor = hotInstance.constructor as typeof Handsontable;
-      
-      // Check if renderer is already registered
-      if (!HandsontableConstructor.renderers.has('customStyleRenderer')) {
-        
-        // Define the renderer function
-        const customStyleRenderer = function (
-          this: any,
-          instance: any,
-          td: HTMLTableCellElement,
-          row: number,
-          col: number,
-          prop: string | number,
-          value: any,
-          cellProperties: any
-        ) {
-          // Get the base text renderer from the instance and call it
-          const textRenderer = instance.getCellRenderer('text');
-          textRenderer(instance, td, row, col, prop, value, cellProperties);
-
-          // Apply our custom styles
-          const { style } = cellProperties as any;
-          if (style) {
-            if (style.color) td.style.color = style.color;
-            if (style.backgroundColor)
-              td.style.backgroundColor = style.backgroundColor;
-          }
-        };
-        
-        // Register the renderer
-        HandsontableConstructor.renderers.registerRenderer('customStyleRenderer', customStyleRenderer);
-      }
-    }
-  }, [hotInstance]);
 
   // This effect loads new data into the table when sheetData state changes.
   useEffect(() => {
@@ -395,11 +381,17 @@ export default function SpreadsheetPage() {
                         row,
                         col,
                         'renderer',
-                        'customStyleRenderer'
+                        customStyleRenderer
                       );
                     }
 
                     if (properties.numericFormat) {
+                      hotInstance.setCellMeta(
+                        row,
+                        col,
+                        'type',
+                        'numeric'
+                      );
                       hotInstance.setCellMeta(
                         row,
                         col,
