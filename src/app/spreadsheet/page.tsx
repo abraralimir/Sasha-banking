@@ -255,29 +255,55 @@ export default function SpreadsheetPage() {
   const handleSetTemplate = (template: { data: any[][], mergeCells?: Handsontable.MergeCells.Settings[] }) => {
     setCharts([]);
     if (hotInstance) {
-        // Clear existing merges and formatting before applying new template
-        hotInstance.updateSettings({
-            mergeCells: [],
-            cell: [],
-        });
-        const commentsPlugin = hotInstance.getPlugin('comments');
-        if (commentsPlugin && typeof commentsPlugin.clearComments === 'function') {
-          commentsPlugin.clearComments();
-        }
-        
-        // Load new data first
-        setSheetData(template.data);
-        
-        // Defer updating settings that rely on the new data structure
-        setTimeout(() => {
-            if (template.mergeCells) {
-                hotInstance.updateSettings({ mergeCells: template.mergeCells });
+        // 1. Clear everything from the instance
+        hotInstance.batch(() => {
+            hotInstance.updateSettings({
+                mergeCells: [],
+                cell: [],
+            });
+            const commentsPlugin = hotInstance.getPlugin('comments');
+            if (commentsPlugin && typeof commentsPlugin.clearComments === 'function') {
+                commentsPlugin.clearComments();
             }
+        });
+
+        // 2. Prepare new data by extracting only primitive values
+        const newData = template.data.map(row => 
+            row.map(cell => (cell && typeof cell === 'object' && cell.value !== undefined) ? cell.value : cell)
+        );
+
+        // 3. Load the clean data into the sheet
+        setSheetData(newData);
+        
+        // 4. Defer applying metadata to ensure the new data is rendered first
+        setTimeout(() => {
+            hotInstance.batch(() => {
+                // Apply metadata (className, readOnly, etc.) from template objects
+                template.data.forEach((row, r) => {
+                    row.forEach((cell, c) => {
+                        if (cell && typeof cell === 'object') {
+                            const { value, ...meta } = cell;
+                            for (const key in meta) {
+                                hotInstance.setCellMeta(r, c, key, (meta as any)[key]);
+                            }
+                        }
+                    });
+                });
+                
+                // Apply merged cells settings
+                if (template.mergeCells) {
+                    hotInstance.updateSettings({ mergeCells: template.mergeCells });
+                }
+            });
             hotInstance.render();
         }, 0);
+
     } else {
-        // Fallback for when instance is not ready yet
-        setSheetData(template.data);
+        // Fallback for when instance is not ready yet, just load the values to prevent crash
+        const fallbackData = template.data.map(row => 
+            row.map(cell => (cell && typeof cell === 'object' && cell.value !== undefined) ? cell.value : cell)
+        );
+        setSheetData(fallbackData);
     }
 
     toast({
@@ -327,7 +353,9 @@ export default function SpreadsheetPage() {
               const template = templates.find(t => t.id === op.params.templateName);
               if (template) {
                 handleSetTemplate(template);
-                newData = template.data;
+                finalDataForCharts = template.data.map(row => 
+                    row.map(cell => (cell && typeof cell === 'object' && cell.value !== undefined) ? cell.value : cell)
+                );
               }
               break;
             case 'clearSheet':
