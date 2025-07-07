@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef } from 'react';
@@ -25,7 +26,6 @@ import { useLanguage } from '@/context/language-context';
 import { useToast } from '@/hooks/use-toast';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
 export default function DataAnalyticsPage() {
   const { t, dir } = useLanguage();
@@ -41,6 +41,9 @@ export default function DataAnalyticsPage() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [barChartData, setBarChartData] = useState<any>(null);
   const [pieChartData, setPieChartData] = useState<any>(null);
+  
+  // This line must be inside the component to run only on the client
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
   const getSummarizer = async (progress_callback?: (progress: any) => void) => {
     if (summarizerPipelineRef.current === null) {
