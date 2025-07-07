@@ -125,7 +125,7 @@ export default function SpreadsheetPage() {
     // Register renderer only on client and only once
     if (
       typeof window !== 'undefined' &&
-      !Handsontable.renderers.getRenderer('customStyleRenderer')
+      !Handsontable.renderers.hasRenderer('customStyleRenderer')
     ) {
       Handsontable.renderers.registerRenderer(
         'customStyleRenderer',
