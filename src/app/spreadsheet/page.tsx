@@ -222,6 +222,9 @@ export default function SpreadsheetPage() {
         });
         while(paddedData.length < 50) paddedData.push(Array(26).fill(''));
         
+        if (hotInstance) {
+           hotInstance.updateSettings({ mergeCells: [] });
+        }
         setSheetData(paddedData);
 
         toast({
@@ -248,9 +251,31 @@ export default function SpreadsheetPage() {
     if (e.target) e.target.value = '';
   };
   
-  const handleSetTemplate = (templateData: any[][]) => {
+  const handleSetTemplate = (template: { data: any[][], mergeCells?: Handsontable.MergeCells.Settings[] }) => {
     setCharts([]);
-    setSheetData(templateData);
+    if (hotInstance) {
+        // Clear existing merges and formatting before applying new template
+        hotInstance.updateSettings({
+            mergeCells: [],
+            cell: [],
+        });
+        hotInstance.getPlugin('comments').clearComments();
+        
+        // Load new data first
+        setSheetData(template.data);
+        
+        // Defer updating settings that rely on the new data structure
+        setTimeout(() => {
+            if (template.mergeCells) {
+                hotInstance.updateSettings({ mergeCells: template.mergeCells });
+            }
+            hotInstance.render();
+        }, 0);
+    } else {
+        // Fallback for when instance is not ready yet
+        setSheetData(template.data);
+    }
+
     toast({
         title: t('templateAppliedTitle'),
         description: t('templateAppliedDesc'),
@@ -297,15 +322,15 @@ export default function SpreadsheetPage() {
             case 'setTemplate':
               const template = templates.find(t => t.id === op.params.templateName);
               if (template) {
-                newData = JSON.parse(JSON.stringify(template.data));
-                setCharts([]);
+                handleSetTemplate(template);
+                newData = template.data;
               }
               break;
             case 'clearSheet':
               const clearedData = Array.from({ length: 50 }, () =>
                 Array(26).fill('')
               );
-              hotInstance.updateSettings({ cell: [], comments: false });
+              hotInstance.updateSettings({ cell: [], comments: false, mergeCells: [] });
               if (hotInstance.getPlugin('comments')?.clearComments) {
                 hotInstance.getPlugin('comments').clearComments();
               }
@@ -314,6 +339,7 @@ export default function SpreadsheetPage() {
               break;
             case 'setData':
               if (op.params.data) {
+                hotInstance.updateSettings({ mergeCells: [] });
                 newData = op.params.data;
                 setCharts([]);
               }
@@ -323,8 +349,10 @@ export default function SpreadsheetPage() {
               if (range && properties) {
                 for (let row = range.row; row <= range.row2; row++) {
                   for (let col = range.col; col <= range.col2; col++) {
-                    const currentMeta = hotInstance.getCellMeta(row, col) || {};
-                    let classNames = (currentMeta.className || '').split(' ').filter(Boolean);
+                    const cell = hotInstance.getCell(row, col);
+                    if (!cell) continue;
+
+                    let classNames = (cell.className || '').split(' ').filter(Boolean);
                     
                     const alignments = ['htLeft', 'htCenter', 'htRight', 'htJustify'];
                     classNames = classNames.filter(c => !alignments.includes(c));
@@ -339,21 +367,18 @@ export default function SpreadsheetPage() {
                     if (properties.underline) classNames.push('ht-cell-underline');
                     else classNames = classNames.filter(c => c !== 'ht-cell-underline');
 
-                    // Handle background and text color classes
                     if (properties.className) {
                         const newClasses = properties.className.split(' ');
                         const bgClass = newClasses.find(c => c.startsWith('ht-bg-'));
                         const textClass = newClasses.find(c => c.startsWith('ht-text-'));
                         
-                        // Remove old color classes before adding new ones
                         classNames = classNames.filter(c => !c.startsWith('ht-bg-'));
                         classNames = classNames.filter(c => !c.startsWith('ht-text-'));
 
                         if (bgClass) classNames.push(bgClass);
                         if (textClass) classNames.push(textClass);
                     }
-
-                    hotInstance.setCellMeta(row, col, 'className', classNames.join(' '));
+                    cell.className = classNames.join(' ');
                     
                     if (properties.readOnly !== undefined) {
                       hotInstance.setCellMeta(row, col, 'readOnly', properties.readOnly);
@@ -363,7 +388,6 @@ export default function SpreadsheetPage() {
                       hotInstance.setCellMeta(row, col, 'type', 'numeric');
                       hotInstance.setCellMeta(row, col, 'numericFormat', properties.numericFormat);
                     } else {
-                       // If we are applying non-numeric formatting, ensure the type isn't stuck on numeric
                        if (hotInstance.getCellMeta(row, col).type === 'numeric' && !properties.numericFormat) {
                            hotInstance.setCellMeta(row, col, 'type', 'text');
                        }

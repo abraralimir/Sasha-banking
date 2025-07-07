@@ -28,6 +28,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
 import {
   Menubar,
@@ -51,7 +52,7 @@ interface SpreadsheetToolbarProps {
   onImport: () => void;
   toggleFullscreen: () => void;
   isFullscreen: boolean;
-  onSetTemplate: (templateData: any[][]) => void;
+  onSetTemplate: (template: (typeof templates)[0]) => void;
 }
 
 const colorPalette = [
@@ -77,8 +78,10 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
     hotInstance.batch(() => {
         for (let row = selectedRange.from.row; row <= selectedRange.to.row; row++) {
             for (let col = selectedRange.from.col; col <= selectedRange.to.col; col++) {
-                const currentMeta = hotInstance.getCellMeta(row, col);
-                let classNames = (currentMeta.className || '').split(' ').filter(Boolean);
+                const cell = hotInstance.getCell(row, col);
+                if (!cell) continue;
+
+                let classNames = (cell.className || '').split(' ').filter(Boolean);
                 
                 if(classPrefix) {
                     classNames = classNames.filter(cn => !cn.startsWith(classPrefix));
@@ -89,7 +92,7 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
                 } else if (!classPrefix) { // Only toggle off if not a prefix-based class
                      classNames = classNames.filter(cn => cn !== classNameToToggle);
                 }
-                hotInstance.setCellMeta(row, col, 'className', classNames.join(' '));
+                cell.className = classNames.join(' ');
             }
         }
     });
@@ -105,11 +108,14 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
     hotInstance.batch(() => {
         for (let row = selectedRange.from.row; row <= selectedRange.to.row; row++) {
           for (let col = selectedRange.from.col; col <= selectedRange.to.col; col++) {
-            let classNames = (hotInstance.getCellMeta(row, col).className || '').split(' ').filter(Boolean);
+            const cell = hotInstance.getCell(row, col);
+            if (!cell) continue;
+
+            let classNames = (cell.className || '').split(' ').filter(Boolean);
             const alignments = ['htLeft', 'htCenter', 'htRight', 'htJustify'];
             classNames = classNames.filter(c => !alignments.includes(c));
             classNames.push(alignment);
-            hotInstance.setCellMeta(row, col, 'className', classNames.join(' '));
+            cell.className = classNames.join(' ');
           }
         }
     });
@@ -174,14 +180,14 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
 
   return (
     <TooltipProvider>
-      <div className="p-2 border-b bg-background">
+      <div className="p-2 border-b bg-background z-20 relative">
         <Menubar className="border-none p-0 h-auto bg-transparent">
           <div className="flex items-center space-x-1 flex-wrap">
             <MenubarMenu>
               <MenubarTrigger>{t('toolbarTemplates')}</MenubarTrigger>
-              <MenubarContent className="z-[999]">
+              <MenubarContent>
                 {templates.map((template) => (
-                  <MenubarItem key={template.id} onSelect={() => onSetTemplate(template.data)}>
+                  <MenubarItem key={template.id} onSelect={() => onSetTemplate(template)}>
                     {t(template.name)}
                   </MenubarItem>
                 ))}
@@ -256,29 +262,31 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
               <TooltipContent><p>{t('tooltipUnderline')}</p></TooltipContent>
             </Tooltip>
             <DropdownMenu>
-              <Tooltip>
-                  <TooltipTrigger asChild>
-                      <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" disabled={!isEnabled}><Palette /></Button>
-                      </DropdownMenuTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent><p>{t('tooltipFillColor')}</p></TooltipContent>
-              </Tooltip>
-              <DropdownMenuContent>
-                  <div className="p-2 grid grid-cols-4 gap-1">
-                      {colorPalette.map(color => (
-                          <DropdownMenuItem key={color.className} className="p-0 h-6 w-6 cursor-pointer" onSelect={() => toggleCellClass(color.className, color.className.startsWith('ht-bg-') ? 'ht-bg-' : 'ht-text-')} >
-                              <div title={color.name} className={cn("h-full w-full border", color.className.startsWith('ht-bg-') ? color.className.replace('ht-bg-', 'bg-') : 'flex items-center justify-center ' + color.className.replace('ht-text-','text-'))}>
-                                {color.className.startsWith('ht-text-') && 'A'}
-                              </div>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" disabled={!isEnabled}><Palette /></Button>
+                        </DropdownMenuTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent><p>{t('tooltipFillColor')}</p></TooltipContent>
+                </Tooltip>
+                <DropdownMenuPortal>
+                  <DropdownMenuContent>
+                      <div className="p-2 grid grid-cols-4 gap-1">
+                          {colorPalette.map(color => (
+                              <DropdownMenuItem key={color.className} className="p-0 h-6 w-6 cursor-pointer" onSelect={() => toggleCellClass(color.className, color.className.startsWith('ht-bg-') ? 'ht-bg-' : 'ht-text-')} >
+                                  <div title={color.name} className={cn("h-full w-full border", color.className.startsWith('ht-bg-') ? color.className.replace('!important', '') : 'flex items-center justify-center ' + color.className.replace('!important', ''))}>
+                                    {color.className.startsWith('ht-text-') && 'A'}
+                                  </div>
+                              </DropdownMenuItem>
+                          ))}
+                            <DropdownMenuItem className="p-0 h-6 w-6 cursor-pointer" onSelect={() => { toggleCellClass('', 'ht-bg-'); toggleCellClass('', 'ht-text-'); } }>
+                              <div className="h-full w-full border text-xs flex items-center justify-center">X</div>
                           </DropdownMenuItem>
-                      ))}
-                        <DropdownMenuItem className="p-0 h-6 w-6 cursor-pointer" onSelect={() => { toggleCellClass('', 'ht-bg-'); toggleCellClass('', 'ht-text-'); } }>
-                          <div className="h-full w-full border text-xs flex items-center justify-center">X</div>
-                      </DropdownMenuItem>
-                  </div>
-              </DropdownMenuContent>
-          </DropdownMenu>
+                      </div>
+                  </DropdownMenuContent>
+                </DropdownMenuPortal>
+            </DropdownMenu>
           </div>
           <Separator orientation="vertical" className="h-6" />
 
