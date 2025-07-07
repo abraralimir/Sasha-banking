@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -80,30 +81,6 @@ type ChartData = {
   };
 };
 
-// Define custom renderer once
-// We use a function expression to preserve the 'this' context from Handsontable.
-const customStyleRenderer = function (
-  instance: Handsontable,
-  td: HTMLTableCellElement,
-  row: number,
-  col: number,
-  prop: string | number,
-  value: any,
-  cellProperties: Handsontable.CellProperties
-) {
-  // The 'this' context is dynamically set by Handsontable.
-  // eslint-disable-next-line prefer-rest-params
-  Handsontable.renderers.TextRenderer.apply(this, arguments as any);
-
-  const { style } = cellProperties as any; // Cast to any to access custom meta
-  if (style) {
-    if (style.color) td.style.color = style.color;
-    if (style.backgroundColor)
-      td.style.backgroundColor = style.backgroundColor;
-  }
-};
-
-
 export default function SpreadsheetPage() {
   const { t, language, dir } = useLanguage();
   const [sheetData, setSheetData] = useState<any[][]>(initialData);
@@ -121,18 +98,58 @@ export default function SpreadsheetPage() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [charts, setCharts] = useState<ChartData[]>([]);
 
+  // This effect sets the hotInstance from the ref once the component mounts
   useEffect(() => {
-    // Register renderer only on client and only once
-    if (
-      typeof window !== 'undefined' &&
-      !Handsontable.renderers.hasRenderer('customStyleRenderer')
-    ) {
-      Handsontable.renderers.registerRenderer(
-        'customStyleRenderer',
-        customStyleRenderer
-      );
+    if (hotRef.current) {
+      const instance = hotRef.current.hotInstance;
+      setHotInstance(instance);
     }
-  }, []);
+  }, []); // Runs once on mount
+
+  // This effect registers the custom renderer once the hotInstance is available.
+  useEffect(() => {
+    if (hotInstance) {
+      const HandsontableConstructor = hotInstance.constructor as typeof Handsontable;
+      
+      // Check if renderer is already registered
+      if (!HandsontableConstructor.renderers.has('customStyleRenderer')) {
+        
+        // Define the renderer function
+        const customStyleRenderer = function (
+          this: any,
+          instance: any,
+          td: HTMLTableCellElement,
+          row: number,
+          col: number,
+          prop: string | number,
+          value: any,
+          cellProperties: any
+        ) {
+          // Get the base text renderer from the instance and call it
+          const textRenderer = instance.getCellRenderer('text');
+          textRenderer(instance, td, row, col, prop, value, cellProperties);
+
+          // Apply our custom styles
+          const { style } = cellProperties as any;
+          if (style) {
+            if (style.color) td.style.color = style.color;
+            if (style.backgroundColor)
+              td.style.backgroundColor = style.backgroundColor;
+          }
+        };
+        
+        // Register the renderer
+        HandsontableConstructor.renderers.registerRenderer('customStyleRenderer', customStyleRenderer);
+      }
+    }
+  }, [hotInstance]);
+
+  // This effect loads new data into the table when sheetData state changes.
+  useEffect(() => {
+    if (hotInstance && hotInstance.getSourceData() !== sheetData) {
+      hotInstance.loadData(sheetData);
+    }
+  }, [sheetData, hotInstance]);
 
   useEffect(() => {
     setChatMessages([
@@ -163,16 +180,6 @@ export default function SpreadsheetPage() {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
   }, []);
-
-  useEffect(() => {
-    if (hotRef.current) {
-      const instance = hotRef.current.hotInstance;
-      setHotInstance(instance);
-      if (instance.getSourceData() !== sheetData) {
-        instance.loadData(sheetData);
-      }
-    }
-  }, [sheetData]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
