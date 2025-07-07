@@ -161,6 +161,10 @@ export default function SpreadsheetPage() {
     dataRange: { labels: string; data: string | string[] },
     currentSheetData: any[][]
   ) => {
+    if (!dataRange || !dataRange.labels || !dataRange.data) {
+        // Return empty data if the range is invalid to prevent crash
+        return { labels: [], datasets: [] };
+    }
     const { labels: labelsRange, data: dataRanges } = dataRange;
 
     const labelsCoords = XLSX.utils.decode_range(labelsRange);
@@ -171,6 +175,7 @@ export default function SpreadsheetPage() {
 
     const datasets = (Array.isArray(dataRanges) ? dataRanges : [dataRanges]).map(
       (range) => {
+        if (!range) return { label: 'Dataset', data: [], backgroundColor: [] };
         const dataCoords = XLSX.utils.decode_range(range);
         const data = [];
         const headerRow = dataCoords.s.r > 0 ? dataCoords.s.r - 1 : 0;
@@ -255,7 +260,6 @@ export default function SpreadsheetPage() {
   const handleSetTemplate = (template: { data: any[][], mergeCells?: Handsontable.MergeCells.Settings[] }) => {
     setCharts([]);
     if (hotInstance) {
-        // 1. Clear everything from the instance
         hotInstance.batch(() => {
             hotInstance.updateSettings({
                 mergeCells: [],
@@ -263,22 +267,22 @@ export default function SpreadsheetPage() {
             });
             const commentsPlugin = hotInstance.getPlugin('comments');
             if (commentsPlugin && typeof commentsPlugin.clearComments === 'function') {
-                commentsPlugin.clearComments();
+                try {
+                    commentsPlugin.clearComments();
+                } catch (e) {
+                    console.warn("Could not clear comments, plugin might be clearing itself up.");
+                }
             }
         });
 
-        // 2. Prepare new data by extracting only primitive values
         const newData = template.data.map(row => 
             row.map(cell => (cell && typeof cell === 'object' && cell.value !== undefined) ? cell.value : cell)
         );
 
-        // 3. Load the clean data into the sheet
         setSheetData(newData);
         
-        // 4. Defer applying metadata to ensure the new data is rendered first
         setTimeout(() => {
             hotInstance.batch(() => {
-                // Apply metadata (className, readOnly, etc.) from template objects
                 template.data.forEach((row, r) => {
                     row.forEach((cell, c) => {
                         if (cell && typeof cell === 'object') {
@@ -290,7 +294,6 @@ export default function SpreadsheetPage() {
                     });
                 });
                 
-                // Apply merged cells settings
                 if (template.mergeCells) {
                     hotInstance.updateSettings({ mergeCells: template.mergeCells });
                 }
@@ -299,7 +302,6 @@ export default function SpreadsheetPage() {
         }, 0);
 
     } else {
-        // Fallback for when instance is not ready yet, just load the values to prevent crash
         const fallbackData = template.data.map(row => 
             row.map(cell => (cell && typeof cell === 'object' && cell.value !== undefined) ? cell.value : cell)
         );
@@ -365,7 +367,9 @@ export default function SpreadsheetPage() {
               hotInstance.updateSettings({ cell: [], comments: false, mergeCells: [] });
               const commentsPlugin = hotInstance.getPlugin('comments');
               if (commentsPlugin && typeof commentsPlugin.clearComments === 'function') {
-                commentsPlugin.clearComments();
+                try {
+                  commentsPlugin.clearComments();
+                } catch(e) { console.warn("Could not clear comments during clearSheet.") }
               }
               newData = clearedData;
               setCharts([]);
