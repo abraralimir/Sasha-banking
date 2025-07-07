@@ -218,7 +218,7 @@ export default function DataAnalyticsPage() {
                     <p className="text-muted-foreground">{t('daGeneratingDashboardDesc')}</p>
                 </div>
             ) : dashboardData && (
-                <div ref={dashboardRef} className="animate-in fade-in-50 duration-500 space-y-6">
+                <div ref={dashboardRef} className="animate-in fade-in-50 duration-500 space-y-6 bg-muted/40 p-4 md:p-6 rounded-lg">
                     <Card>
                         <CardHeader>
                             <CardTitle>{dashboardData.title}</CardTitle>
@@ -245,7 +245,7 @@ export default function DataAnalyticsPage() {
                               <CardContent>
                                   <div className="h-[400px]">
                                       {chart.type === 'bar' ? (
-                                          <Bar data={{ ...chart.data, datasets: chart.data.datasets.map(ds => ({...ds, backgroundColor: 'hsl(var(--primary) / 0.6)', borderColor: 'hsl(var(--primary))', borderWidth: 1})) }} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }} />
+                                          <Bar data={{ ...chart.data, datasets: chart.data.datasets.map(ds => ({...ds, backgroundColor: getPieChartColors(chart.data.labels.length) })) }} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }} />
                                       ) : (
                                           <div className="h-full w-full flex items-center justify-center">
                                             <Pie data={{ ...chart.data, datasets: chart.data.datasets.map(ds => ({...ds, backgroundColor: getPieChartColors(chart.data.labels.length) })) }} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }} />
