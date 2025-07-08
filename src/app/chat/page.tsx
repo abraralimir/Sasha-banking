@@ -575,7 +575,7 @@ export default function ChatPage() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder={t('placeholder')}
-                    className="pr-56 py-3 text-base resize-none"
+                    className="pr-40 sm:pr-48 md:pr-56 py-3 text-base resize-none"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
@@ -584,13 +584,13 @@ export default function ChatPage() {
                     }}
                     rows={1}
                   />
-                  <div className="absolute top-1/2 right-3 transform -translate-y-1/2 flex items-center space-x-1">
+                  <div className="absolute top-1/2 right-2 sm:right-3 transform -translate-y-1/2 flex items-center space-x-0.5 sm:space-x-1">
                     <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".csv" className="hidden" />
                     <input type="file" ref={pdfInputRef} onChange={handlePdfUpload} accept="application/pdf" className="hidden" />
                     
                     <Tooltip>
                         <TooltipTrigger asChild>
-                        <Button type="button" variant="ghost" size="icon" onClick={() => setIsImageGenOpen(true)}>
+                        <Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={() => setIsImageGenOpen(true)}>
                             <Wand2 className="w-5 h-5" />
                             <span className="sr-only">{t('imageDialogTitle')}</span>
                         </Button>
@@ -600,7 +600,7 @@ export default function ChatPage() {
                     
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button type="button" variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()}>
+                        <Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={() => fileInputRef.current?.click()}>
                           <FileUp className="w-5 h-5" />
                           <span className="sr-only">{t('uploadCsvTooltip')}</span>
                         </Button>
@@ -610,7 +610,7 @@ export default function ChatPage() {
 
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button type="button" variant="ghost" size="icon" onClick={() => pdfInputRef.current?.click()}>
+                        <Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={() => pdfInputRef.current?.click()}>
                           <FileText className="w-5 h-5" />
                           <span className="sr-only">{t('uploadPdfTooltip')}</span>
                         </Button>
@@ -620,7 +620,7 @@ export default function ChatPage() {
 
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button type="button" variant="ghost" size="icon" disabled>
+                        <Button type="button" variant="ghost" size="icon" className="h-9 w-9" disabled>
                           <Mic className="w-5 h-5" />
                           <span className="sr-only">{t('micTooltip')}</span>
                         </Button>
@@ -628,7 +628,7 @@ export default function ChatPage() {
                       <TooltipContent>{t('micTooltip')}</TooltipContent>
                     </Tooltip>
                     
-                    <Button type="submit" size="sm" disabled={isLoading || !input.trim()}>
+                    <Button type="submit" size="sm" className="h-9" disabled={isLoading || !input.trim()}>
                       <CornerDownLeft className="w-5 h-5" />
                       <span className="sr-only">{t('sendSr')}</span>
                     </Button>

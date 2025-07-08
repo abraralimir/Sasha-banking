@@ -46,6 +46,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
 import { templates } from '@/lib/spreadsheet-templates';
+import { ScrollArea } from '../ui/scroll-area';
 
 interface SpreadsheetToolbarProps {
   hotInstance: Handsontable | null;
@@ -181,8 +182,7 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
   return (
     <TooltipProvider>
       <div className="p-2 border-b bg-background z-20 relative">
-        <Menubar className="border-none p-0 h-auto bg-transparent">
-          <div className="flex items-center space-x-1 flex-wrap">
+        <Menubar className="border-none p-0 h-auto bg-transparent flex-wrap">
             <MenubarMenu>
               <MenubarTrigger>{t('toolbarTemplates')}</MenubarTrigger>
               <MenubarContent>
@@ -194,143 +194,134 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
               </MenubarContent>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger className="px-3 py-1.5 bg-muted">{t('toolbarHome')}</MenubarTrigger>
+              <MenubarTrigger className="cursor-pointer" onClick={onImport}>{t('toolbarImport')}</MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger className="px-3 py-1.5 cursor-not-allowed">{t('toolbarInsert')}</MenubarTrigger>
+              <MenubarTrigger className="cursor-pointer" onClick={handleDownload} disabled={!isEnabled}>{t('toolbarDownload')}</MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger className="px-3 py-1.5 cursor-not-allowed">{t('toolbarFormulas')}</MenubarTrigger>
-            </MenubarMenu>
-             <MenubarMenu>
-              <MenubarTrigger className="px-3 py-1.5 cursor-not-allowed">{t('toolbarData')}</MenubarTrigger>
-            </MenubarMenu>
-             <MenubarMenu>
-              <MenubarTrigger className="px-3 py-1.5 cursor-not-allowed">{t('toolbarReview')}</MenubarTrigger>
-            </MenubarMenu>
-             <MenubarMenu>
-              <MenubarTrigger className="px-3 py-1.5 cursor-not-allowed">{t('toolbarView')}</MenubarTrigger>
-            </MenubarMenu>
-            <MenubarMenu>
-              <MenubarTrigger className="px-3 py-1.5" onClick={toggleFullscreen}>
+              <MenubarTrigger className="cursor-pointer" onClick={toggleFullscreen}>
                 {isFullscreen ? t('toolbarExitFullscreen') : t('toolbarFullscreen')}
               </MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger className="px-3 py-1.5" onClick={handleDownload} disabled={!isEnabled}>{t('toolbarDownload')}</MenubarTrigger>
+              <MenubarTrigger className="cursor-not-allowed text-muted-foreground">{t('toolbarInsert')}</MenubarTrigger>
             </MenubarMenu>
-            <MenubarMenu>
-              <MenubarTrigger className="px-3 py-1.5" onClick={onImport}>{t('toolbarImport')}</MenubarTrigger>
+             <MenubarMenu>
+              <MenubarTrigger className="cursor-not-allowed text-muted-foreground">{t('toolbarData')}</MenubarTrigger>
             </MenubarMenu>
-          </div>
         </Menubar>
 
-        <div className="flex items-center space-x-2 mt-2 flex-wrap">
-          {/* Clipboard */}
-          <div className="flex items-center space-x-1">
-            <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={true}><div className="flex flex-col items-center"><Copy className="h-4 w-4" /><span className="text-[10px] -mt-1">{t('tooltipPaste').split(' ')[0]}</span></div></Button></TooltipTrigger>
-              <TooltipContent><p>{t('tooltipPaste')}</p></TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleCut} disabled={!isEnabled}><Scissors /></Button></TooltipTrigger>
-              <TooltipContent><p>{t('tooltipCut')}</p></TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleCopy} disabled={!isEnabled}><Copy /></Button></TooltipTrigger>
-              <TooltipContent><p>{t('tooltipCopy')}</p></TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={true}><Paintbrush /></Button></TooltipTrigger>
-              <TooltipContent><p>{t('tooltipFormatPainter')}</p></TooltipContent>
-            </Tooltip>
-          </div>
-          <Separator orientation="vertical" className="h-6" />
+        <Separator className="my-2" />
 
-          {/* Font */}
-          <div className="flex items-center space-x-1">
-            <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleCellClass('ht-cell-bold')} disabled={!isEnabled}><Bold /></Button></TooltipTrigger>
-              <TooltipContent><p>{t('tooltipBold')}</p></TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleCellClass('ht-cell-italic')} disabled={!isEnabled}><Italic /></Button></TooltipTrigger>
-              <TooltipContent><p>{t('tooltipItalic')}</p></TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleCellClass('ht-cell-underline')} disabled={!isEnabled}><Underline /></Button></TooltipTrigger>
-              <TooltipContent><p>{t('tooltipUnderline')}</p></TooltipContent>
-            </Tooltip>
-            <DropdownMenu>
+        <ScrollArea className="w-full whitespace-nowrap">
+            <div className="flex items-center space-x-2 pb-2">
+            {/* Clipboard */}
+            <div className="flex items-center space-x-1">
                 <Tooltip>
-                    <TooltipTrigger asChild>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" disabled={!isEnabled}><Palette /></Button>
-                        </DropdownMenuTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent><p>{t('tooltipFillColor')}</p></TooltipContent>
+                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={true}><div className="flex flex-col items-center"><Copy className="h-4 w-4" /><span className="text-[10px] -mt-1">{t('tooltipPaste').split(' ')[0]}</span></div></Button></TooltipTrigger>
+                <TooltipContent><p>{t('tooltipPaste')}</p></TooltipContent>
                 </Tooltip>
-                <DropdownMenuPortal>
-                  <DropdownMenuContent>
-                      <div className="p-2 grid grid-cols-4 gap-1">
-                          {colorPalette.map(color => (
-                              <DropdownMenuItem key={color.className} className="p-0 h-6 w-6 cursor-pointer" onSelect={() => toggleCellClass(color.className, color.className.startsWith('ht-bg-') ? 'ht-bg-' : 'ht-text-')} >
-                                  <div title={color.name} className={cn("h-full w-full border", color.className.startsWith('ht-bg-') ? color.className.replace('!important', '') : 'flex items-center justify-center ' + color.className.replace('!important', ''))}>
-                                    {color.className.startsWith('ht-text-') && 'A'}
-                                  </div>
-                              </DropdownMenuItem>
-                          ))}
-                            <DropdownMenuItem className="p-0 h-6 w-6 cursor-pointer" onSelect={() => { toggleCellClass('', 'ht-bg-'); toggleCellClass('', 'ht-text-'); } }>
-                              <div className="h-full w-full border text-xs flex items-center justify-center">X</div>
-                          </DropdownMenuItem>
-                      </div>
-                  </DropdownMenuContent>
-                </DropdownMenuPortal>
-            </DropdownMenu>
-          </div>
-          <Separator orientation="vertical" className="h-6" />
+                <Tooltip>
+                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleCut} disabled={!isEnabled}><Scissors /></Button></TooltipTrigger>
+                <TooltipContent><p>{t('tooltipCut')}</p></TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleCopy} disabled={!isEnabled}><Copy /></Button></TooltipTrigger>
+                <TooltipContent><p>{t('tooltipCopy')}</p></TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={true}><Paintbrush /></Button></TooltipTrigger>
+                <TooltipContent><p>{t('tooltipFormatPainter')}</p></TooltipContent>
+                </Tooltip>
+            </div>
+            <Separator orientation="vertical" className="h-6" />
 
-          {/* Alignment */}
-          <div className="flex items-center space-x-1">
-            <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setAlignment('htLeft')} disabled={!isEnabled}><AlignLeft /></Button></TooltipTrigger>
-              <TooltipContent><p>{t('tooltipAlignLeft')}</p></TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setAlignment('htCenter')} disabled={!isEnabled}><AlignCenter /></Button></TooltipTrigger>
-              <TooltipContent><p>{t('tooltipCenter')}</p></TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setAlignment('htRight')} disabled={!isEnabled}><AlignRight /></Button></TooltipTrigger>
-              <TooltipContent><p>{t('tooltipAlignRight')}</p></TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleWrapTextToggle} disabled={!isEnabled}><WrapText /></Button></TooltipTrigger>
-              <TooltipContent><p>{t('tooltipWrapText')}</p></TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleMergeToggle} disabled={!isEnabled}><Merge /></Button></TooltipTrigger>
-              <TooltipContent><p>{t('tooltipMergeCenter')}</p></TooltipContent>
-            </Tooltip>
-          </div>
-          <Separator orientation="vertical" className="h-6" />
-          
-          {/* Editing */}
-          <div className="flex items-center space-x-1">
-             <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={true}><Sigma /></Button></TooltipTrigger>
-              <TooltipContent><p>{t('tooltipAutoSum')}</p></TooltipContent>
-            </Tooltip>
-             <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={true}><Filter /></Button></TooltipTrigger>
-              <TooltipContent><p>{t('tooltipSortFilter')}</p></TooltipContent>
-            </Tooltip>
-             <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={true}><Search /></Button></TooltipTrigger>
-              <TooltipContent><p>{t('tooltipFindSelect')}</p></TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
+            {/* Font */}
+            <div className="flex items-center space-x-1">
+                <Tooltip>
+                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleCellClass('ht-cell-bold')} disabled={!isEnabled}><Bold /></Button></TooltipTrigger>
+                <TooltipContent><p>{t('tooltipBold')}</p></TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleCellClass('ht-cell-italic')} disabled={!isEnabled}><Italic /></Button></TooltipTrigger>
+                <TooltipContent><p>{t('tooltipItalic')}</p></TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleCellClass('ht-cell-underline')} disabled={!isEnabled}><Underline /></Button></TooltipTrigger>
+                <TooltipContent><p>{t('tooltipUnderline')}</p></TooltipContent>
+                </Tooltip>
+                <DropdownMenu>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" disabled={!isEnabled}><Palette /></Button>
+                            </DropdownMenuTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent><p>{t('tooltipFillColor')}</p></TooltipContent>
+                    </Tooltip>
+                    <DropdownMenuPortal>
+                    <DropdownMenuContent>
+                        <div className="p-2 grid grid-cols-4 gap-1">
+                            {colorPalette.map(color => (
+                                <DropdownMenuItem key={color.className} className="p-0 h-6 w-6 cursor-pointer" onSelect={() => toggleCellClass(color.className, color.className.startsWith('ht-bg-') ? 'ht-bg-' : 'ht-text-')} >
+                                    <div title={color.name} className={cn("h-full w-full border", color.className.startsWith('ht-bg-') ? color.className.replace('!important', '') : 'flex items-center justify-center ' + color.className.replace('!important', ''))}>
+                                    {color.className.startsWith('ht-text-') && 'A'}
+                                    </div>
+                                </DropdownMenuItem>
+                            ))}
+                                <DropdownMenuItem className="p-0 h-6 w-6 cursor-pointer" onSelect={() => { toggleCellClass('', 'ht-bg-'); toggleCellClass('', 'ht-text-'); } }>
+                                <div className="h-full w-full border text-xs flex items-center justify-center">X</div>
+                            </DropdownMenuItem>
+                        </div>
+                    </DropdownMenuContent>
+                    </DropdownMenuPortal>
+                </DropdownMenu>
+            </div>
+            <Separator orientation="vertical" className="h-6" />
+
+            {/* Alignment */}
+            <div className="flex items-center space-x-1">
+                <Tooltip>
+                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setAlignment('htLeft')} disabled={!isEnabled}><AlignLeft /></Button></TooltipTrigger>
+                <TooltipContent><p>{t('tooltipAlignLeft')}</p></TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setAlignment('htCenter')} disabled={!isEnabled}><AlignCenter /></Button></TooltipTrigger>
+                <TooltipContent><p>{t('tooltipCenter')}</p></TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setAlignment('htRight')} disabled={!isEnabled}><AlignRight /></Button></TooltipTrigger>
+                <TooltipContent><p>{t('tooltipAlignRight')}</p></TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleWrapTextToggle} disabled={!isEnabled}><WrapText /></Button></TooltipTrigger>
+                <TooltipContent><p>{t('tooltipWrapText')}</p></TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleMergeToggle} disabled={!isEnabled}><Merge /></Button></TooltipTrigger>
+                <TooltipContent><p>{t('tooltipMergeCenter')}</p></TooltipContent>
+                </Tooltip>
+            </div>
+            <Separator orientation="vertical" className="h-6" />
+            
+            {/* Editing */}
+            <div className="flex items-center space-x-1">
+                <Tooltip>
+                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={true}><Sigma /></Button></TooltipTrigger>
+                <TooltipContent><p>{t('tooltipAutoSum')}</p></TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={true}><Filter /></Button></TooltipTrigger>
+                <TooltipContent><p>{t('tooltipSortFilter')}</p></TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" disabled={true}><Search /></Button></TooltipTrigger>
+                <TooltipContent><p>{t('tooltipFindSelect')}</p></TooltipContent>
+                </Tooltip>
+            </div>
+            </div>
+        </ScrollArea>
       </div>
     </TooltipProvider>
   );

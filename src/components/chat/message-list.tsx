@@ -83,12 +83,12 @@ function ChatMessage({
   
   return (
     <div
-      className={cn('flex items-start gap-4 animate-in fade-in', {
+      className={cn('flex items-start gap-3 sm:gap-4 animate-in fade-in', {
         'justify-end': !isAssistant,
       })}
     >
       {isAssistant && <SashaAvatar className="w-8 h-8 shrink-0" />}
-      <div className="max-w-[75%] space-y-2">
+      <div className="max-w-[90%] sm:max-w-[80%] md:max-w-[75%] space-y-2">
         {message.content && (
           <div
             className={cn(

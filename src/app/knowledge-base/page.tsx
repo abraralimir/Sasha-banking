@@ -87,7 +87,7 @@ export default function KnowledgeBasePage() {
                                     value={notes}
                                     onChange={(e) => setNotes(e.target.value)}
                                     placeholder={t('kbPlaceholder')}
-                                    className="min-h-[400px] text-base font-mono"
+                                    className="min-h-[300px] sm:min-h-[400px] md:min-h-[500px] text-base font-mono"
                                     disabled={isSaving}
                                 />
                             )}

@@ -217,7 +217,7 @@ export default function DataAnalyticsPage() {
       <main className="flex-1 overflow-auto p-4 md:p-6">
         <div className="max-w-7xl mx-auto space-y-6">
             {!fileName ? (
-                 <div className="w-full pt-16 flex justify-center animate-in fade-in-50 duration-500">
+                 <div className="w-full pt-8 md:pt-16 flex justify-center animate-in fade-in-50 duration-500">
                     <Card className="w-full max-w-lg text-center shadow-lg">
                         <CardHeader>
                             <div className="mx-auto bg-primary/10 text-primary p-3 rounded-full mb-4">
@@ -248,8 +248,8 @@ export default function DataAnalyticsPage() {
                             <CardDescription>{fileName}</CardDescription>
                         </CardHeader>
                     </Card>
-                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                        <Card className="xl:col-span-3">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <Card className="lg:col-span-3">
                             <CardHeader className="flex flex-row items-center gap-3 space-y-0">
                                 <FileText className="w-6 h-6 text-primary"/>
                                 <CardTitle>{t('daSummaryTitle')}</CardTitle>
@@ -260,13 +260,13 @@ export default function DataAnalyticsPage() {
                         </Card>
                         
                         {dashboardData.charts.map((chart, index) => (
-                          <Card key={index} className={dashboardData.charts.length === 1 ? 'xl:col-span-3' : (chart.type === 'bar' ? 'xl:col-span-2' : 'xl:col-span-1') }>
+                          <Card key={index} className={dashboardData.charts.length === 1 ? 'lg:col-span-3' : (chart.type === 'bar' ? 'lg:col-span-2' : 'lg:col-span-1') }>
                               <CardHeader className="flex flex-row items-center gap-3 space-y-0">
                                   {chart.type === 'bar' ? <BarChart3 className="w-6 h-6 text-primary"/> : <PieChart className="w-6 h-6 text-primary"/>}
                                   <CardTitle>{chart.title}</CardTitle>
                               </CardHeader>
                               <CardContent>
-                                  <div className="h-[400px]">
+                                  <div className="h-[300px] md:h-[400px]">
                                       {chart.type === 'bar' ? (
                                           <Bar data={{ ...chart.data, datasets: chart.data.datasets.map(ds => ({...ds, backgroundColor: getPieChartColors(chart.data.labels.length) })) }} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }} />
                                       ) : (
@@ -279,7 +279,7 @@ export default function DataAnalyticsPage() {
                           </Card>
                         ))}
                         
-                         <Card className="xl:col-span-3">
+                         <Card className="lg:col-span-3">
                             <CardHeader className="flex flex-row items-center gap-3 space-y-0">
                                 <Lightbulb className="w-6 h-6 text-primary"/>
                                 <CardTitle>{t('daKeyInsightsTitle')}</CardTitle>

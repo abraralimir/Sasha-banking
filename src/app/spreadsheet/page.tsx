@@ -666,7 +666,7 @@ export default function SpreadsheetPage() {
               {isChatOpen && (
                 <aside
                   className={cn(
-                    'w-[350px] border-l bg-background flex flex-col h-full animate-in duration-300 z-30',
+                    'w-full max-w-[400px] sm:w-[350px] border-l bg-background flex flex-col h-full animate-in duration-300 z-30',
                     dir === 'ltr'
                       ? 'slide-in-from-right-sm'
                       : 'slide-in-from-left-sm'
