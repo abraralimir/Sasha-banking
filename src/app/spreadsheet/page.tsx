@@ -82,6 +82,7 @@ type ChartData = {
 export default function SpreadsheetPage() {
   const { t, language, dir } = useLanguage();
   const { isOnline, countdown } = useSashaStatus();
+  const [hasMounted, setHasMounted] = useState(false);
 
   const [sheetData, setSheetData] = useState<any[][]>(initialData);
   const [prompt, setPrompt] = useState('');
@@ -100,6 +101,10 @@ export default function SpreadsheetPage() {
   const [isNewSessionDialogOpen, setIsNewSessionDialogOpen] = useState(false);
 
   useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (hotRef.current) {
       const instance = hotRef.current.hotInstance;
       setHotInstance(instance);
@@ -107,7 +112,7 @@ export default function SpreadsheetPage() {
   }, []);
 
   useEffect(() => {
-    if (hotInstance) {
+    if (hotInstance && !hotInstance.isDestroyed) {
       hotInstance.loadData(sheetData);
       hotInstance.render();
     }
@@ -178,14 +183,10 @@ export default function SpreadsheetPage() {
     dataRange: { labels: string; data: string | string[] },
     currentSheetData: any[][]
   ) => {
-    if (!dataRange || !dataRange.labels || !dataRange.data) {
-        // Return empty data if the range is invalid to prevent crash
+    if (!dataRange || !dataRange.labels || !dataRange.data || typeof dataRange.labels !== 'string' || dataRange.labels.indexOf(':') === -1) {
         return { labels: [], datasets: [] };
     }
     const { labels: labelsRange, data: dataRanges } = dataRange;
-    if (typeof labelsRange !== 'string' || labelsRange.indexOf(':') === -1) {
-      return { labels: [], datasets: [] };
-    }
 
     const labelsCoords = XLSX.utils.decode_range(labelsRange);
     const labels = [];
@@ -528,6 +529,26 @@ export default function SpreadsheetPage() {
     setIsNewSessionDialogOpen(false);
   };
 
+  if (!hasMounted) {
+    return (
+        <div className="flex flex-col h-screen bg-background text-foreground" dir={dir}>
+            <header className="grid grid-cols-3 items-center p-4 border-b shrink-0">
+                <div className="justify-self-start flex items-center gap-2">
+                    <SidebarTrigger />
+                </div>
+                <h1 className="text-xl font-semibold tracking-tight justify-self-center">
+                    {t('spreadsheetTitle')}
+                </h1>
+                <div className="justify-self-end flex items-center gap-2">
+                    <LanguageToggle />
+                </div>
+            </header>
+            <main className="flex-1 flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </main>
+        </div>
+    );
+  }
 
   return (
     <div

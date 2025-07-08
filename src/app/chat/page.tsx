@@ -38,6 +38,7 @@ type ReportType = 'loan' | 'financial';
 export default function ChatPage() {
   const { t, language, dir } = useLanguage();
   const { isOnline, countdown } = useSashaStatus();
+  const [hasMounted, setHasMounted] = useState(false);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -65,6 +66,10 @@ export default function ChatPage() {
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const [isImageGenOpen, setIsImageGenOpen] = useState(false);
   const [isNewSessionDialogOpen, setIsNewSessionDialogOpen] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   useEffect(() => {
     try {
@@ -474,6 +479,24 @@ export default function ChatPage() {
     );
   };
 
+  if (!hasMounted) {
+    return (
+      <div className="flex flex-col h-screen" dir={dir}>
+        <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background/80 backdrop-blur-sm">
+          <div className="justify-self-start">
+            <SidebarTrigger />
+          </div>
+          <h1 className="text-xl font-semibold tracking-tight justify-self-center">{t('pageTitle')}</h1>
+          <div className="justify-self-end">
+            <LanguageToggle />
+          </div>
+        </header>
+        <main className="flex-1 overflow-y-auto flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <TooltipProvider delayDuration={0}>
