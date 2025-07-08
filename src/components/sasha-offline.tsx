@@ -4,9 +4,23 @@ import { SashaAvatar } from '@/components/sasha-avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/context/language-context';
 import { Moon } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 
 export function SashaOffline({ countdown }: { countdown: string }) {
     const { t, dir } = useLanguage();
+    const audioRef = useRef<HTMLAudioElement>(null);
+
+    useEffect(() => {
+        // We try to play the audio programmatically, which has a higher chance of success
+        // across different browsers and devices than a simple autoPlay attribute.
+        const audio = audioRef.current;
+        if (audio) {
+            audio.play().catch(error => {
+                console.warn("Audio autoplay was prevented by the browser. This is a standard security feature.", error);
+            });
+        }
+    }, []);
+
     return (
         <main className="relative flex-1 flex items-center justify-center p-4 overflow-hidden">
              <video 
@@ -14,19 +28,19 @@ export function SashaOffline({ countdown }: { countdown: string }) {
                 loop 
                 muted 
                 playsInline
-                className="absolute z-0 inset-0 w-full h-full object-cover"
+                className="absolute z-0 w-auto min-w-full min-h-full max-w-none"
                 poster="https://placehold.co/1920x1080.png"
                 data-ai-hint="abstract background"
              >
                 <source src="/offline-bg.mp4.mp4" type="video/mp4" />
                 Your browser does not support the video tag.
             </video>
-            <audio autoPlay loop>
+            <audio ref={audioRef} loop>
                 <source src="/offline-loop.mp3.mp3" type="audio/mpeg" />
             </audio>
             <div className="absolute inset-0 bg-black/60 z-10"></div>
             
-            <Card className="w-full max-w-md text-center shadow-2xl animate-in fade-in-50 duration-500 z-20 bg-background/80 text-foreground backdrop-blur-xl border border-border">
+            <Card className="w-full max-w-md text-center shadow-2xl animate-in fade-in-50 duration-500 z-20 bg-background/80 text-black backdrop-blur-xl border-border">
                 <CardHeader>
                     <div className="mx-auto flex flex-col items-center gap-4">
                         <SashaAvatar className="w-20 h-20" />
