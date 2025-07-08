@@ -99,7 +99,7 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     sashaOfflineTitle: 'Sasha is Offline',
     sashaOfflineDesc: 'Even AI strategists and their creators need to rest and recharge. Sasha will be back online during working hours.',
     sashaOnlineAgain: 'Online again in:',
-    sashaOfflineHours: 'Working Hours: 5:30 AM - 6:30 PM',
+    sashaOfflineHours: 'Working Hours: 5:30 AM - 5:30 PM & 5:45 PM - 6:30 PM',
 
     // Nav
     chatTitle: 'Chat',
@@ -407,7 +407,7 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     sashaOfflineTitle: 'ساشا غير متصلة',
     sashaOfflineDesc: 'حتى خبراء الذكاء الاصطناعي ومبتكروهم بحاجة إلى الراحة. ستعود ساشا للعمل خلال ساعات الدوام.',
     sashaOnlineAgain: 'متصلة مرة أخرى في:',
-    sashaOfflineHours: 'ساعات العمل: 5:30 صباحًا - 6:30 مساءً',
+    sashaOfflineHours: 'ساعات العمل: 5:30 صباحًا - 5:30 مساءً  و  5:45 مساءً - 6:30 مساءً',
     
     // Nav
     chatTitle: 'الدردشة',

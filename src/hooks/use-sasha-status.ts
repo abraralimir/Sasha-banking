@@ -17,11 +17,17 @@ export function useSashaStatus() {
       const currentHour = now.getHours();
       const currentMinute = now.getMinutes();
 
-      // Working hours: 5:30 AM to 6:30 PM (18:30)
+      // Morning session: 5:30 AM to 5:30 PM (17:30)
       const isAfterStartTime = currentHour > 5 || (currentHour === 5 && currentMinute >= 30);
+      const isBeforeBreakTime = currentHour < 17 || (currentHour === 17 && currentMinute < 30);
+      const inFirstPeriod = isAfterStartTime && isBeforeBreakTime;
+
+      // Evening session: 5:45 PM (17:45) to 6:30 PM (18:30)
+      const isAfterBreakTime = currentHour > 17 || (currentHour === 17 && currentMinute >= 45);
       const isBeforeEndTime = currentHour < 18 || (currentHour === 18 && currentMinute < 30);
-      
-      const isOnline = isAfterStartTime && isBeforeEndTime;
+      const inSecondPeriod = isAfterBreakTime && isBeforeEndTime;
+
+      const isOnline = inFirstPeriod || inSecondPeriod;
       
       const timeString = now.toLocaleTimeString(language === 'ar' ? 'ar-OM' : 'en-US', {
         hour: 'numeric',
@@ -31,11 +37,18 @@ export function useSashaStatus() {
       let countdown = '';
       if (!isOnline) {
         let targetTime = new Date();
-        targetTime.setHours(5, 30, 0, 0); // Target is 5:30 AM today
+        // Check if currently in the break period (17:30 to 17:44)
+        const isInBreak = currentHour === 17 && currentMinute >= 30 && currentMinute < 45;
 
-        // If it's already past 5:30 AM, target is 5:30 AM tomorrow
-        if (now.getTime() > targetTime.getTime()) {
-          targetTime.setDate(targetTime.getDate() + 1);
+        if (isInBreak) {
+          targetTime.setHours(17, 45, 0, 0); // Target is 5:45 PM today
+        } else {
+          targetTime.setHours(5, 30, 0, 0); // Default target is 5:30 AM today
+
+          // If it's already past 5:30 AM, target is 5:30 AM tomorrow
+          if (now.getTime() > targetTime.getTime()) {
+            targetTime.setDate(targetTime.getDate() + 1);
+          }
         }
         
         const distance = targetTime.getTime() - now.getTime();
