@@ -97,7 +97,7 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     // Sasha Status
     sashaStatusOffline: 'Offline',
     sashaOfflineTitle: 'Sasha is Offline',
-    sashaOfflineDesc: 'Even AI strategists and their creators need to rest and recharge. Sasha will be back online during working hours.',
+    sashaOfflineDesc: 'Sasha is currently recharging. She will be back online during working hours.',
     sashaOnlineAgain: 'Online again in:',
     sashaOfflineHours: 'Working Hours: 5:30 AM - 5:30 PM & 5:45 PM - 6:30 PM',
 
@@ -405,7 +405,7 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     // Sasha Status
     sashaStatusOffline: 'غير متصلة',
     sashaOfflineTitle: 'ساشا غير متصلة',
-    sashaOfflineDesc: 'حتى خبراء الذكاء الاصطناعي ومبتكروهم بحاجة إلى الراحة. ستعود ساشا للعمل خلال ساعات الدوام.',
+    sashaOfflineDesc: 'ساشا تقوم بإعادة الشحن حاليًا. ستعود للعمل خلال ساعات الدوام.',
     sashaOnlineAgain: 'متصلة مرة أخرى في:',
     sashaOfflineHours: 'ساعات العمل: 5:30 صباحًا - 5:30 مساءً  و  5:45 مساءً - 6:30 مساءً',
     
