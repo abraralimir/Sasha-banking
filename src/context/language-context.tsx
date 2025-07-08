@@ -100,6 +100,21 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     spreadsheetTitle: 'Spreadsheet',
     spreadsheetGuideTitle: 'Spreadsheet Guide',
     dataAnalyticsTitle: 'Data Analytics',
+    knowledgeBaseTitle: 'Knowledge Base',
+
+    // Knowledge Base Page
+    kbHeader: "Sasha's Knowledge Base",
+    kbSubHeader: "Add your own custom instructions, rules, or data that Sasha will remember across all conversations. This is your personal extension to Sasha's brain.",
+    kbPlaceholder: "Enter your custom notes here...\n\nFor example:\n- Never suggest investing in cryptocurrency.\n- When I ask for a market summary, always include the VIX index.\n- My company's fiscal year ends in June.",
+    kbSaveButton: 'Save Knowledge',
+    kbSavingButton: 'Saving...',
+    kbSaveSuccessTitle: 'Knowledge Base Saved',
+    kbSaveSuccessDesc: "Sasha's knowledge has been updated.",
+    kbSaveErrorTitle: 'Save Failed',
+    kbSaveErrorDesc: 'Could not save your notes. Please try again.',
+    kbLoadErrorTitle: 'Load Failed',
+    kbLoadErrorDesc: 'Could not load your knowledge base notes.',
+
 
     // Learn Page -> About Page
     learnPageTitle: 'About Sasha',
@@ -386,6 +401,20 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     spreadsheetTitle: 'جدول البيانات',
     spreadsheetGuideTitle: 'دليل جدول البيانات',
     dataAnalyticsTitle: 'تحليل البيانات',
+    knowledgeBaseTitle: 'قاعدة المعرفة',
+    
+    // Knowledge Base Page
+    kbHeader: "قاعدة معرفة ساشا",
+    kbSubHeader: "أضف تعليماتك وقواعدك وبياناتك المخصصة التي ستتذكرها ساشا في جميع المحادثات. هذا هو امتدادك الشخصي لدماغ ساشا.",
+    kbPlaceholder: "أدخل ملاحظاتك المخصصة هنا...\n\nعلى سبيل المثال:\n- لا تقترح أبدًا الاستثمار في العملات المشفرة.\n- عندما أطلب ملخصًا للسوق، قم دائمًا بتضمين مؤشر VIX.\n- تنتهي السنة المالية لشركتي في يونيو.",
+    kbSaveButton: 'حفظ المعرفة',
+    kbSavingButton: 'جاري الحفظ...',
+    kbSaveSuccessTitle: 'تم حفظ قاعدة المعرفة',
+    kbSaveSuccessDesc: "تم تحديث معرفة ساشا.",
+    kbSaveErrorTitle: 'فشل الحفظ',
+    kbSaveErrorDesc: 'تعذر حفظ ملاحظاتك. يرجى المحاولة مرة أخرى.',
+    kbLoadErrorTitle: 'فشل التحميل',
+    kbLoadErrorDesc: 'تعذر تحميل ملاحظات قاعدة المعرفة الخاصة بك.',
 
     // Learn Page -> About Page
     learnPageTitle: 'حول ساشا',
