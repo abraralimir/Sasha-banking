@@ -12,7 +12,7 @@ import {
   LinearScale,
   BarElement,
   Title,
-  Tooltip as ChartTooltip,
+  Tooltip,
   Legend,
   ArcElement,
 } from 'chart.js';
@@ -44,14 +44,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip as UiTooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useSashaStatus } from '@/hooks/use-sasha-status';
+import { SashaStatus } from '@/components/sasha-status';
+import { SashaOffline } from '@/components/sasha-offline';
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
   Title,
-  ChartTooltip,
+  Tooltip,
   Legend,
   ArcElement
 );
@@ -78,6 +81,8 @@ type ChartData = {
 
 export default function SpreadsheetPage() {
   const { t, language, dir } = useLanguage();
+  const { isOnline, countdown } = useSashaStatus();
+
   const [sheetData, setSheetData] = useState<any[][]>(initialData);
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -178,6 +183,9 @@ export default function SpreadsheetPage() {
         return { labels: [], datasets: [] };
     }
     const { labels: labelsRange, data: dataRanges } = dataRange;
+    if (typeof labelsRange !== 'string' || labelsRange.indexOf(':') === -1) {
+      return { labels: [], datasets: [] };
+    }
 
     const labelsCoords = XLSX.utils.decode_range(labelsRange);
     const labels = [];
@@ -187,7 +195,7 @@ export default function SpreadsheetPage() {
 
     const datasets = (Array.isArray(dataRanges) ? dataRanges : [dataRanges]).map(
       (range) => {
-        if (!range) return { label: 'Dataset', data: [], backgroundColor: [] };
+        if (!range || typeof range !== 'string' || range.indexOf(':') === -1) return { label: 'Dataset', data: [], backgroundColor: [] };
         const dataCoords = XLSX.utils.decode_range(range);
         const data = [];
         const headerRow = dataCoords.s.r > 0 ? dataCoords.s.r - 1 : 0;
@@ -542,8 +550,9 @@ export default function SpreadsheetPage() {
           {t('spreadsheetTitle')}
         </h1>
         <div className="justify-self-end flex items-center gap-2">
+           <SashaStatus />
            <TooltipProvider>
-              <Tooltip>
+              <UiTooltip>
                   <TooltipTrigger asChild>
                       <Button variant="ghost" size="icon" onClick={() => setIsNewSessionDialogOpen(true)}>
                           <RefreshCw className="h-5 w-5" />
@@ -553,7 +562,7 @@ export default function SpreadsheetPage() {
                   <TooltipContent>
                       <p>{t('newSessionButton')}</p>
                   </TooltipContent>
-              </Tooltip>
+              </UiTooltip>
           </TooltipProvider>
           <Button
             variant="ghost"
@@ -569,180 +578,187 @@ export default function SpreadsheetPage() {
         </div>
       </header>
 
-      <SpreadsheetToolbar
-        hotInstance={hotInstance}
-        onImport={handleImportClick}
-        toggleFullscreen={toggleFullscreen}
-        isFullscreen={isFullscreen}
-        onSetTemplate={handleSetTemplate}
-      />
+      {isOnline ? (
+        <>
+            <SpreadsheetToolbar
+              hotInstance={hotInstance}
+              onImport={handleImportClick}
+              toggleFullscreen={toggleFullscreen}
+              isFullscreen={isFullscreen}
+              onSetTemplate={handleSetTemplate}
+            />
 
-      <div className="flex flex-1 overflow-hidden">
-        <main className="flex-1 overflow-auto flex flex-col">
-          <div className="flex-grow">
-            <Spreadsheet data={sheetData} hotRef={hotRef} />
-          </div>
-          {charts.length > 0 && (
-            <ScrollArea className="flex-shrink-0 border-t bg-muted/40 max-h-[45vh]">
-              <section className="p-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-semibold text-center flex-grow">
-                    {t('chartsTitle')}
-                  </h2>
-                   <Button variant="ghost" size="icon" onClick={() => setCharts([])} className="h-7 w-7">
-                      <X className="h-4 w-4" />
-                      <span className="sr-only">Close charts</span>
-                   </Button>
+            <div className="flex flex-1 overflow-hidden">
+              <main className="flex-1 overflow-auto flex flex-col">
+                <div className="flex-grow">
+                  <Spreadsheet data={sheetData} hotRef={hotRef} />
                 </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {charts.map((chart, index) => (
-                    <Card key={index} className="shadow-lg">
-                      <CardHeader>
-                        <CardTitle>{chart.title}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="h-[350px]">
-                        {chart.type === 'bar' ? (
-                          <Bar
-                            data={chart.data}
-                            options={{
-                              responsive: true,
-                              maintainAspectRatio: false,
-                              plugins: { legend: { position: 'top' } },
-                            }}
-                          />
-                        ) : (
-                          <div className="h-full w-full flex items-center justify-center">
-                            <Pie
-                              data={chart.data}
-                              options={{
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: { legend: { position: 'right' } },
-                              }}
-                            />
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </section>
-            </ScrollArea>
-          )}
-        </main>
-
-        {isChatOpen && (
-          <aside
-            className={cn(
-              'w-[350px] border-l bg-background flex flex-col h-full animate-in duration-300 z-30',
-              dir === 'ltr'
-                ? 'slide-in-from-right-sm'
-                : 'slide-in-from-left-sm'
-            )}
-          >
-            <div className="p-4 border-b flex items-center justify-between">
-              <h2 className="text-lg font-semibold tracking-tight">
-                {t('chatWithSasha')}
-              </h2>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setIsChatOpen(false)}
-              >
-                <X className="h-4 w-4" />
-                <span className="sr-only">{t('closeChat')}</span>
-              </Button>
-            </div>
-            <ScrollArea className="flex-1 p-4">
-              <div className="space-y-4">
-                {chatMessages.map((message, index) => (
-                  <div
-                    key={index}
-                    className={cn(
-                      'flex items-start gap-3 animate-in fade-in',
-                      { 'justify-end flex-row-reverse': message.role === 'user' }
-                    )}
-                  >
-                    {message.role === 'assistant' && (
-                      <SashaAvatar className="w-8 h-8 shrink-0" />
-                    )}
-                    <div
-                      className={cn(
-                        'rounded-lg p-3 text-sm max-w-xs shadow-sm',
-                        {
-                          'bg-primary text-primary-foreground':
-                            message.role === 'assistant',
-                          'bg-card text-card-foreground':
-                            message.role === 'user',
-                        }
-                      )}
-                    >
-                      <p className="whitespace-pre-wrap">{message.content}</p>
-                    </div>
-                    {message.role === 'user' && (
-                      <Avatar className="w-8 h-8 shrink-0">
-                        <AvatarFallback>
-                          <User className="w-4 h-4" />
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                  </div>
-                ))}
-                {isLoading && (
-                  <div
-                    className={cn('flex items-start gap-3', {
-                      'justify-end flex-row-reverse': dir === 'rtl',
-                    })}
-                  >
-                    <SashaAvatar className="w-8 h-8 shrink-0" />
-                    <div className="bg-primary text-primary-foreground rounded-lg p-3 shadow-sm flex items-center space-x-1">
-                      <span className="w-2 h-2 bg-primary-foreground/50 rounded-full animate-pulse delay-0 duration-1000"></span>
-                      <span className="w-2 h-2 bg-primary-foreground/50 rounded-full animate-pulse delay-200 duration-1000"></span>
-                      <span className="w-2 h-2 bg-primary-foreground/50 rounded-full animate-pulse delay-400 duration-1000"></span>
-                    </div>
-                  </div>
+                {charts.length > 0 && (
+                  <ScrollArea className="flex-shrink-0 border-t bg-muted/40 max-h-[45vh]">
+                    <section className="p-4">
+                      <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-lg font-semibold text-center flex-grow">
+                          {t('chartsTitle')}
+                        </h2>
+                        <Button variant="ghost" size="icon" onClick={() => setCharts([])} className="h-7 w-7">
+                            <X className="h-4 w-4" />
+                            <span className="sr-only">Close charts</span>
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {charts.map((chart, index) => (
+                          <Card key={index} className="shadow-lg">
+                            <CardHeader>
+                              <CardTitle>{chart.title}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="h-[350px]">
+                              {chart.type === 'bar' ? (
+                                <Bar
+                                  data={chart.data}
+                                  options={{
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { position: 'top' } },
+                                  }}
+                                />
+                              ) : (
+                                <div className="h-full w-full flex items-center justify-center">
+                                  <Pie
+                                    data={chart.data}
+                                    options={{
+                                      responsive: true,
+                                      maintainAspectRatio: false,
+                                      plugins: { legend: { position: 'right' } },
+                                    }}
+                                  />
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </section>
+                  </ScrollArea>
                 )}
-                <div ref={messagesEndRef} />
-              </div>
-            </ScrollArea>
-            <div className="p-4 border-t bg-background">
-              <form onSubmit={handleSashaSubmit} className="relative">
-                <Textarea
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  placeholder={t('spreadsheetPlaceholder')}
-                  className="pr-12 text-base resize-none"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSashaSubmit(e);
-                    }
-                  }}
-                  rows={1}
-                  disabled={isLoading}
-                />
-                <Button
-                  type="submit"
-                  size="icon"
+              </main>
+
+              {isChatOpen && (
+                <aside
                   className={cn(
-                    'absolute top-1/2 transform -translate-y-1/2 h-8 w-8',
-                    dir === 'ltr' ? 'right-2' : 'left-2'
+                    'w-[350px] border-l bg-background flex flex-col h-full animate-in duration-300 z-30',
+                    dir === 'ltr'
+                      ? 'slide-in-from-right-sm'
+                      : 'slide-in-from-left-sm'
                   )}
-                  disabled={isLoading || !prompt.trim()}
                 >
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
-                  <span className="sr-only">{t('send')}</span>
-                </Button>
-              </form>
+                  <div className="p-4 border-b flex items-center justify-between">
+                    <h2 className="text-lg font-semibold tracking-tight">
+                      {t('chatWithSasha')}
+                    </h2>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setIsChatOpen(false)}
+                    >
+                      <X className="h-4 w-4" />
+                      <span className="sr-only">{t('closeChat')}</span>
+                    </Button>
+                  </div>
+                  <ScrollArea className="flex-1 p-4">
+                    <div className="space-y-4">
+                      {chatMessages.map((message, index) => (
+                        <div
+                          key={index}
+                          className={cn(
+                            'flex items-start gap-3 animate-in fade-in',
+                            { 'justify-end flex-row-reverse': message.role === 'user' }
+                          )}
+                        >
+                          {message.role === 'assistant' && (
+                            <SashaAvatar className="w-8 h-8 shrink-0" />
+                          )}
+                          <div
+                            className={cn(
+                              'rounded-lg p-3 text-sm max-w-xs shadow-sm',
+                              {
+                                'bg-primary text-primary-foreground':
+                                  message.role === 'assistant',
+                                'bg-card text-card-foreground':
+                                  message.role === 'user',
+                              }
+                            )}
+                          >
+                            <p className="whitespace-pre-wrap">{message.content}</p>
+                          </div>
+                          {message.role === 'user' && (
+                            <Avatar className="w-8 h-8 shrink-0">
+                              <AvatarFallback>
+                                <User className="w-4 h-4" />
+                              </AvatarFallback>
+                            </Avatar>
+                          )}
+                        </div>
+                      ))}
+                      {isLoading && (
+                        <div
+                          className={cn('flex items-start gap-3', {
+                            'justify-end flex-row-reverse': dir === 'rtl',
+                          })}
+                        >
+                          <SashaAvatar className="w-8 h-8 shrink-0" />
+                          <div className="bg-primary text-primary-foreground rounded-lg p-3 shadow-sm flex items-center space-x-1">
+                            <span className="w-2 h-2 bg-primary-foreground/50 rounded-full animate-pulse delay-0 duration-1000"></span>
+                            <span className="w-2 h-2 bg-primary-foreground/50 rounded-full animate-pulse delay-200 duration-1000"></span>
+                            <span className="w-2 h-2 bg-primary-foreground/50 rounded-full animate-pulse delay-400 duration-1000"></span>
+                          </div>
+                        </div>
+                      )}
+                      <div ref={messagesEndRef} />
+                    </div>
+                  </ScrollArea>
+                  <div className="p-4 border-t bg-background">
+                    <form onSubmit={handleSashaSubmit} className="relative">
+                      <Textarea
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                        placeholder={t('spreadsheetPlaceholder')}
+                        className="pr-12 text-base resize-none"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSashaSubmit(e);
+                          }
+                        }}
+                        rows={1}
+                        disabled={isLoading}
+                      />
+                      <Button
+                        type="submit"
+                        size="icon"
+                        className={cn(
+                          'absolute top-1/2 transform -translate-y-1/2 h-8 w-8',
+                          dir === 'ltr' ? 'right-2' : 'left-2'
+                        )}
+                        disabled={isLoading || !prompt.trim()}
+                      >
+                        {isLoading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4" />
+                        )}
+                        <span className="sr-only">{t('send')}</span>
+                      </Button>
+                    </form>
+                  </div>
+                </aside>
+              )}
             </div>
-          </aside>
-        )}
-      </div>
+        </>
+      ) : (
+        <SashaOffline countdown={countdown} />
+      )}
+
 
        <AlertDialog open={isNewSessionDialogOpen} onOpenChange={setIsNewSessionDialogOpen}>
           <AlertDialogContent dir={dir}>

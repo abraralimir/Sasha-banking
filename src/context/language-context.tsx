@@ -94,6 +94,12 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     newSessionConfirmDescSpreadsheet: "This will clear your entire spreadsheet, including data and charts, and reset the chat. This action cannot be undone.",
     newSessionConfirmButton: "Start New Session",
 
+    // Sasha Status
+    sashaOfflineTitle: 'Sasha is Offline',
+    sashaOfflineDesc: 'Even AI strategists and their creators need to rest and recharge. Sasha will be back online during working hours.',
+    sashaOnlineAgain: 'Online again in:',
+    sashaOfflineHours: 'Working Hours: 5:30 AM - 6:30 PM',
+
     // Nav
     chatTitle: 'Chat',
     aboutTitle: 'About Sasha',
@@ -395,6 +401,12 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     newSessionConfirmDescSpreadsheet: "سيؤدي هذا إلى مسح جدول البيانات بالكامل، بما في ذلك البيانات والمخططات، وإعادة تعيين الدردشة. لا يمكن التراجع عن هذا الإجراء.",
     newSessionConfirmButton: "بدء جلسة جديدة",
 
+    // Sasha Status
+    sashaOfflineTitle: 'ساشا غير متصلة',
+    sashaOfflineDesc: 'حتى خبراء الذكاء الاصطناعي ومبتكروهم بحاجة إلى الراحة. ستعود ساشا للعمل خلال ساعات الدوام.',
+    sashaOnlineAgain: 'متصلة مرة أخرى في:',
+    sashaOfflineHours: 'ساعات العمل: 5:30 صباحًا - 6:30 مساءً',
+    
     // Nav
     chatTitle: 'الدردشة',
     aboutTitle: 'حول ساشا',
