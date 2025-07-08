@@ -2,10 +2,28 @@
 
 import { useSashaStatus } from '@/hooks/use-sasha-status';
 import { useLanguage } from '@/context/language-context';
+import { useState, useEffect } from 'react';
 
 export function SashaStatus() {
     const { isOnline, timeString } = useSashaStatus();
     const { t } = useLanguage();
+    const [hasMounted, setHasMounted] = useState(false);
+
+    useEffect(() => {
+        setHasMounted(true);
+    }, []);
+
+    if (!hasMounted) {
+        return (
+            <div className="flex items-center space-x-2 rtl:space-x-reverse h-5 w-24">
+              <div className="flex items-center space-x-2">
+                <span className="relative flex h-3 w-3">
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-muted"></span>
+                </span>
+              </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex items-center space-x-2 rtl:space-x-reverse">

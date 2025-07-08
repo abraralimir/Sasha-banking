@@ -18,11 +18,11 @@ export function SashaOffline({ countdown }: { countdown: string }) {
                 poster="https://placehold.co/1920x1080.png"
                 data-ai-hint="abstract background"
              >
-                <source src="/video/offline-bg.mp4" type="video/mp4" />
+                <source src="/offline-bg.mp4" type="video/mp4" />
                 Your browser does not support the video tag.
             </video>
             <audio autoPlay loop>
-                <source src="/audio/offline-loop.mp3" type="audio/mpeg" />
+                <source src="/offline-loop.mp3" type="audio/mpeg" />
             </audio>
             <div className="absolute inset-0 bg-black/60 z-10"></div>
             
