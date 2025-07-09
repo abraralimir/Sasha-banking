@@ -46,7 +46,7 @@ export function SashaOffline({
     };
 
     return (
-        <main className="fixed inset-0 w-full h-full z-20">
+        <div className="fixed inset-0 w-full h-full z-40">
              <video 
                 autoPlay 
                 loop 
@@ -62,7 +62,7 @@ export function SashaOffline({
             <audio ref={audioRef} loop>
                 <source src="/offline-loop.mp3" type="audio/mpeg" />
             </audio>
-            <div className="absolute inset-0 bg-black/50 z-10"></div>
+            <div className="absolute inset-0 bg-black/40 z-10"></div>
             
              <Button
                 variant="ghost"
@@ -75,7 +75,7 @@ export function SashaOffline({
             </Button>
             
             <div className="relative z-20 flex items-center justify-center h-full p-4">
-                <Card className="w-full max-w-md text-center shadow-2xl animate-in fade-in-50 duration-500 bg-black/60 backdrop-blur-lg border border-white/20">
+                <Card className="w-full max-w-md text-center shadow-2xl animate-in fade-in-50 duration-500 bg-black/50 backdrop-blur-lg border border-white/20">
                     <CardHeader className="pb-4">
                         <div className="mx-auto flex flex-col items-center gap-4">
                             <SashaAvatar className="w-16 h-16" />
@@ -94,6 +94,6 @@ export function SashaOffline({
                     </CardContent>
                 </Card>
             </div>
-        </main>
+        </div>
     )
 }

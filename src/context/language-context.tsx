@@ -95,6 +95,7 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     newSessionConfirmButton: "Start New Session",
 
     // Sasha Status
+    sashaStatusOnline: 'Online',
     sashaStatusOffline: 'Offline',
     sashaOfflineTitle: 'Sasha is Offline',
     sashaOfflineDesc: 'Sasha is currently recharging. She will be back online during working hours.',
@@ -405,6 +406,7 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     newSessionConfirmButton: "بدء جلسة جديدة",
 
     // Sasha Status
+    sashaStatusOnline: 'متصلة',
     sashaStatusOffline: 'غير متصلة',
     sashaOfflineTitle: 'ساشا غير متصلة',
     sashaOfflineDesc: 'ساشا تقوم بإعادة الشحن حاليًا. ستعود للعمل خلال ساعات الدوام.',
