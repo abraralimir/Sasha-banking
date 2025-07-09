@@ -1,16 +1,28 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import NextImage from 'next/image';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { SashaAvatar } from '@/components/sasha-avatar';
-import { User, Download } from 'lucide-react';
+import { User, Download, Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/context/language-context';
-import { FinancialReportChart } from './financial-report-chart';
+
+const FinancialReportChart = dynamic(
+  () => import('./financial-report-chart').then((mod) => mod.FinancialReportChart),
+  {
+    loading: () => (
+      <div className="flex h-[386px] w-full items-center justify-center rounded-lg border bg-card p-4">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    ),
+    ssr: false,
+  }
+);
 
 export type Message = {
   id: string;

@@ -2,10 +2,10 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import type { HotTable } from '@handsontable/react';
 import type Handsontable from 'handsontable';
 import * as XLSX from 'xlsx';
-import { Bar, Pie } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -19,7 +19,6 @@ import {
 
 import { LanguageToggle } from '@/components/language-toggle';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { Spreadsheet } from '@/components/spreadsheet/spreadsheet';
 import { Button } from '@/components/ui/button';
 import { Loader2, Send, MessageSquare, X, RefreshCw } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
@@ -58,6 +57,21 @@ ChartJS.register(
   Legend,
   ArcElement
 );
+
+const Spreadsheet = dynamic(
+  () => import('@/components/spreadsheet/spreadsheet').then((mod) => mod.Spreadsheet),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full flex items-center justify-center bg-muted/40">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    ),
+  }
+);
+
+const Bar = dynamic(() => import('react-chartjs-2').then(mod => mod.Bar), { ssr: false });
+const Pie = dynamic(() => import('react-chartjs-2').then(mod => mod.Pie), { ssr: false });
 
 const initialData = Array.from({ length: 50 }, () => Array(26).fill(''));
 

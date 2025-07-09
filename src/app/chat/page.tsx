@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { CornerDownLeft, Mic, FileUp, FileText, XCircle, Loader2, Wand2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -26,11 +27,15 @@ import { LanguageToggle } from '@/components/language-toggle';
 import { useLanguage } from '@/context/language-context';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { ImageGenerationDialog } from '@/components/chat/image-generation-dialog';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useSashaStatus } from '@/hooks/use-sasha-status';
 import { SashaStatus } from '@/components/sasha-status';
 import { SashaOffline } from '@/components/sasha-offline';
+
+const ImageGenerationDialog = dynamic(
+    () => import('@/components/chat/image-generation-dialog').then(mod => mod.ImageGenerationDialog), 
+    { ssr: false }
+);
 
 type ReportToDownload = NonNullable<Message['analysisReport'] | Message['financialReport']>;
 type ReportType = 'loan' | 'financial';

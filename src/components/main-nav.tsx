@@ -3,18 +3,23 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { MessageCircle, Sheet as SheetIcon, BookOpen, BarChart3, GraduationCap } from 'lucide-react';
-import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
+import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from '@/components/ui/sidebar';
 import { useLanguage } from '@/context/language-context';
 
 export function MainNav() {
   const pathname = usePathname();
   const { t } = useLanguage();
+  const { setOpenMobile } = useSidebar();
+
+  const handleLinkClick = () => {
+    setOpenMobile(false);
+  };
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <SidebarMenuButton asChild isActive={pathname.startsWith('/chat')}>
-          <Link href="/chat">
+          <Link href="/chat" onClick={handleLinkClick}>
             <MessageCircle />
             <span>{t('chatTitle')}</span>
           </Link>
@@ -22,7 +27,7 @@ export function MainNav() {
       </SidebarMenuItem>
       <SidebarMenuItem>
         <SidebarMenuButton asChild isActive={pathname.startsWith('/spreadsheet')}>
-          <Link href="/spreadsheet">
+          <Link href="/spreadsheet" onClick={handleLinkClick}>
             <SheetIcon />
             <span>{t('spreadsheetTitle')}</span>
           </Link>
@@ -30,7 +35,7 @@ export function MainNav() {
       </SidebarMenuItem>
       <SidebarMenuItem>
         <SidebarMenuButton asChild isActive={pathname.startsWith('/spreadsheet-guide')}>
-          <Link href="/spreadsheet-guide">
+          <Link href="/spreadsheet-guide" onClick={handleLinkClick}>
             <GraduationCap />
             <span>{t('spreadsheetGuideTitle')}</span>
           </Link>
@@ -38,7 +43,7 @@ export function MainNav() {
       </SidebarMenuItem>
        <SidebarMenuItem>
         <SidebarMenuButton asChild isActive={pathname.startsWith('/data-analytics')}>
-          <Link href="/data-analytics">
+          <Link href="/data-analytics" onClick={handleLinkClick}>
             <BarChart3 />
             <span>{t('dataAnalyticsTitle')}</span>
           </Link>
@@ -46,7 +51,7 @@ export function MainNav() {
       </SidebarMenuItem>
        <SidebarMenuItem>
         <SidebarMenuButton asChild isActive={pathname.startsWith('/about')}>
-          <Link href="/about">
+          <Link href="/about" onClick={handleLinkClick}>
             <BookOpen />
             <span>{t('aboutTitle')}</span>
           </Link>
