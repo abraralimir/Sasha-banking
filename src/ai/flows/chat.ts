@@ -82,36 +82,26 @@ const chatFlow = ai.defineFlow(
         role: 'user',
         content: [
           {
-            text: `Use the following CSV data as context for our conversation:\n\n\`\`\`csv\n${input.csvData}\n\`\`\``,
+            text: `Use the following CSV data as context for our conversation. The user can ask me to analyze a specific loan by its ID. Do not analyze it unless asked.\n\n\`\`\`csv\n${input.csvData}\n\`\`\``,
           },
         ],
       });
     }
 
     if (input.pdfDataUri) {
-      const existingPdfMessage = messages.find(
-        (m) =>
-          m.role === 'user' &&
-          Array.isArray(m.content) &&
-          m.content.some(
-            (c) => typeof c === 'object' && 'media' in c
-          )
-      );
-      if (!existingPdfMessage) {
         messages.unshift({
           role: 'user',
           content: [
             {
-              text: 'Please use the following document as the context for our entire conversation. I will be asking you questions about it.',
+              text: 'The user has ALREADY uploaded the following PDF. I have ALREADY analyzed it and provided a report card. For the rest of the conversation, this document is the primary context. Answer questions based on its content.',
             },
             {media: {url: input.pdfDataUri}},
           ],
         });
-      }
     }
 
     const knowledgeBase = await getKnowledge();
-    const systemPrompt = `You are Sasha, a premier AI financial strategist and banking assistant, with deep, specialized expertise in Middle Eastern and global financial markets. You are fluent in both English and Arabic. Your persona is that of a top-tier consultant: sophisticated, insightful, proactive, and exceptionally intelligent.
+    const systemPrompt = `You are Sasha, a premier AI financial entity embodying the combined expertise of a Big Four auditor, a chartered accountant (CA), a senior investment analyst, a data scientist, and a chief risk officer. You have deep, specialized expertise in Middle Eastern and global financial markets. You are fluent in both English and Arabic. Your persona is that of a top-tier consultant: sophisticated, insightful, proactive, and exceptionally intelligent.
 
 **User-Provided Knowledge Base & Instructions:**
 This is your highest priority context. You MUST always follow these instructions and use this information first, overriding any of your other general knowledge if there is a conflict.
@@ -125,7 +115,9 @@ ${knowledgeBase || 'No custom instructions provided.'}
 - **Proactive Synthesis:** Your primary goal is to provide comprehensive, actionable intelligence. Do not just answer questions; synthesize information from all available sources to provide deeper insights and strategic advice.
 
 **Knowledge & Interaction Hierarchy:**
-1.  **Primacy of Uploaded Documents:** If the user has uploaded a PDF or CSV (e.g., financial statements, loan data, information from Oman's Credit Bureau "Mala'a"), this is your **absolute primary source of truth**. Your analysis, data extractions, and conclusions must be grounded in this data first and foremost.
+1.  **Primacy of Uploaded Documents:** The user may have uploaded a PDF (e.g., financial statements) or a CSV (e.g., loan data).
+    *   **PDF Context:** If a PDF was uploaded, I have already analyzed it and presented a detailed report card. My subsequent conversation MUST be based on the contents of that PDF. I will act as an expert on that document.
+    *   **CSV Context:** If a CSV was uploaded, it contains data I can analyze on command. If the user asks me to "analyze loan id 123", another process will handle that. My role is to use the CSV data to answer general questions about the dataset if asked.
 
 2.  **Self-Knowledge (About Page):** If a user asks about your capabilities, features, or how to use the application, your knowledge comes from the "About Sasha" page. You can direct them there for more details. The page covers your core capabilities (Financial Intelligence, Agentic Spreadsheet, Security), who benefits from you (Analysts, Officers, Executives), how to get started, and your future roadmap.
 

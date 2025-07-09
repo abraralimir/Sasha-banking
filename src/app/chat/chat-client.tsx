@@ -131,7 +131,7 @@ export default function ChatPageClient() {
       console.error("Failed to access localStorage:", error);
       setMessages([{ id: '1', role: 'assistant', content: t('initialMessage') }]);
     }
-  }, [t, toast]);
+  }, [t]);
   
   useEffect(() => {
     // Save messages if a user has sent a message
@@ -182,18 +182,43 @@ export default function ChatPageClient() {
     const newUserMessage: Message = { id: Date.now().toString(), role: 'user', content: input };
     const newMessages = [...messages, newUserMessage];
     setMessages(newMessages);
+    const currentInput = input;
     setInput('');
     setIsLoading(true);
 
     try {
-      const historyForApi = newMessages.map(({ id, analysisReport, financialReport, imageUrl, ...rest }) => rest);
-      const response = await chat({ history: historyForApi, pdfDataUri: pdfData, csvData: csvData, language });
-      const botResponse: Message = {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: response.content,
-      };
-      setMessages(prev => [...prev, botResponse]);
+      const loanAnalysisMatch = currentInput.trim().match(/^analyze loan id (\S+)/i);
+      
+      if (loanAnalysisMatch) {
+        if (!csvData) {
+          toast({ variant: 'destructive', title: t('genericErrorTitle'), description: t('uploadCsvFirst') });
+          setMessages(prev => prev.slice(0, prev.length - 1)); // Remove user message
+          setIsLoading(false);
+          return;
+        }
+        
+        const loanId = loanAnalysisMatch[1];
+        setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: `Analyzing loan ID **${loanId}**...` }]);
+        
+        const report = await analyzeLoan({ csvData, loanId, language });
+        const analysisMessage: Message = {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: t('loanAnalysisHeader', { loanId }),
+          analysisReport: { ...report, loanId },
+        };
+        setMessages(prev => [...prev, analysisMessage]);
+
+      } else {
+        const historyForApi = newMessages.map(({ id, analysisReport, financialReport, imageUrl, ...rest }) => rest);
+        const response = await chat({ history: historyForApi, pdfDataUri: pdfData, csvData: csvData, language });
+        const botResponse: Message = {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: response.content,
+        };
+        setMessages(prev => [...prev, botResponse]);
+      }
     } catch (error) {
       console.error(error);
       toast({
@@ -201,6 +226,11 @@ export default function ChatPageClient() {
         title: t('genericErrorTitle'),
         description: t('genericErrorDesc'),
       });
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: t('unableToAnalyzeMessage'),
+      }]);
     } finally {
       setIsLoading(false);
     }
@@ -214,7 +244,6 @@ export default function ChatPageClient() {
         const text = e.target?.result as string;
         setCsvData(text);
         setCsvFileName(file.name);
-        // Removed saving to localStorage to prevent quota errors
         toast({
           title: t('csvUploadTitle'),
           description: t('csvUploadDesc', { fileName: file.name }),
@@ -235,32 +264,59 @@ export default function ChatPageClient() {
       return;
     }
     
+    setMessages(prev => [...prev, {
+      id: Date.now().toString(),
+      role: 'assistant',
+      content: t('analyzingPdfMessage', { fileName: file.name }),
+    }]);
+
+    setIsLoading(true);
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = async (e) => {
-      const dataUri = e.target?.result as string;
-      const fileName = file.name;
+      try {
+        const dataUri = e.target?.result as string;
+        const fileName = file.name;
 
-      setPdfData(dataUri);
-      setPdfFileName(fileName);
-      // Removed saving to localStorage to prevent quota errors
-      toast({
-        title: t('pdfUploadTitle'),
-        description: t('pdfUploadDesc', { fileName }),
-      });
+        setPdfData(dataUri);
+        setPdfFileName(fileName);
+        toast({
+          title: t('pdfUploadTitle'),
+          description: t('pdfUploadDesc', { fileName }),
+        });
 
-      setMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: t('pdfLoadedForChat', { fileName }),
-      }]);
+        const report = await analyzeFinancialStatement({ pdfDataUri: dataUri, language });
+        
+        const reportMessage: Message = {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: t('financialAnalysisHeader'),
+          financialReport: report,
+        };
+        setMessages(prev => [...prev, reportMessage]);
+
+      } catch (error) {
+        console.error("PDF Analysis failed:", error);
+        toast({
+          variant: 'destructive',
+          title: t('analysisFailedTitle'),
+          description: t('analysisFailedDesc'),
+        });
+        setMessages(prev => [...prev, {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: t('unableToAnalyzeMessage'),
+        }]);
+      } finally {
+        setIsLoading(false);
+        if (event.target) event.target.value = '';
+      }
     };
   };
 
   const handleClearPdf = () => {
     setPdfData(null);
     setPdfFileName(null);
-    // Removed clearing localStorage to align with not setting it
     toast({
       title: t('pdfClearedTitle'),
       description: t('pdfClearedDesc'),
@@ -275,7 +331,6 @@ export default function ChatPageClient() {
   const handleClearCsv = () => {
     setCsvData(null);
     setCsvFileName(null);
-    // Removed clearing localStorage to align with not setting it
     toast({
       title: t('csvClearedTitle'),
       description: t('csvClearedDesc'),
