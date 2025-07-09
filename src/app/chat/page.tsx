@@ -25,8 +25,6 @@ import { analyzeFinancialStatement } from '@/ai/flows/analyze-financial-statemen
 import { useToast } from '@/hooks/use-toast';
 import { LanguageToggle } from '@/components/language-toggle';
 import { useLanguage } from '@/context/language-context';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useSashaStatus } from '@/hooks/use-sasha-status';
 import { SashaStatus } from '@/components/sasha-status';
@@ -39,6 +37,43 @@ const ImageGenerationDialog = dynamic(
 
 type ReportToDownload = NonNullable<Message['analysisReport'] | Message['financialReport']>;
 type ReportType = 'loan' | 'financial';
+
+const generateAndDownloadPdf = async (element: HTMLElement, fileName: string) => {
+    try {
+        const { default: jsPDF } = await import('jspdf');
+        const { default: html2canvas } = await import('html2canvas');
+
+        const canvas = await html2canvas(element, { useCORS: true, scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        const ratio = canvasWidth / canvasHeight;
+        let imgWidth = pdfWidth;
+        let imgHeight = imgWidth / ratio;
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+
+        while (heightLeft > 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pdfHeight;
+        }
+        
+        pdf.save(fileName);
+        return true;
+    } catch (err) {
+        console.error(err);
+        return false;
+    }
+};
+
 
 export default function ChatPage() {
   const { t, language, dir } = useLanguage();
@@ -116,52 +151,27 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (pdfRenderContent && pdfContainerRef.current) {
-        // A small delay to ensure the chart has rendered before capturing
-        setTimeout(() => {
-            html2canvas(pdfContainerRef.current!, {
-                useCORS: true,
-                scale: 2,
-            }).then(canvas => {
-                const imgData = canvas.toDataURL('image/png');
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = pdf.internal.pageSize.getHeight();
-                const canvasWidth = canvas.width;
-                const canvasHeight = canvas.height;
-                const ratio = canvasWidth / canvasHeight;
-                let imgWidth = pdfWidth;
-                let imgHeight = imgWidth / ratio;
-                let heightLeft = imgHeight;
-                let position = 0;
+        const performDownload = async () => {
+            const fileName = downloadInfo?.type === 'loan'
+              ? `loan-report-${(downloadInfo.report as NonNullable<Message['analysisReport']>)?.loanId}.pdf`
+              : `financial-report.pdf`;
+            
+            const success = await generateAndDownloadPdf(pdfContainerRef.current!, fileName);
 
-                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                heightLeft -= pdfHeight;
-
-                while (heightLeft > 0) {
-                  position = heightLeft - imgHeight;
-                  pdf.addPage();
-                  pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                  heightLeft -= pdfHeight;
-                }
-
-                const fileName = downloadInfo?.type === 'loan'
-                  ? `loan-report-${(downloadInfo.report as NonNullable<Message['analysisReport']>)?.loanId}.pdf`
-                  : `financial-report.pdf`;
-                
-                pdf.save(fileName);
-            }).catch(err => {
-                console.error(err);
+            if (!success) {
                 toast({
                   variant: 'destructive',
                   title: t('genericErrorTitle'),
                   description: t('pdfGenerationError')
                 });
-            }).finally(() => {
-                setPdfRenderContent(null);
-                setIsDownloading(false);
-                setDownloadInfo(null);
-            });
-        }, 500); // 500ms delay
+            }
+
+            setPdfRenderContent(null);
+            setIsDownloading(false);
+            setDownloadInfo(null);
+        };
+        // A small delay to ensure the chart has rendered before capturing
+        setTimeout(performDownload, 500);
     }
   }, [pdfRenderContent, t, toast, downloadInfo]);
   

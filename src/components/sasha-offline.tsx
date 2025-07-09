@@ -36,13 +36,13 @@ export function SashaOffline({ countdown }: { countdown: string }) {
     };
 
     return (
-        <main className="relative flex-1 flex items-center justify-center p-4 overflow-hidden">
+        <main className="flex-1 flex items-center justify-center p-4 overflow-hidden">
              <video 
                 autoPlay 
                 loop 
                 muted 
                 playsInline
-                className="absolute z-0 w-auto min-w-full min-h-full max-w-none object-cover"
+                className="fixed inset-0 w-full h-full z-0 object-cover"
                 poster="https://placehold.co/1920x1080.png"
                 data-ai-hint="abstract background"
              >
@@ -52,7 +52,7 @@ export function SashaOffline({ countdown }: { countdown: string }) {
             <audio ref={audioRef} loop>
                 <source src="/offline-loop.mp3.mp3" type="audio/mpeg" />
             </audio>
-            <div className="absolute inset-0 bg-black/50 z-10"></div>
+            <div className="fixed inset-0 bg-black/50 z-10"></div>
             
              <Button
                 variant="ghost"
@@ -75,7 +75,7 @@ export function SashaOffline({ countdown }: { countdown: string }) {
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                    <p className="text-white/70 text-sm">{t('sashaOfflineDesc')}</p>
+                    <p className="text-white/70 text-sm max-w-xs mx-auto">{t('sashaOfflineDesc')}</p>
                     <div className="text-sm font-semibold bg-white/10 py-2 px-4 rounded-lg border border-white/20">
                         <p className="text-white/90 text-xs">{t('sashaOnlineAgain')}</p>
                         <p className="text-3xl font-mono tracking-widest mt-1 text-white">{countdown}</p>

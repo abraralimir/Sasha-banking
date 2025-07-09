@@ -12,8 +12,6 @@ import {
   Legend,
   ArcElement
 } from 'chart.js';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 import { LanguageToggle } from '@/components/language-toggle';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -81,19 +79,24 @@ export default function DataAnalyticsPage() {
     });
   };
 
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
     const input = dashboardRef.current;
     if (!input || !dashboardData) return;
 
     setIsDownloading(true);
     toast({ title: t('daGeneratingPdfTitle') });
 
-    html2canvas(input, {
-        scale: 2,
-        useCORS: true,
-        windowWidth: input.scrollWidth,
-        windowHeight: input.scrollHeight
-    }).then((canvas) => {
+    try {
+        const { default: jsPDF } = await import('jspdf');
+        const { default: html2canvas } = await import('html2canvas');
+
+        const canvas = await html2canvas(input, {
+            scale: 2,
+            useCORS: true,
+            windowWidth: input.scrollWidth,
+            windowHeight: input.scrollHeight
+        });
+
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF({
             orientation: 'p',
@@ -123,16 +126,16 @@ export default function DataAnalyticsPage() {
         }
         
         pdf.save(`${dashboardData.title.replace(/\s/g, '_')}_Report.pdf`);
-    }).catch(err => {
+    } catch (err) {
         console.error("PDF generation failed:", err);
         toast({
             variant: 'destructive',
             title: t('daPdfGenerationFailedTitle'),
             description: t('daPdfGenerationFailedDesc'),
         });
-    }).finally(() => {
+    } finally {
         setIsDownloading(false);
-    });
+    }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
