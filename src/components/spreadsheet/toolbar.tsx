@@ -30,13 +30,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
-import {
-  Menubar,
-  MenubarContent,
-  MenubarItem,
-  MenubarMenu,
-  MenubarTrigger,
-} from '@/components/ui/menubar';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -182,35 +175,27 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
   return (
     <TooltipProvider>
       <div className="p-2 border-b bg-background z-20 relative">
-        <Menubar className="border-none p-0 h-auto bg-transparent flex-wrap">
-            <MenubarMenu>
-              <MenubarTrigger>{t('toolbarTemplates')}</MenubarTrigger>
-              <MenubarContent>
+        <div className="flex flex-wrap items-center gap-1">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 text-sm">{t('toolbarTemplates')}</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
                 {templates.map((template) => (
-                  <MenubarItem key={template.id} onSelect={() => onSetTemplate(template)}>
+                  <DropdownMenuItem key={template.id} onSelect={() => onSetTemplate(template)}>
                     {t(template.name)}
-                  </MenubarItem>
+                  </DropdownMenuItem>
                 ))}
-              </MenubarContent>
-            </MenubarMenu>
-            <MenubarMenu>
-              <MenubarTrigger className="cursor-pointer" onClick={onImport}>{t('toolbarImport')}</MenubarTrigger>
-            </MenubarMenu>
-            <MenubarMenu>
-              <MenubarTrigger className="cursor-pointer" onClick={handleDownload} disabled={!isEnabled}>{t('toolbarDownload')}</MenubarTrigger>
-            </MenubarMenu>
-            <MenubarMenu>
-              <MenubarTrigger className="cursor-pointer" onClick={toggleFullscreen}>
-                {isFullscreen ? t('toolbarExitFullscreen') : t('toolbarFullscreen')}
-              </MenubarTrigger>
-            </MenubarMenu>
-            <MenubarMenu>
-              <MenubarTrigger className="cursor-not-allowed text-muted-foreground">{t('toolbarInsert')}</MenubarTrigger>
-            </MenubarMenu>
-             <MenubarMenu>
-              <MenubarTrigger className="cursor-not-allowed text-muted-foreground">{t('toolbarData')}</MenubarTrigger>
-            </MenubarMenu>
-        </Menubar>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button variant="ghost" size="sm" className="h-8 text-sm" onClick={onImport}>{t('toolbarImport')}</Button>
+          <Button variant="ghost" size="sm" className="h-8 text-sm" onClick={handleDownload} disabled={!isEnabled}>{t('toolbarDownload')}</Button>
+          <Button variant="ghost" size="sm" className="h-8 text-sm" onClick={toggleFullscreen}>
+            {isFullscreen ? t('toolbarExitFullscreen') : t('toolbarFullscreen')}
+          </Button>
+          <Button variant="ghost" size="sm" className="h-8 text-sm cursor-not-allowed text-muted-foreground">{t('toolbarInsert')}</Button>
+          <Button variant="ghost" size="sm" className="h-8 text-sm cursor-not-allowed text-muted-foreground">{t('toolbarData')}</Button>
+        </div>
 
         <Separator className="my-2" />
 
