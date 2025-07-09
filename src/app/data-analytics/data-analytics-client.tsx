@@ -25,6 +25,7 @@ import { generateDashboard, type GenerateDashboardOutput } from '@/ai/flows/gene
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useDataAnalyticsStatus } from '@/hooks/use-data-analytics-status';
 import { SashaOffline } from '@/components/sasha-offline';
+import { cn } from '@/lib/utils';
 
 const Bar = dynamic(() => import('react-chartjs-2').then(mod => mod.Bar), { ssr: false });
 const Pie = dynamic(() => import('react-chartjs-2').then(mod => mod.Pie), { ssr: false });
@@ -218,16 +219,6 @@ export default function DataAnalyticsClient() {
     );
   }
 
-  if (!isOnline) {
-    return (
-        <SashaOffline
-            countdown={countdown}
-            description={t('daOfflineDesc')}
-            hours={t('daOfflineHours')}
-        />
-    )
-  }
-
   return (
     <div className="flex flex-col h-screen bg-muted/40 text-foreground" dir={dir}>
       <input
@@ -247,11 +238,20 @@ export default function DataAnalyticsClient() {
         <div className="justify-self-end flex items-center gap-2">
           <div className="hidden sm:flex items-center space-x-2 rtl:space-x-reverse">
             <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+              {!isOnline ? (
+                 <>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                 </>
+              ) : (
+                <>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                </>
+              )}
             </span>
             <p className="text-xs text-muted-foreground">
-              {t('sashaStatusOnline')}
+              {isOnline ? t('sashaStatusOnline') : t('sashaStatusOffline')}
             </p>
           </div>
           {fileName && !isLoading && (
@@ -273,8 +273,18 @@ export default function DataAnalyticsClient() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-auto p-4 md:p-8">
-        <div className="max-w-7xl mx-auto space-y-6">
+      <main className={cn(
+        "flex-1 overflow-auto",
+        !isOnline ? "p-0" : "p-4 md:p-8"
+      )}>
+        {!isOnline ? (
+          <SashaOffline
+              countdown={countdown}
+              description={t('daOfflineDesc')}
+              hours={t('daOfflineHours')}
+          />
+        ) : (
+          <div className="max-w-7xl mx-auto space-y-6">
             {!fileName ? (
                   <div className="w-full pt-8 md:pt-16 flex justify-center animate-in fade-in-50 duration-500">
                     <Card className="w-full max-w-lg text-center shadow-lg">
@@ -357,20 +367,24 @@ export default function DataAnalyticsClient() {
                     </div>
                 </div>
             )}
-        </div>
+          </div>
+        )}
       </main>
-      <footer className="p-4 border-t shrink-0 bg-background">
-        <div className="max-w-7xl mx-auto flex justify-end">
-          {dashboardData && !isLoading && (
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={isDownloading}>
-                {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-                {t('daDownloadPdfButton')}
-              </Button>
+
+      {isOnline && (
+        <footer className="p-4 border-t shrink-0 bg-background">
+            <div className="max-w-7xl mx-auto flex justify-end">
+            {dashboardData && !isLoading && (
+                <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={isDownloading}>
+                    {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                    {t('daDownloadPdfButton')}
+                </Button>
+                </div>
+            )}
             </div>
-          )}
-        </div>
-      </footer>
+        </footer>
+      )}
     </div>
   );
 }

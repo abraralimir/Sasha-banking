@@ -1,3 +1,4 @@
+
 'use client';
 
 import { SashaAvatar } from '@/components/sasha-avatar';
@@ -46,7 +47,7 @@ export function SashaOffline({
     };
 
     return (
-        <div className="fixed inset-0 w-full h-full z-40">
+        <div className="relative w-full h-full">
              <video 
                 autoPlay 
                 loop 
