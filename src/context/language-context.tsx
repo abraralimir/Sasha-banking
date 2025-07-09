@@ -98,10 +98,12 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     sashaStatusOnline: 'Online',
     sashaStatusOffline: 'Offline',
     sashaOfflineTitle: 'Sasha is Offline',
-    sashaOfflineDesc: 'Sasha is currently recharging. She will be back online during working hours.',
+    sashaOfflineDesc: 'Sasha is currently recharging and performing system optimizations. She will be back online during working hours.',
     sashaOnlineAgain: 'ONLINE AGAIN IN',
-    sashaOfflineHours: 'Working Hours: 5:30 AM - 5:30 PM & 5:45 PM - 6:30 PM',
-
+    chatOfflineHours: "Working Hours: 5:30 AM - 1:00 PM, 2:00 PM - 5:00 PM & 7:00 PM - 10:00 PM",
+    spreadsheetOfflineHours: "Maintenance daily from 3:00 PM to 5:00 PM.",
+    daOfflineHours: "Working Hours: 5:30 AM - 10:00 AM, 12:00 PM - 3:00 PM & 7:00 PM - 10:00 PM",
+    
     // Nav
     chatTitle: 'Chat',
     aboutTitle: 'About Sasha',
@@ -128,6 +130,10 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     learnPageTitle: 'About Sasha',
     learnIntro: 'Sasha is an advanced, AI-powered financial strategist and banking assistant designed to bring institutional-grade analysis and agentic task execution to your fingertips. Interact naturally, get deep insights, and automate complex tasks with ease.',
     learnCapabilitiesTitle: "Sasha's Core Capabilities",
+    capabilityHours: "Availability:",
+    chatAvailability: "5:30 AM - 1 PM, 2 PM - 5 PM, 7 PM - 10 PM",
+    spreadsheetAvailability: "24/7 (Daily maintenance: 3 PM - 5 PM)",
+    daAvailability: "5:30 AM - 10 AM, 12 PM - 3 PM, 7 PM - 10 PM",
     learnChatTitle: 'Institutional-Grade Financial Intelligence',
     learnChatDesc: "Engage with an AI that understands the nuances of finance. Upload complex financial statements, credit reports from bureaus like Oman's Mala'a, or internal loan data. Sasha doesn't just read; she comprehends, synthesizes, and critiques. Ask her to 'Identify key risks in this balance sheet,' 'Benchmark this company's P/E ratio against industry standards,' or 'Draft a summary for the credit committee.' Sasha provides instant, institutional-quality analysis in both English and Arabic, becoming an indispensable partner for credit officers, analysts, and decision-makers.",
     learnSpreadsheetTitle: 'The Truly Agentic Spreadsheet',
@@ -320,8 +326,6 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     daGeneratingPdfTitle: 'Generating PDF Report...',
     daPdfGenerationFailedTitle: 'PDF Generation Failed',
     daPdfGenerationFailedDesc: 'An error occurred while trying to generate the PDF report.',
-    daOfflineDesc: "Sasha is currently resting to optimize her systems. She performs heavy data analytics, so frequent breaks are necessary for peak performance.",
-    daOfflineHours: "Working Hours: 3 AM - 12 PM & 3 PM - 6 PM",
   },
   ar: {
     pageTitle: 'ساشا المصرفية',
@@ -409,10 +413,12 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     sashaStatusOnline: 'متصلة',
     sashaStatusOffline: 'غير متصلة',
     sashaOfflineTitle: 'ساشا غير متصلة',
-    sashaOfflineDesc: 'ساشا تقوم بإعادة الشحن حاليًا. ستعود للعمل خلال ساعات الدوام.',
+    sashaOfflineDesc: 'ساشا تقوم حاليًا بإعادة الشحن وتحسينات النظام. ستعود للعمل خلال ساعات الدوام.',
     sashaOnlineAgain: 'متصلة مرة أخرى في:',
-    sashaOfflineHours: 'ساعات العمل: 5:30 صباحًا - 5:30 مساءً  و  5:45 مساءً - 6:30 مساءً',
-    
+    chatOfflineHours: "ساعات العمل: 5:30 صباحًا - 1:00 ظهرًا، 2:00 ظهرًا - 5:00 مساءً، و 7:00 مساءً - 10:00 مساءً",
+    spreadsheetOfflineHours: "صيانة يومية من 3:00 مساءً إلى 5:00 مساءً.",
+    daOfflineHours: "ساعات العمل: 5:30 صباحًا - 10:00 صباحًا، 12:00 ظهرًا - 3:00 عصرًا، و 7:00 مساءً - 10:00 مساءً",
+
     // Nav
     chatTitle: 'الدردشة',
     aboutTitle: 'حول ساشا',
@@ -438,6 +444,10 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     learnPageTitle: 'حول ساشا',
     learnIntro: 'ساشا هي خبيرة استراتيجية مالية ومساعدة مصرفية متقدمة تعمل بالذكاء الاصطناعي، مصممة لتوفر لك تحليلات على مستوى المؤسسات وتنفيذ مهام وكيلية بكل سهولة. تفاعل بشكل طبيعي، واحصل على رؤى عميقة، وقم بأتمتة المهام المعقدة.',
     learnCapabilitiesTitle: "قدرات ساشا الأساسية",
+    capabilityHours: "التوفر:",
+    chatAvailability: "5:30 ص - 1 م، 2 م - 5 م، 7 م - 10 م",
+    spreadsheetAvailability: "24/7 (صيانة يومية: 3 م - 5 م)",
+    daAvailability: "5:30 ص - 10 ص، 12 م - 3 م، 7 م - 10 م",
     learnChatTitle: 'ذكاء مالي من الطراز المؤسسي',
     learnChatDesc: "تفاعل مع ذكاء اصطناعي يفهم دقائق الأمور المالية. قم بتحميل بيانات مالية معقدة، تقارير ائتمانية من مكاتب مثل 'ملاءة' في عُمان، أو بيانات قروض داخلية. ساشا لا تقرأ فقط؛ بل تفهم، وتحلل، وتنتقد. اطلب منها 'تحديد المخاطر الرئيسية في هذه الميزانية العمومية'، 'مقارنة نسبة السعر إلى الأرباح لهذه الشركة بمعايير الصناعة'، أو 'صياغة ملخص للجنة الائتمان'. تقدم ساشا تحليلاً فوريًا بجودة مؤسسية باللغتين الإنجليزية والعربية، لتصبح شريكًا لا غنى عنه لمسؤولي الائتمان والمحللين وصناع القرار.",
     learnSpreadsheetTitle: 'جدول البيانات الوكيلي الحقيقي',
@@ -630,8 +640,6 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     daGeneratingPdfTitle: 'جاري إنشاء تقرير PDF...',
     daPdfGenerationFailedTitle: 'فشل إنشاء PDF',
     daPdfGenerationFailedDesc: 'حدث خطأ أثناء محاولة إنشاء تقرير PDF.',
-    daOfflineDesc: "ساشا تستريح حاليًا لتحسين أنظمتها. إنها تقوم بتحليلات بيانات ثقيلة، لذا فإن الفترات المتكررة ضرورية لتحقيق أعلى أداء.",
-    daOfflineHours: "ساعات العمل: 3 صباحًا - 12 ظهرًا و 3 مساءً - 6 مساءً",
   },
 };
 

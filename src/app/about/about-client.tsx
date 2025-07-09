@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { MessageCircle, Sheet, BookOpen, Rocket, Wand, ListChecks, BrainCircuit, Bot, ShieldCheck, LineChart, FileCheck as FileCheckIcon, Briefcase, BarChart3 } from 'lucide-react';
+import { MessageCircle, Sheet, BookOpen, Rocket, Wand, ListChecks, BrainCircuit, Bot, ShieldCheck, LineChart, FileCheck as FileCheckIcon, Briefcase, BarChart3, Clock } from 'lucide-react';
 import { LanguageToggle } from '@/components/language-toggle';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useLanguage } from '@/context/language-context';
@@ -19,16 +19,19 @@ export default function AboutPageClient() {
       icon: MessageCircle,
       title: t('learnChatTitle'),
       description: t('learnChatDesc'),
+      availability: t('chatAvailability')
     },
     {
       icon: Sheet,
       title: t('learnSpreadsheetTitle'),
       description: t('learnSpreadsheetDesc'),
+      availability: t('spreadsheetAvailability')
     },
     {
       icon: BarChart3,
       title: t('learnDATitle'),
       description: t('learnDADesc'),
+      availability: t('daAvailability')
     },
     {
       icon: Wand,
@@ -116,8 +119,15 @@ export default function AboutPageClient() {
                             <span className="font-semibold">{item.title}</span>
                             </div>
                         </AccordionTrigger>
-                        <AccordionContent className="text-muted-foreground pl-11">
-                            {item.description}
+                        <AccordionContent className="text-muted-foreground pl-11 space-y-3">
+                            <p>{item.description}</p>
+                            {item.availability && (
+                                <div className="text-xs font-medium text-muted-foreground/80 flex items-center gap-2">
+                                    <Clock className="w-3 h-3"/>
+                                    <span className="font-semibold">{t('capabilityHours')}</span>
+                                    <span>{item.availability}</span>
+                                </div>
+                            )}
                         </AccordionContent>
                     </AccordionItem>
                 ))}

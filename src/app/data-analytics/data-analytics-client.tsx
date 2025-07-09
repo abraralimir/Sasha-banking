@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -52,7 +51,7 @@ const generateAndDownloadPdf = async (element: HTMLElement, fileName: string) =>
         const canvasWidth = canvas.width;
         const canvasHeight = canvas.height;
         const ratio = canvasWidth / canvasHeight;
-        const imgHeight = pdfWidth / ratio;
+        let imgHeight = pdfWidth / ratio;
         let heightLeft = imgHeight;
         let position = 0;
 
@@ -256,9 +255,9 @@ export default function DataAnalyticsClient() {
         </div>
       </header>
 
-      {isOnline ? (
-        <>
-          <main className="flex-1 overflow-auto p-4 md:p-8">
+      <main className="flex-1 overflow-hidden">
+        {isOnline ? (
+          <div className="h-full overflow-auto p-4 md:p-8">
             <div className="max-w-7xl mx-auto space-y-6">
               {!fileName ? (
                     <div className="w-full pt-8 md:pt-16 flex justify-center animate-in fade-in-50 duration-500">
@@ -285,6 +284,7 @@ export default function DataAnalyticsClient() {
                       <p className="text-muted-foreground">{t('daGeneratingDashboardDesc')}</p>
                   </div>
               ) : dashboardData && (
+                <>
                   <div ref={dashboardRef} className="animate-in fade-in-50 duration-500 space-y-6 bg-muted/40 p-4 md:p-6 rounded-lg">
                       <Card>
                           <CardHeader>
@@ -341,29 +341,28 @@ export default function DataAnalyticsClient() {
                           </Card>
                       </div>
                   </div>
+                  <footer className="p-4 pt-6 mt-4 border-t shrink-0 bg-transparent">
+                    <div className="max-w-7xl mx-auto flex justify-end">
+                        <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={isDownloading}>
+                            {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                            {t('daDownloadPdfButton')}
+                        </Button>
+                        </div>
+                    </div>
+                  </footer>
+                </>
               )}
             </div>
-          </main>
-          {dashboardData && !isLoading && (
-            <footer className="p-4 border-t shrink-0 bg-background">
-                <div className="max-w-7xl mx-auto flex justify-end">
-                    <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={isDownloading}>
-                        {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-                        {t('daDownloadPdfButton')}
-                    </Button>
-                    </div>
-                </div>
-            </footer>
-          )}
-        </>
-      ) : (
-        <SashaOffline
-            countdown={countdown}
-            description={t('daOfflineDesc')}
-            hours={t('daOfflineHours')}
-        />
-      )}
+          </div>
+        ) : (
+          <SashaOffline
+              countdown={countdown}
+              description={t('sashaOfflineDesc')}
+              hours={t('daOfflineHours')}
+          />
+        )}
+      </main>
     </div>
   );
 }

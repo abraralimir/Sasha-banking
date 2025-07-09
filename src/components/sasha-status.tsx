@@ -4,10 +4,13 @@ import { useSashaStatus } from '@/hooks/use-sasha-status';
 import { useLanguage } from '@/context/language-context';
 import { useState, useEffect } from 'react';
 
-export function SashaStatus() {
-    const { isOnline, timeString } = useSashaStatus();
+export function SashaStatus({ isOnline: isOnlineProp, timeString: timeStringProp }: { isOnline?: boolean, timeString?: string }) {
+    const { isOnline: sashaIsOnline, timeString: sashaTimeString } = useSashaStatus();
     const { t } = useLanguage();
     const [hasMounted, setHasMounted] = useState(false);
+
+    const isOnline = isOnlineProp !== undefined ? isOnlineProp : sashaIsOnline;
+    const timeString = timeStringProp !== undefined ? timeStringProp : sashaTimeString;
 
     useEffect(() => {
         setHasMounted(true);
@@ -43,7 +46,7 @@ export function SashaStatus() {
                 </span>
             </div>
             <p className="text-xs text-muted-foreground font-mono">
-                {isOnline ? timeString : t('sashaStatusOffline')}
+                {isOnline ? (timeString || t('sashaStatusOnline')) : t('sashaStatusOffline')}
             </p>
         </div>
     );

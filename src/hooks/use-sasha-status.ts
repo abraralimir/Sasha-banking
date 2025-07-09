@@ -5,7 +5,7 @@ import { useLanguage } from '@/context/language-context';
 
 export function useSashaStatus() {
   const [status, setStatus] = useState({ 
-    isOnline: true, // Default to true to avoid flash of offline content on initial render
+    isOnline: true,
     timeString: '',
     countdown: ''
   });
@@ -16,18 +16,23 @@ export function useSashaStatus() {
       const now = new Date();
       const currentHour = now.getHours();
       const currentMinute = now.getMinutes();
+      const currentTime = currentHour * 60 + currentMinute;
 
-      // Morning session: 5:30 AM to 5:30 PM (17:30)
-      const isAfterStartTime = currentHour > 5 || (currentHour === 5 && currentMinute >= 30);
-      const isBeforeBreakTime = currentHour < 17 || (currentHour === 17 && currentMinute < 30);
-      const inFirstPeriod = isAfterStartTime && isBeforeBreakTime;
+      // Define working hours in minutes from midnight
+      const morningSessionStart = 5 * 60 + 30; // 5:30 AM
+      const morningSessionEnd = 13 * 60; // 1:00 PM
 
-      // Evening session: 5:45 PM (17:45) to 6:30 PM (18:30)
-      const isAfterBreakTime = currentHour > 17 || (currentHour === 17 && currentMinute >= 45);
-      const isBeforeEndTime = currentHour < 18 || (currentHour === 18 && currentMinute < 30);
-      const inSecondPeriod = isAfterBreakTime && isBeforeEndTime;
+      const afternoonSessionStart = 14 * 60; // 2:00 PM
+      const afternoonSessionEnd = 17 * 60; // 5:00 PM
+      
+      const eveningSessionStart = 19 * 60; // 7:00 PM
+      const eveningSessionEnd = 22 * 60; // 10:00 PM
 
-      const isOnline = inFirstPeriod || inSecondPeriod;
+      const inMorningSession = currentTime >= morningSessionStart && currentTime < morningSessionEnd;
+      const inAfternoonSession = currentTime >= afternoonSessionStart && currentTime < afternoonSessionEnd;
+      const inEveningSession = currentTime >= eveningSessionStart && currentTime < eveningSessionEnd;
+
+      const isOnline = inMorningSession || inAfternoonSession || inEveningSession;
       
       const timeString = now.toLocaleTimeString(language === 'ar' ? 'ar-OM' : 'en-US', {
         hour: 'numeric',
@@ -37,19 +42,20 @@ export function useSashaStatus() {
       let countdown = '';
       if (!isOnline) {
         let targetTime = new Date();
-        // Check if currently in the break period (17:30 to 17:44)
-        const isInBreak = currentHour === 17 && currentMinute >= 30 && currentMinute < 45;
+        let nextSessionStart: number;
 
-        if (isInBreak) {
-          targetTime.setHours(17, 45, 0, 0); // Target is 5:45 PM today
-        } else {
-          targetTime.setHours(5, 30, 0, 0); // Default target is 5:30 AM today
-
-          // If it's already past 5:30 AM, target is 5:30 AM tomorrow
-          if (now.getTime() > targetTime.getTime()) {
-            targetTime.setDate(targetTime.getDate() + 1);
-          }
+        if (currentTime < morningSessionStart) { // Before first session today
+          nextSessionStart = morningSessionStart;
+        } else if (currentTime >= morningSessionEnd && currentTime < afternoonSessionStart) { // Between morning and afternoon
+          nextSessionStart = afternoonSessionStart;
+        } else if (currentTime >= afternoonSessionEnd && currentTime < eveningSessionStart) { // Between afternoon and evening
+          nextSessionStart = eveningSessionStart;
+        } else { // After all sessions for today
+          nextSessionStart = morningSessionStart;
+          targetTime.setDate(targetTime.getDate() + 1); // Target is tomorrow
         }
+        
+        targetTime.setHours(Math.floor(nextSessionStart / 60), nextSessionStart % 60, 0, 0);
         
         const distance = targetTime.getTime() - now.getTime();
         const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -63,8 +69,8 @@ export function useSashaStatus() {
       setStatus({ isOnline, timeString, countdown });
     };
 
-    checkStatus(); // Initial check
-    const interval = setInterval(checkStatus, 1000); // Check every second for the countdown
+    checkStatus();
+    const interval = setInterval(checkStatus, 1000);
 
     return () => clearInterval(interval);
   }, [language]);
