@@ -546,7 +546,7 @@ export default function SpreadsheetPage() {
   if (!hasMounted) {
     return (
         <div className="flex flex-col h-screen bg-background text-foreground" dir={dir}>
-            <header className="grid grid-cols-3 items-center p-4 border-b shrink-0">
+            <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 relative z-30">
                 <div className="justify-self-start flex items-center gap-2">
                     <SidebarTrigger />
                 </div>
@@ -577,7 +577,7 @@ export default function SpreadsheetPage() {
         className="hidden"
         accept=".xlsx, .xls, .csv"
       />
-      <header className="grid grid-cols-3 items-center p-4 border-b shrink-0">
+      <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 relative z-30">
         <div className="justify-self-start flex items-center gap-2">
           <SidebarTrigger />
         </div>

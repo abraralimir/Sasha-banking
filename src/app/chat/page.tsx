@@ -497,7 +497,7 @@ export default function ChatPage() {
   if (!hasMounted) {
     return (
       <div className="flex flex-col h-screen" dir={dir}>
-        <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background/80 backdrop-blur-sm">
+        <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background/80 backdrop-blur-sm relative z-30">
           <div className="justify-self-start">
             <SidebarTrigger />
           </div>
@@ -516,7 +516,7 @@ export default function ChatPage() {
   return (
     <TooltipProvider delayDuration={0}>
       <div className="flex flex-col h-screen text-foreground animate-in fade-in-50 duration-500" dir={dir}>
-        <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background/80 backdrop-blur-sm">
+        <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background/80 backdrop-blur-sm relative z-30">
           <div className="justify-self-start">
             <SidebarTrigger />
           </div>

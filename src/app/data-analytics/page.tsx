@@ -12,6 +12,8 @@ import {
   Legend,
   ArcElement
 } from 'chart.js';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 import { LanguageToggle } from '@/components/language-toggle';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -82,59 +84,59 @@ export default function DataAnalyticsPage() {
   const handleDownloadPdf = async () => {
     const input = dashboardRef.current;
     if (!input || !dashboardData) return;
-
+  
     setIsDownloading(true);
     toast({ title: t('daGeneratingPdfTitle') });
-
+  
     try {
-        const { default: jsPDF } = await import('jspdf');
-        const { default: html2canvas } = await import('html2canvas');
-
-        const canvas = await html2canvas(input, {
-            scale: 2,
-            useCORS: true,
-            windowWidth: input.scrollWidth,
-            windowHeight: input.scrollHeight
-        });
-
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF({
-            orientation: 'p',
-            unit: 'mm',
-            format: 'a4'
-        });
-
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-        
-        const canvasWidth = canvas.width;
-        const canvasHeight = canvas.height;
-
-        const ratio = canvasWidth / canvasHeight;
-        const imgHeight = pdfWidth / ratio;
-        let heightLeft = imgHeight;
-        let position = 0;
-
+      const { default: jsPDF } = await import('jspdf');
+      const { default: html2canvas } = await import('html2canvas');
+  
+      const canvas = await html2canvas(input, {
+        scale: 2,
+        useCORS: true,
+        windowWidth: input.scrollWidth,
+        windowHeight: input.scrollHeight
+      });
+  
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'p',
+        unit: 'mm',
+        format: 'a4'
+      });
+  
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      const canvasWidth = canvas.width;
+      const canvasHeight = canvas.height;
+  
+      const ratio = canvasWidth / canvasHeight;
+      const imgHeight = pdfWidth / ratio;
+      let heightLeft = imgHeight;
+      let position = 0;
+  
+      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+      heightLeft -= pdfHeight;
+  
+      while (heightLeft > 0) {
+        position -= pdfHeight;
+        pdf.addPage();
         pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
         heightLeft -= pdfHeight;
-
-        while (heightLeft > 0) {
-            position -= pdfHeight;
-            pdf.addPage();
-            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
-            heightLeft -= pdfHeight;
-        }
-        
-        pdf.save(`${dashboardData.title.replace(/\s/g, '_')}_Report.pdf`);
+      }
+      
+      pdf.save(`${dashboardData.title.replace(/\s/g, '_')}_Report.pdf`);
     } catch (err) {
-        console.error("PDF generation failed:", err);
-        toast({
-            variant: 'destructive',
-            title: t('daPdfGenerationFailedTitle'),
-            description: t('daPdfGenerationFailedDesc'),
-        });
+      console.error("PDF generation failed:", err);
+      toast({
+        variant: 'destructive',
+        title: t('daPdfGenerationFailedTitle'),
+        description: t('daPdfGenerationFailedDesc'),
+      });
     } finally {
-        setIsDownloading(false);
+      setIsDownloading(false);
     }
   };
 
@@ -196,7 +198,7 @@ export default function DataAnalyticsPage() {
   if (!hasMounted) {
     return (
       <div className="flex flex-col h-screen bg-muted/40 text-foreground" dir={dir}>
-        <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background">
+        <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background relative z-30">
           <div className="justify-self-start flex items-center gap-2">
             <SidebarTrigger />
           </div>
@@ -223,7 +225,7 @@ export default function DataAnalyticsPage() {
         className="hidden"
         accept=".xlsx,.csv,.pdf"
       />
-      <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background">
+      <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background relative z-30">
         <div className="justify-self-start flex items-center gap-2">
           <SidebarTrigger />
         </div>
@@ -352,7 +354,11 @@ export default function DataAnalyticsPage() {
         </footer>
         </>
       ) : (
-        <SashaOffline countdown={countdown} />
+        <SashaOffline
+            countdown={countdown}
+            description={t('daOfflineDesc')}
+            hours={t('daOfflineHours')}
+        />
       )}
     </div>
   );
