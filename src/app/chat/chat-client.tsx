@@ -500,11 +500,11 @@ export default function ChatPageClient() {
       const flawsHtml = (financialReport.identifiedFlaws && financialReport.identifiedFlaws.length > 0) ? (
         <>
           <h2 style={{ fontSize: '14px', fontWeight: 'bold', marginTop: '15px', marginBottom: '5px' }}>{selectedTitles.identifiedFlawsTitle}</h2>
-          <ul style={{ padding: isRtl ? '0 20px 0 0' : '0 0 0 20px', margin: 0, listStyle: 'none' }}>
+          <ul style={{ padding: 0, margin: 0, listStyle: 'none' }}>
             {financialReport.identifiedFlaws.map((flaw, i) => (
-              <li key={i} style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '8px' }}>
-                <span style={{ height: '8px', width: '8px', marginTop: '5px', margin: isRtl ? '0 0 0 10px' : '0 10px 0 0', flexShrink: 0, borderRadius: '50%', backgroundColor: '#ef4444' }}></span>
-                <span style={{ fontSize: '11px', lineHeight: 1.6 }}>{flaw}</span>
+              <li key={i} style={{ position: 'relative', padding: isRtl ? '0 20px 0 0' : '0 0 0 20px', marginBottom: '12px' }}>
+                <span style={{ position: 'absolute', [isRtl ? 'right' : 'left']: 0, top: '5px', height: '8px', width: '8px', borderRadius: '50%', backgroundColor: '#ef4444' }}></span>
+                <p style={{ fontSize: '11px', lineHeight: 1.6, whiteSpace: 'pre-wrap', margin: 0 }}>{flaw}</p>
               </li>
             ))}
           </ul>
@@ -541,7 +541,17 @@ export default function ChatPageClient() {
     }
     
     return (
-      <div className="p-[15mm] box-border text-black bg-white" style={{ width: '210mm', fontFamily: isRtl ? "'Cairo', sans-serif" : "'Inter', sans-serif", direction: isRtl ? 'rtl' : 'ltr' }}>
+      <div 
+        style={{ 
+          width: '210mm', 
+          padding: '15mm', 
+          boxSizing: 'border-box',
+          color: 'black',
+          backgroundColor: 'white',
+          fontFamily: isRtl ? "'Cairo', sans-serif" : "'Inter', sans-serif", 
+          direction: isRtl ? 'rtl' : 'ltr' 
+        }}
+      >
         <h1 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', textAlign: isRtl ? 'right' : 'left' }}>{reportTitle}</h1>
         {reportContentHtml}
         <p style={{ fontSize: '9px', color: '#555', marginTop: '40px', textAlign: 'center' }}>{selectedTitles.generatedBy}</p>
