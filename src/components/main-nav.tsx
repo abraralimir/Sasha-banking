@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -9,10 +10,10 @@ import { useLanguage } from '@/context/language-context';
 export function MainNav() {
   const pathname = usePathname();
   const { t } = useLanguage();
-  const { setOpenMobile } = useSidebar();
+  const { isMobile, setOpenMobile } = useSidebar();
 
   const handleLinkClick = () => {
-    if (useSidebar().isMobile) {
+    if (isMobile) {
       setOpenMobile(false);
     }
   };
