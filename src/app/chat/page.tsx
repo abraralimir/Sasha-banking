@@ -35,9 +35,6 @@ const ImageGenerationDialog = dynamic(
     { ssr: false }
 );
 
-type ReportToDownload = NonNullable<Message['analysisReport'] | Message['financialReport']>;
-type ReportType = 'loan' | 'financial';
-
 const generateAndDownloadPdf = async (element: HTMLElement, fileName: string) => {
     try {
         const { default: jsPDF } = await import('jspdf');
@@ -73,6 +70,9 @@ const generateAndDownloadPdf = async (element: HTMLElement, fileName: string) =>
         return false;
     }
 };
+
+type ReportToDownload = NonNullable<Message['analysisReport'] | Message['financialReport']>;
+type ReportType = 'loan' | 'financial';
 
 
 export default function ChatPage() {
