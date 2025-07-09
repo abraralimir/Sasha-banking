@@ -14,26 +14,32 @@ export function useDataAnalyticsStatus() {
       const currentHour = now.getHours();
       const currentMinute = now.getMinutes();
 
-      // Working hours: 3 AM to 5 PM (17:00), with a 15-minute break at the end of every hour.
-      // Online if hour is between 3 and 16, and minute is between 0 and 44.
-      const isWithinHours = currentHour >= 3 && currentHour < 17;
-      const isWithinMinutes = currentMinute < 45;
-      
-      const isOnline = isWithinHours && isWithinMinutes;
+      // Define working hours and breaks
+      const isBreakTime = currentMinute >= 45;
+      const inMorningSession = currentHour >= 3 && currentHour < 12;
+      const inAfternoonSession = currentHour >= 15 && currentHour < 18;
+
+      const isOnline = (inMorningSession || inAfternoonSession) && !isBreakTime;
       
       let countdown = '';
       if (!isOnline) {
         let targetTime = new Date();
         
-        // If outside the 3 AM - 5 PM window
-        if (currentHour < 3 || currentHour >= 17) {
+        // Currently in a 15-minute break within working hours
+        if ((inMorningSession || inAfternoonSession) && isBreakTime) {
+          targetTime.setHours(currentHour + 1, 0, 0, 0);
+        } 
+        // Currently in the lunch break (12:00 PM to 2:59 PM)
+        else if (currentHour >= 12 && currentHour < 15) {
+          targetTime.setHours(15, 0, 0, 0);
+        }
+        // After hours (from 6 PM onwards) or early morning (before 3 AM)
+        else {
           targetTime.setHours(3, 0, 0, 0);
-          // If it's already past 3 AM today, target is 3 AM tomorrow
+          // If it's already past 3 AM today (i.e., we are in the after-hours part of the day)
           if (now.getTime() > targetTime.getTime()) {
             targetTime.setDate(targetTime.getDate() + 1);
           }
-        } else { // Must be in a 15-minute break (e.g., at 3:45, 4:45, etc.)
-          targetTime.setHours(currentHour + 1, 0, 0, 0);
         }
         
         const distance = targetTime.getTime() - now.getTime();
