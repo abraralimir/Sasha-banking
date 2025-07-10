@@ -72,7 +72,7 @@ export type ChatInput = z.infer<typeof ChatInputSchema>;
 
 const ChatOutputSchema = z.object({
   content: z.string().describe("Sasha's response to the user."),
-  theme: ColorThemeSchema.optional().describe('An optional color theme to apply to the UI.'),
+  theme: ColorThemeSchema.optional().nullable().describe('An optional color theme to apply to the UI.'),
 });
 export type ChatOutput = z.infer<typeof ChatOutputSchema>;
 
