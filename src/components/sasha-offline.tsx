@@ -47,7 +47,7 @@ export function SashaOffline({
     };
 
     return (
-        <div className="relative w-full h-full">
+        <div className="absolute inset-0 w-full h-full z-40">
              <video 
                 autoPlay 
                 loop 
@@ -57,13 +57,13 @@ export function SashaOffline({
                 poster="https://placehold.co/1920x1080.png"
                 data-ai-hint="abstract background"
              >
-                <source src="/offline-bg.mp4" type="video/mp4" />
+                <source src="/offline-bg.mp4.mp4" type="video/mp4" />
                 Your browser does not support the video tag.
             </video>
             <audio ref={audioRef} loop>
-                <source src="/offline-loop.mp3" type="audio/mpeg" />
+                <source src="/offline-loop.mp3.mp3" type="audio/mpeg" />
             </audio>
-            <div className="absolute inset-0 bg-black/40 z-10"></div>
+            <div className="absolute inset-0 bg-black/60 z-10"></div>
             
              <Button
                 variant="ghost"
@@ -87,9 +87,9 @@ export function SashaOffline({
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <p className="text-white/80 text-sm max-w-xs mx-auto leading-relaxed">{description || t('sashaOfflineDesc')}</p>
+                        <p className="text-white/80 text-sm max-w-xs mx-auto leading-relaxed">{description}</p>
                         <div className="text-sm font-semibold bg-white/10 py-3 px-4 rounded-lg border border-white/20">
-                            <p className="text-white/90 text-xs font-sans tracking-wide uppercase">{hours || t('sashaOnlineAgain')}</p>
+                            <p className="text-white/90 text-xs font-sans tracking-wide uppercase">{hours}</p>
                             <p className="text-4xl font-mono tracking-widest mt-1 text-white">{countdown}</p>
                         </div>
                     </CardContent>
