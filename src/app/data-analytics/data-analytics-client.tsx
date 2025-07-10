@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -255,8 +256,14 @@ export default function DataAnalyticsClient() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-hidden">
-        {isOnline ? (
+      <main className="relative flex-1 overflow-hidden">
+        {!isOnline ? (
+          <SashaOffline
+              countdown={countdown}
+              description={t('sashaOfflineDesc')}
+              hours={t('daOfflineHours')}
+          />
+        ) : (
           <div className="h-full overflow-auto p-4 md:p-8">
             <div className="max-w-7xl mx-auto space-y-6">
               {!fileName ? (
@@ -355,12 +362,6 @@ export default function DataAnalyticsClient() {
               )}
             </div>
           </div>
-        ) : (
-          <SashaOffline
-              countdown={countdown}
-              description={t('sashaOfflineDesc')}
-              hours={t('daOfflineHours')}
-          />
         )}
       </main>
     </div>

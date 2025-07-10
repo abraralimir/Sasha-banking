@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
@@ -507,7 +508,7 @@ export default function SpreadsheetClient() {
         description: t('genericErrorDesc'),
       });
     } finally {
-      setIsLoading(true);
+      setIsLoading(false);
     }
   };
 
@@ -576,7 +577,7 @@ export default function SpreadsheetClient() {
         className="hidden"
         accept=".xlsx, .xls, .csv"
       />
-      <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 relative z-30">
+      <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 relative z-50">
         <div className="justify-self-start flex items-center gap-2">
           <SidebarTrigger />
         </div>
@@ -613,7 +614,13 @@ export default function SpreadsheetClient() {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {isOnline ? (
+        {!isOnline ? (
+            <SashaOffline 
+                countdown={countdown} 
+                description={t('spreadsheetOfflineDesc')}
+                hours={t('spreadsheetOfflineHours')}
+            />
+        ) : (
           <>
               <SpreadsheetToolbar
                 hotInstance={hotInstance}
@@ -790,12 +797,6 @@ export default function SpreadsheetClient() {
                 )}
               </div>
           </>
-        ) : (
-          <SashaOffline 
-            countdown={countdown} 
-            description={t('spreadsheetOfflineDesc')}
-            hours={t('spreadsheetOfflineHours')}
-          />
         )}
       </div>
 

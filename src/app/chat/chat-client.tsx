@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -198,13 +199,13 @@ export default function ChatPageClient() {
         }
         
         const loanId = loanAnalysisMatch[1];
-        setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: `Analyzing loan ID **${loanId}**...` }]);
+        setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: t('loanAnalysisHeader', { loanId }) }]);
         
         const report = await analyzeLoan({ csvData, loanId, language });
         const analysisMessage: Message = {
           id: Date.now().toString(),
           role: 'assistant',
-          content: t('loanAnalysisHeader', { loanId }),
+          content: '',
           analysisReport: { ...report, loanId },
         };
         setMessages(prev => [...prev, analysisMessage]);
@@ -562,7 +563,7 @@ export default function ChatPageClient() {
   if (!hasMounted) {
     return (
       <div className="flex flex-col h-screen" dir={dir}>
-        <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background/80 backdrop-blur-sm relative z-30">
+        <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background/80 backdrop-blur-sm relative z-50">
           <div className="justify-self-start">
             <SidebarTrigger />
           </div>
@@ -580,8 +581,8 @@ export default function ChatPageClient() {
 
   return (
     <TooltipProvider delayDuration={0}>
-      <div className="flex flex-col h-screen text-foreground animate-in fade-in-50 duration-500" dir={dir}>
-        <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background/80 backdrop-blur-sm relative z-30">
+      <div className="flex flex-col h-screen text-foreground" dir={dir}>
+        <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background/80 backdrop-blur-sm relative z-50">
           <div className="justify-self-start">
             <SidebarTrigger />
           </div>
@@ -603,128 +604,128 @@ export default function ChatPageClient() {
           </div>
         </header>
         
-        <div className="flex-1 overflow-hidden">
-          {isOnline ? (
-            <div className="h-full flex flex-col">
-              <main className="flex-1 overflow-y-auto">
-                <MessageList 
-                  messages={messages} 
-                  isLoading={isLoading} 
-                  onDownloadLoanPdf={(report) => promptDownload('loan', report)}
-                  onDownloadFinancialReportPdf={(report) => promptDownload('financial', report)}
+        <div className="relative flex-1 overflow-hidden">
+            {!isOnline ? (
+                <SashaOffline
+                    countdown={countdown}
+                    description={t('sashaOfflineDesc')}
+                    hours={t('chatOfflineHours')}
                 />
-              </main>
-              
-              <footer className="p-4 border-t shrink-0 bg-background">
-                <div className="max-w-3xl mx-auto">
-                  {csvFileName && (
-                    <div className="flex items-center justify-between p-2 mb-2 text-sm rounded-md bg-muted text-muted-foreground">
-                      <div className="flex items-center gap-2 truncate">
-                        <FileUp className="w-4 h-4 shrink-0" />
-                        <span className="font-medium truncate">{t('analyzingFile', { fileName: csvFileName })}</span>
-                      </div>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button type="button" variant="ghost" size="icon" onClick={handleClearCsv} className="w-6 h-6 shrink-0">
-                            <XCircle className="w-4 h-4" />
-                            <span className="sr-only">{t('clearCsvTooltip')}</span>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>{t('clearCsvTooltip')}</TooltipContent>
-                      </Tooltip>
-                    </div>
-                  )}
-                  {pdfFileName && (
-                    <div className="flex items-center justify-between p-2 mb-2 text-sm rounded-md bg-muted text-muted-foreground">
-                      <div className="flex items-center gap-2 truncate">
-                        <FileText className="w-4 h-4 shrink-0" />
-                        <span className="font-medium truncate">{t('analyzingFile', { fileName: pdfFileName })}</span>
-                      </div>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button type="button" variant="ghost" size="icon" onClick={handleClearPdf} className="w-6 h-6 shrink-0">
-                            <XCircle className="w-4 h-4" />
-                            <span className="sr-only">{t('clearPdfTooltip')}</span>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>{t('clearPdfTooltip')}</TooltipContent>
-                      </Tooltip>
-                    </div>
-                  )}
-                  <form onSubmit={handleSendMessage} className="relative">
-                    <Textarea
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      placeholder={t('placeholder')}
-                      className="pr-40 sm:pr-48 md:pr-56 py-3 text-base resize-none"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSendMessage(e);
-                        }
-                      }}
-                      rows={1}
+            ) : (
+                <div className="h-full flex flex-col animate-in fade-in-50 duration-500">
+                <main className="flex-1 overflow-y-auto">
+                    <MessageList 
+                    messages={messages} 
+                    isLoading={isLoading} 
+                    onDownloadLoanPdf={(report) => promptDownload('loan', report)}
+                    onDownloadFinancialReportPdf={(report) => promptDownload('financial', report)}
                     />
-                    <div className="absolute top-1/2 right-2 sm:right-3 transform -translate-y-1/2 flex items-center space-x-0.5 sm:space-x-1">
-                      <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".csv" className="hidden" />
-                      <input type="file" ref={pdfInputRef} onChange={handlePdfUpload} accept="application/pdf" className="hidden" />
-                      
-                      <Tooltip>
-                          <TooltipTrigger asChild>
-                          <Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={() => setIsImageGenOpen(true)}>
-                              <Wand2 className="w-5 h-5" />
-                              <span className="sr-only">{t('imageDialogTitle')}</span>
-                          </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>{t('imageDialogTitle')}</TooltipContent>
-                      </Tooltip>
-                      
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={() => fileInputRef.current?.click()}>
-                            <FileUp className="w-5 h-5" />
-                            <span className="sr-only">{t('uploadCsvTooltip')}</span>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>{t('uploadCsvTooltip')}</TooltipContent>
-                      </Tooltip>
+                </main>
+                
+                <footer className="p-4 border-t shrink-0 bg-background">
+                    <div className="max-w-3xl mx-auto">
+                    {csvFileName && (
+                        <div className="flex items-center justify-between p-2 mb-2 text-sm rounded-md bg-muted text-muted-foreground">
+                        <div className="flex items-center gap-2 truncate">
+                            <FileUp className="w-4 h-4 shrink-0" />
+                            <span className="font-medium truncate">{t('analyzingFile', { fileName: csvFileName })}</span>
+                        </div>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                            <Button type="button" variant="ghost" size="icon" onClick={handleClearCsv} className="w-6 h-6 shrink-0">
+                                <XCircle className="w-4 h-4" />
+                                <span className="sr-only">{t('clearCsvTooltip')}</span>
+                            </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('clearCsvTooltip')}</TooltipContent>
+                        </Tooltip>
+                        </div>
+                    )}
+                    {pdfFileName && (
+                        <div className="flex items-center justify-between p-2 mb-2 text-sm rounded-md bg-muted text-muted-foreground">
+                        <div className="flex items-center gap-2 truncate">
+                            <FileText className="w-4 h-4 shrink-0" />
+                            <span className="font-medium truncate">{t('analyzingFile', { fileName: pdfFileName })}</span>
+                        </div>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                            <Button type="button" variant="ghost" size="icon" onClick={handleClearPdf} className="w-6 h-6 shrink-0">
+                                <XCircle className="w-4 h-4" />
+                                <span className="sr-only">{t('clearPdfTooltip')}</span>
+                            </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('clearPdfTooltip')}</TooltipContent>
+                        </Tooltip>
+                        </div>
+                    )}
+                    <form onSubmit={handleSendMessage} className="relative">
+                        <Textarea
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder={t('placeholder')}
+                        className="pr-40 sm:pr-48 md:pr-56 py-3 text-base resize-none"
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage(e);
+                            }
+                        }}
+                        rows={1}
+                        />
+                        <div className="absolute top-1/2 right-2 sm:right-3 transform -translate-y-1/2 flex items-center space-x-0.5 sm:space-x-1">
+                        <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".csv" className="hidden" />
+                        <input type="file" ref={pdfInputRef} onChange={handlePdfUpload} accept="application/pdf" className="hidden" />
+                        
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                            <Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={() => setIsImageGenOpen(true)}>
+                                <Wand2 className="w-5 h-5" />
+                                <span className="sr-only">{t('imageDialogTitle')}</span>
+                            </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('imageDialogTitle')}</TooltipContent>
+                        </Tooltip>
+                        
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                            <Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={() => fileInputRef.current?.click()}>
+                                <FileUp className="w-5 h-5" />
+                                <span className="sr-only">{t('uploadCsvTooltip')}</span>
+                            </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('uploadCsvTooltip')}</TooltipContent>
+                        </Tooltip>
 
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={() => pdfInputRef.current?.click()}>
-                            <FileText className="w-5 h-5" />
-                            <span className="sr-only">{t('uploadPdfTooltip')}</span>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>{t('uploadPdfTooltip')}</TooltipContent>
-                      </Tooltip>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                            <Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={() => pdfInputRef.current?.click()}>
+                                <FileText className="w-5 h-5" />
+                                <span className="sr-only">{t('uploadPdfTooltip')}</span>
+                            </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('uploadPdfTooltip')}</TooltipContent>
+                        </Tooltip>
 
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button type="button" variant="ghost" size="icon" className="h-9 w-9" disabled>
-                            <Mic className="w-5 h-5" />
-                            <span className="sr-only">{t('micTooltip')}</span>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>{t('micTooltip')}</TooltipContent>
-                      </Tooltip>
-                      
-                      <Button type="submit" size="sm" className="h-9" disabled={isLoading || !input.trim()}>
-                        <CornerDownLeft className="w-5 h-5" />
-                        <span className="sr-only">{t('sendSr')}</span>
-                      </Button>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                            <Button type="button" variant="ghost" size="icon" className="h-9 w-9" disabled>
+                                <Mic className="w-5 h-5" />
+                                <span className="sr-only">{t('micTooltip')}</span>
+                            </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('micTooltip')}</TooltipContent>
+                        </Tooltip>
+                        
+                        <Button type="submit" size="sm" className="h-9" disabled={isLoading || !input.trim()}>
+                            <CornerDownLeft className="w-5 h-5" />
+                            <span className="sr-only">{t('sendSr')}</span>
+                        </Button>
+                        </div>
+                    </form>
                     </div>
-                  </form>
+                </footer>
                 </div>
-              </footer>
-            </div>
-          ) : (
-            <SashaOffline 
-              countdown={countdown} 
-              description={t('sashaOfflineDesc')}
-              hours={t('chatOfflineHours')}
-            />
-          )}
+            )}
         </div>
 
         <AlertDialog open={isNewSessionDialogOpen} onOpenChange={setIsNewSessionDialogOpen}>
