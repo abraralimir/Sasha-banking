@@ -44,6 +44,16 @@ User's core request: "${input.prompt}"
 Now, use your creative expertise to generate the image.`,
         config: {
             responseModalities: ['TEXT', 'IMAGE'],
+            safetySettings: [
+                {
+                    category: 'HARM_CATEGORY_HATE_SPEECH',
+                    threshold: 'BLOCK_ONLY_HIGH',
+                },
+                {
+                    category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+                    threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+                },
+            ]
         },
     });
 

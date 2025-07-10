@@ -24,7 +24,7 @@ import { useSashaStatus } from '@/hooks/use-sasha-status';
 import { SashaOffline } from '@/components/sasha-offline';
 import { SashaStatus } from '@/components/sasha-status';
 
-type Mode = 'generate' | 'upscale' | 'video';
+type Mode = 'generate' | 'upscale';
 
 const formSchema = z.object({
   prompt: z.string().min(3, 'Prompt must be at least 3 characters.'),
@@ -177,10 +177,9 @@ export default function SashaVisionClient() {
                             </CardHeader>
                             <CardContent>
                                 <Tabs value={mode} onValueChange={(v) => { handleReset(); setMode(v as Mode) }} className="w-full">
-                                    <TabsList className="grid w-full grid-cols-3">
+                                    <TabsList className="grid w-full grid-cols-2">
                                         <TabsTrigger value="generate"><ImageIcon className="mr-2"/>{t('textToImageTitle')}</TabsTrigger>
                                         <TabsTrigger value="upscale"><Sparkles className="mr-2"/>{t('imageEnhancementTitle')}</TabsTrigger>
-                                        <TabsTrigger value="video" disabled><Video className="mr-2"/>{t('videoEnhancementTitle')}</TabsTrigger>
                                     </TabsList>
                                     <TabsContent value="generate" className="pt-4">
                                         <Form {...form}>
@@ -228,12 +227,6 @@ export default function SashaVisionClient() {
                                                 </div>
                                             )}
                                         </div>
-                                    </TabsContent>
-                                    <TabsContent value="video" className="pt-4">
-                                        <Button className="w-full" variant="outline" disabled>
-                                            <Upload className="mr-2"/>
-                                            {t('uploadVideo')}
-                                        </Button>
                                     </TabsContent>
                                 </Tabs>
                             </CardContent>
