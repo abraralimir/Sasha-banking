@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -178,13 +179,14 @@ ${knowledgeBase || 'No custom instructions provided.'}
       },
     });
 
-    if (output!.toolOutput) {
+    if (output?.toolOutput) {
         return {
-            content: output!.toolOutput.content,
-            theme: output!.toolOutput.theme,
+            content: output.toolOutput.content,
+            theme: output.toolOutput.theme,
         };
     }
     
     return output!;
   }
 );
+
