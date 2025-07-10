@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -40,7 +41,7 @@ const upscaleImageFlow = ai.defineFlow(
         model: 'googleai/gemini-2.0-flash-preview-image-generation',
         prompt: [
             { media: { url: input.imageDataUri } },
-            { text: 'Upscale this image to a higher resolution, enhancing details and clarity without changing the content or style. Produce a photorealistic, high-quality version.' },
+            { text: 'Dramatically upscale this image to a much higher resolution. Your primary goal is to enhance details, sharpness, and overall clarity to create a photorealistic, high-quality, high-pixel-count version. Do not alter the original content or artistic style; focus solely on technical enhancement and photorealism.' },
         ],
         config: {
             responseModalities: ['TEXT', 'IMAGE'],
