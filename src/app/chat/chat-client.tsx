@@ -127,7 +127,6 @@ export default function ChatPageClient() {
         setMessages([{ id: '1', role: 'assistant', content: t('initialMessage') }]);
       }
 
-      // Removed loading files from localStorage to prevent quota errors
     } catch (error) {
       console.error("Failed to access localStorage:", error);
       setMessages([{ id: '1', role: 'assistant', content: t('initialMessage') }]);
@@ -175,6 +174,28 @@ export default function ChatPageClient() {
         setTimeout(performDownload, 500);
     }
   }, [pdfRenderContent, t, toast, downloadInfo]);
+
+  const applyTheme = (theme: Message['theme']) => {
+    if (!theme) return;
+    const root = document.documentElement;
+    root.style.setProperty('--primary', theme.primary);
+    root.style.setProperty('--background', theme.background);
+    root.style.setProperty('--foreground', theme.foreground);
+    root.style.setProperty('--primary-foreground', theme.primaryForeground);
+    root.style.setProperty('--card', theme.card);
+    root.style.setProperty('--popover', theme.card);
+    root.style.setProperty('--card-foreground', theme.foreground);
+    root.style.setProperty('--popover-foreground', theme.foreground);
+    root.style.setProperty('--muted', theme.accent);
+    root.style.setProperty('--accent', theme.accent);
+    root.style.setProperty('--accent-foreground', theme.foreground);
+    
+    // Also apply to sidebar
+    root.style.setProperty('--sidebar-background', `hsl(${theme.background})`);
+    root.style.setProperty('--sidebar-foreground', `hsl(${theme.foreground})`);
+    root.style.setProperty('--sidebar-accent', `hsl(${theme.accent})`);
+    root.style.setProperty('--sidebar-accent-foreground', `hsl(${theme.foreground})`);
+  };
   
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -211,13 +232,19 @@ export default function ChatPageClient() {
         setMessages(prev => [...prev, analysisMessage]);
 
       } else {
-        const historyForApi = newMessages.map(({ id, analysisReport, financialReport, imageUrl, ...rest }) => rest);
+        const historyForApi = newMessages.map(({ id, analysisReport, financialReport, imageUrl, theme, ...rest }) => rest);
         const response = await chat({ history: historyForApi, pdfDataUri: pdfData, csvData: csvData, language });
         const botResponse: Message = {
           id: Date.now().toString(),
           role: 'assistant',
           content: response.content,
+          theme: response.theme
         };
+        
+        if(response.theme){
+            applyTheme(response.theme);
+        }
+
         setMessages(prev => [...prev, botResponse]);
       }
     } catch (error) {
@@ -560,219 +587,212 @@ export default function ChatPageClient() {
     );
   };
 
-  if (!hasMounted) {
-    return (
-      <div className="flex flex-col h-screen" dir={dir}>
-        <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background/80 backdrop-blur-sm relative z-50">
-          <div className="justify-self-start">
-            <SidebarTrigger />
-          </div>
-          <h1 className="text-xl font-semibold tracking-tight justify-self-center">{t('pageTitle')}</h1>
-          <div className="justify-self-end">
-            <LanguageToggle />
-          </div>
-        </header>
-        <main className="flex-1 overflow-y-auto flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </main>
-      </div>
-    );
-  }
-
   return (
-    <TooltipProvider delayDuration={0}>
-      <div className="flex flex-col h-screen text-foreground" dir={dir}>
-        <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background/80 backdrop-blur-sm relative z-50">
-          <div className="justify-self-start">
-            <SidebarTrigger />
-          </div>
-          <h1 className="text-xl font-semibold tracking-tight justify-self-center">{t('pageTitle')}</h1>
-          <div className="justify-self-end flex items-center gap-2">
-            <SashaStatus />
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={() => setIsNewSessionDialogOpen(true)}>
-                        <RefreshCw className="h-5 w-5" />
-                        <span className="sr-only">{t('newSessionButton')}</span>
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                    <p>{t('newSessionButton')}</p>
-                </TooltipContent>
-            </Tooltip>
-            <LanguageToggle />
-          </div>
-        </header>
-        
-        <div className="relative flex-1 overflow-hidden">
-            {!isOnline ? (
-                <SashaOffline
-                    countdown={countdown}
-                    description={t('sashaOfflineDesc')}
-                    hours={t('chatOfflineHours')}
-                />
-            ) : (
-                <div className="h-full flex flex-col animate-in fade-in-50 duration-500">
-                <main className="flex-1 overflow-y-auto">
-                    <MessageList 
-                    messages={messages} 
-                    isLoading={isLoading} 
-                    onDownloadLoanPdf={(report) => promptDownload('loan', report)}
-                    onDownloadFinancialReportPdf={(report) => promptDownload('financial', report)}
-                    />
-                </main>
-                
-                <footer className="p-4 border-t shrink-0 bg-background">
-                    <div className="max-w-3xl mx-auto">
-                    {csvFileName && (
-                        <div className="flex items-center justify-between p-2 mb-2 text-sm rounded-md bg-muted text-muted-foreground">
-                        <div className="flex items-center gap-2 truncate">
-                            <FileUp className="w-4 h-4 shrink-0" />
-                            <span className="font-medium truncate">{t('analyzingFile', { fileName: csvFileName })}</span>
-                        </div>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                            <Button type="button" variant="ghost" size="icon" onClick={handleClearCsv} className="w-6 h-6 shrink-0">
-                                <XCircle className="w-4 h-4" />
-                                <span className="sr-only">{t('clearCsvTooltip')}</span>
-                            </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>{t('clearCsvTooltip')}</TooltipContent>
-                        </Tooltip>
-                        </div>
-                    )}
-                    {pdfFileName && (
-                        <div className="flex items-center justify-between p-2 mb-2 text-sm rounded-md bg-muted text-muted-foreground">
-                        <div className="flex items-center gap-2 truncate">
-                            <FileText className="w-4 h-4 shrink-0" />
-                            <span className="font-medium truncate">{t('analyzingFile', { fileName: pdfFileName })}</span>
-                        </div>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                            <Button type="button" variant="ghost" size="icon" onClick={handleClearPdf} className="w-6 h-6 shrink-0">
-                                <XCircle className="w-4 h-4" />
-                                <span className="sr-only">{t('clearPdfTooltip')}</span>
-                            </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>{t('clearPdfTooltip')}</TooltipContent>
-                        </Tooltip>
-                        </div>
-                    )}
-                    <form onSubmit={handleSendMessage} className="relative">
-                        <Textarea
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder={t('placeholder')}
-                        className="pr-40 sm:pr-48 md:pr-56 py-3 text-base resize-none"
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSendMessage(e);
-                            }
-                        }}
-                        rows={1}
-                        />
-                        <div className="absolute top-1/2 right-2 sm:right-3 transform -translate-y-1/2 flex items-center space-x-0.5 sm:space-x-1">
-                        <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".csv" className="hidden" />
-                        <input type="file" ref={pdfInputRef} onChange={handlePdfUpload} accept="application/pdf" className="hidden" />
-                        
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                            <Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={() => setIsImageGenOpen(true)}>
-                                <Wand2 className="w-5 h-5" />
-                                <span className="sr-only">{t('imageDialogTitle')}</span>
-                            </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>{t('imageDialogTitle')}</TooltipContent>
-                        </Tooltip>
-                        
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                            <Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={() => fileInputRef.current?.click()}>
-                                <FileUp className="w-5 h-5" />
-                                <span className="sr-only">{t('uploadCsvTooltip')}</span>
-                            </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>{t('uploadCsvTooltip')}</TooltipContent>
-                        </Tooltip>
-
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                            <Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={() => pdfInputRef.current?.click()}>
-                                <FileText className="w-5 h-5" />
-                                <span className="sr-only">{t('uploadPdfTooltip')}</span>
-                            </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>{t('uploadPdfTooltip')}</TooltipContent>
-                        </Tooltip>
-
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                            <Button type="button" variant="ghost" size="icon" className="h-9 w-9" disabled>
-                                <Mic className="w-5 h-5" />
-                                <span className="sr-only">{t('micTooltip')}</span>
-                            </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>{t('micTooltip')}</TooltipContent>
-                        </Tooltip>
-                        
-                        <Button type="submit" size="sm" className="h-9" disabled={isLoading || !input.trim()}>
-                            <CornerDownLeft className="w-5 h-5" />
-                            <span className="sr-only">{t('sendSr')}</span>
-                        </Button>
-                        </div>
-                    </form>
-                    </div>
-                </footer>
-                </div>
-            )}
+    <div className="flex flex-col h-screen text-foreground" dir={dir}>
+      {!hasMounted ? (
+        <div className="flex flex-col h-screen">
+          <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background/80 backdrop-blur-sm relative z-50">
+            <div className="justify-self-start"><SidebarTrigger /></div>
+            <h1 className="text-xl font-semibold tracking-tight justify-self-center">{t('pageTitle')}</h1>
+            <div className="justify-self-end"><LanguageToggle /></div>
+          </header>
+          <main className="flex-1 overflow-y-auto flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </main>
         </div>
+      ) : (
+        <>
+          {isOnline ? (
+             <TooltipProvider delayDuration={0}>
+              <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background/80 backdrop-blur-sm relative z-50">
+                <div className="justify-self-start"><SidebarTrigger /></div>
+                <h1 className="text-xl font-semibold tracking-tight justify-self-center">{t('pageTitle')}</h1>
+                <div className="justify-self-end flex items-center gap-2">
+                  <SashaStatus />
+                  <Tooltip>
+                      <TooltipTrigger asChild>
+                          <Button variant="ghost" size="icon" onClick={() => setIsNewSessionDialogOpen(true)}>
+                              <RefreshCw className="h-5 w-5" />
+                              <span className="sr-only">{t('newSessionButton')}</span>
+                          </Button>
+                      </TooltipTrigger>
+                      <TooltipContent><p>{t('newSessionButton')}</p></TooltipContent>
+                  </Tooltip>
+                  <LanguageToggle />
+                </div>
+              </header>
+              <div className="relative flex-1 overflow-hidden">
+                <div className="h-full flex flex-col animate-in fade-in-50 duration-500">
+                  <main className="flex-1 overflow-y-auto">
+                      <MessageList 
+                      messages={messages} 
+                      isLoading={isLoading} 
+                      onDownloadLoanPdf={(report) => promptDownload('loan', report)}
+                      onDownloadFinancialReportPdf={(report) => promptDownload('financial', report)}
+                      />
+                  </main>
+                  <footer className="p-4 border-t shrink-0 bg-background">
+                    <div className="max-w-3xl mx-auto">
+                      {csvFileName && (
+                          <div className="flex items-center justify-between p-2 mb-2 text-sm rounded-md bg-muted text-muted-foreground">
+                          <div className="flex items-center gap-2 truncate">
+                              <FileUp className="w-4 h-4 shrink-0" />
+                              <span className="font-medium truncate">{t('analyzingFile', { fileName: csvFileName })}</span>
+                          </div>
+                          <Tooltip>
+                              <TooltipTrigger asChild>
+                              <Button type="button" variant="ghost" size="icon" onClick={handleClearCsv} className="w-6 h-6 shrink-0">
+                                  <XCircle className="w-4 h-4" />
+                                  <span className="sr-only">{t('clearCsvTooltip')}</span>
+                              </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>{t('clearCsvTooltip')}</TooltipContent>
+                          </Tooltip>
+                          </div>
+                      )}
+                      {pdfFileName && (
+                          <div className="flex items-center justify-between p-2 mb-2 text-sm rounded-md bg-muted text-muted-foreground">
+                          <div className="flex items-center gap-2 truncate">
+                              <FileText className="w-4 h-4 shrink-0" />
+                              <span className="font-medium truncate">{t('analyzingFile', { fileName: pdfFileName })}</span>
+                          </div>
+                          <Tooltip>
+                              <TooltipTrigger asChild>
+                              <Button type="button" variant="ghost" size="icon" onClick={handleClearPdf} className="w-6 h-6 shrink-0">
+                                  <XCircle className="w-4 h-4" />
+                                  <span className="sr-only">{t('clearPdfTooltip')}</span>
+                              </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>{t('clearPdfTooltip')}</TooltipContent>
+                          </Tooltip>
+                          </div>
+                      )}
+                      <form onSubmit={handleSendMessage} className="relative">
+                          <Textarea
+                          value={input}
+                          onChange={(e) => setInput(e.target.value)}
+                          placeholder={t('placeholder')}
+                          className="pr-40 sm:pr-48 md:pr-56 py-3 text-base resize-none"
+                          onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSendMessage(e);
+                              }
+                          }}
+                          rows={1}
+                          />
+                          <div className="absolute top-1/2 right-2 sm:right-3 transform -translate-y-1/2 flex items-center space-x-0.5 sm:space-x-1">
+                            <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".csv" className="hidden" />
+                            <input type="file" ref={pdfInputRef} onChange={handlePdfUpload} accept="application/pdf" className="hidden" />
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                <Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={() => setIsImageGenOpen(true)}>
+                                    <Wand2 className="w-5 h-5" />
+                                    <span className="sr-only">{t('imageDialogTitle')}</span>
+                                </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>{t('imageDialogTitle')}</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                <Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={() => fileInputRef.current?.click()}>
+                                    <FileUp className="w-5 h-5" />
+                                    <span className="sr-only">{t('uploadCsvTooltip')}</span>
+                                </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>{t('uploadCsvTooltip')}</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                <Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={() => pdfInputRef.current?.click()}>
+                                    <FileText className="w-5 h-5" />
+                                    <span className="sr-only">{t('uploadPdfTooltip')}</span>
+                                </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>{t('uploadPdfTooltip')}</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                <Button type="button" variant="ghost" size="icon" className="h-9 w-9" disabled>
+                                    <Mic className="w-5 h-5" />
+                                    <span className="sr-only">{t('micTooltip')}</span>
+                                </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>{t('micTooltip')}</TooltipContent>
+                            </Tooltip>
+                            <Button type="submit" size="sm" className="h-9" disabled={isLoading || !input.trim()}>
+                                <CornerDownLeft className="w-5 h-5" />
+                                <span className="sr-only">{t('sendSr')}</span>
+                            </Button>
+                          </div>
+                      </form>
+                    </div>
+                  </footer>
+                </div>
+              </div>
+            </TooltipProvider>
+          ) : (
+            <>
+              <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background/80 backdrop-blur-sm relative z-50">
+                <div className="justify-self-start"><SidebarTrigger /></div>
+                <h1 className="text-xl font-semibold tracking-tight justify-self-center">{t('pageTitle')}</h1>
+                <div className="justify-self-end flex items-center gap-2">
+                  <SashaStatus />
+                  <LanguageToggle />
+                </div>
+              </header>
+              <main className="flex-1 relative">
+                <SashaOffline countdown={countdown} hours={t('chatOfflineHours')} />
+              </main>
+            </>
+          )}
 
-        <AlertDialog open={isNewSessionDialogOpen} onOpenChange={setIsNewSessionDialogOpen}>
-            <AlertDialogContent dir={dir}>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>{t('newSessionConfirmTitle')}</AlertDialogTitle>
-                    <AlertDialogDescription>{t('newSessionConfirmDescChat')}</AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleNewSession}>{t('newSessionConfirmButton')}</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
-        
-        <AlertDialog open={!!downloadInfo} onOpenChange={(open) => !open && setDownloadInfo(null)}>
-            <AlertDialogContent dir={dir}>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>{t('choosePdfLanguageTitle')}</AlertDialogTitle>
-                    <AlertDialogDescription>{t('choosePdfLanguageDesc')}</AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel disabled={isDownloading}>{t('cancel')}</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => handleFinalDownload('ar')} disabled={isDownloading}>
-                      {isDownloading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      {t('arabic')}
-                    </AlertDialogAction>
-                    <AlertDialogAction onClick={() => handleFinalDownload('en')} disabled={isDownloading}>
-                      {isDownloading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      {t('english')}
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+          <AlertDialog open={isNewSessionDialogOpen} onOpenChange={setIsNewSessionDialogOpen}>
+              <AlertDialogContent dir={dir}>
+                  <AlertDialogHeader>
+                      <AlertDialogTitle>{t('newSessionConfirmTitle')}</AlertDialogTitle>
+                      <AlertDialogDescription>{t('newSessionConfirmDescChat')}</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                      <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleNewSession}>{t('newSessionConfirmButton')}</AlertDialogAction>
+                  </AlertDialogFooter>
+              </AlertDialogContent>
+          </AlertDialog>
+          
+          <AlertDialog open={!!downloadInfo} onOpenChange={(open) => !open && setDownloadInfo(null)}>
+              <AlertDialogContent dir={dir}>
+                  <AlertDialogHeader>
+                      <AlertDialogTitle>{t('choosePdfLanguageTitle')}</AlertDialogTitle>
+                      <AlertDialogDescription>{t('choosePdfLanguageDesc')}</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                      <AlertDialogCancel disabled={isDownloading}>{t('cancel')}</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleFinalDownload('ar')} disabled={isDownloading}>
+                        {isDownloading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {t('arabic')}
+                      </AlertDialogAction>
+                      <AlertDialogAction onClick={() => handleFinalDownload('en')} disabled={isDownloading}>
+                        {isDownloading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {t('english')}
+                      </AlertDialogAction>
+                  </AlertDialogFooter>
+              </AlertDialogContent>
+          </AlertDialog>
 
-        <ImageGenerationDialog
-          open={isImageGenOpen}
-          onOpenChange={setIsImageGenOpen}
-          onImageGenerated={onImageGenerated}
-        />
+          <ImageGenerationDialog
+            open={isImageGenOpen}
+            onOpenChange={setIsImageGenOpen}
+            onImageGenerated={onImageGenerated}
+          />
 
-        {pdfRenderContent && (
-          <div ref={pdfContainerRef} className="absolute -left-[9999px] -z-10">
-            {pdfRenderContent}
-          </div>
-        )}
-      </div>
-    </TooltipProvider>
+          {pdfRenderContent && (
+            <div ref={pdfContainerRef} className="absolute -left-[9999px] -z-10">
+              {pdfRenderContent}
+            </div>
+          )}
+        </>
+      )}
+    </div>
   );
 }

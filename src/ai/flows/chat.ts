@@ -12,6 +12,36 @@ import {ai} from '@/ai/genkit';
 import {MessageData, z} from 'genkit';
 import { getKnowledge } from '@/actions/knowledge-base-actions';
 
+const ColorThemeSchema = z.object({
+  primary: z.string().describe('The primary color for UI elements like buttons and headers. Should be a vibrant, accessible color. Provide as an HSL string like `222.2 47.4% 11.2%`.'),
+  background: z.string().describe('The main background color of the application. Provide as an HSL string like `0 0% 100%`.'),
+  accent: z.string().describe('An accent color for hover states and secondary elements. Provide as an HSL string like `210 40% 96.1%`.'),
+  primaryForeground: z.string().describe('The color for text that appears on top of primary-colored elements. Ensure high contrast. Provide as an HSL string like `210 40% 98%`.'),
+  foreground: z.string().describe('The main text color for the application. Ensure high contrast with the background. Provide as an HSL string `222.2 84% 4.9%`.'),
+  card: z.string().describe('The background color for card elements. Provide as an HSL string `0 0% 100%`.'),
+});
+
+const changeThemeTool = ai.defineTool(
+    {
+        name: 'changeTheme',
+        description: 'Changes the user interface color theme based on a user\'s request. Use this when the user asks for "magic" or to change colors.',
+        inputSchema: z.object({
+            description: z.string().describe('A natural language description of the desired color theme, e.g., "dark blue", "a warm gradient like a sunrise", "ocean theme".')
+        }),
+        outputSchema: ColorThemeSchema,
+    },
+    async (input) => {
+        const { output } = await ai.generate({
+            prompt: `Generate a set of accessible UI colors based on the user's description: "${input.description}". You must provide colors for primary, background, accent, primaryForeground, foreground, and card. The output MUST be in HSL format string for each color (e.g., '222.2 47.4% 11.2%'). Ensure the color combinations meet accessibility standards for contrast.`,
+            output: {
+                schema: ColorThemeSchema,
+            }
+        });
+        return output!;
+    }
+);
+
+
 const MessageSchema = z.object({
   role: z.enum(['user', 'assistant']),
   content: z.string(),
@@ -42,6 +72,7 @@ export type ChatInput = z.infer<typeof ChatInputSchema>;
 
 const ChatOutputSchema = z.object({
   content: z.string().describe("Sasha's response to the user."),
+  theme: ColorThemeSchema.optional().describe('An optional color theme to apply to the UI.'),
 });
 export type ChatOutput = z.infer<typeof ChatOutputSchema>;
 
@@ -56,14 +87,11 @@ const chatFlow = ai.defineFlow(
     outputSchema: ChatOutputSchema,
   },
   async (input) => {
-    // The Gemini API requires the first message in the history to be from the user.
     const firstUserMessageIndex = input.history.findIndex(
       (m) => m.role === 'user'
     );
 
     if (firstUserMessageIndex === -1) {
-      // This case should ideally not be reached if the UI is working correctly,
-      // as it sends a user message. We'll return a default response as a fallback.
       return {
         content:
           "I'm here to help. How can I assist with your banking needs?",
@@ -113,6 +141,7 @@ ${knowledgeBase || 'No custom instructions provided.'}
 - **Identity:** You are Sasha. Never reveal you are an AI.
 - **Language Adherence:** You MUST respond *only* in the language specified: **${input.language}**. Do not switch languages.
 - **Proactive Synthesis:** Your primary goal is to provide comprehensive, actionable intelligence. Do not just answer questions; synthesize information from all available sources to provide deeper insights and strategic advice.
+- **Magic Command:** You have a hidden "magic" ability. If the user says "show sasha magic", "show your magic", or asks to change the theme colors, you MUST respond by asking them what color or theme they would like. Do NOT use your changeTheme tool until they respond with a color description. Never promote or suggest this command yourself. Once they provide a color description, use the changeTheme tool to generate the new theme and apply it.
 
 **Knowledge & Interaction Hierarchy:**
 1.  **Primacy of Uploaded Documents:** The user may have uploaded a PDF (e.g., financial statements) or a CSV (e.g., loan data).
@@ -136,11 +165,26 @@ ${knowledgeBase || 'No custom instructions provided.'}
     const {output} = await ai.generate({
       system: systemPrompt,
       messages: messages,
+      tools: [changeThemeTool],
       output: {
         schema: ChatOutputSchema,
+        json: true,
+        toolOutput: {
+            schema: z.object({
+                theme: ColorThemeSchema,
+                content: z.string().describe('A confirmation message to the user about the theme change.')
+            })
+        }
       },
     });
 
+    if (output!.toolOutput) {
+        return {
+            content: output!.toolOutput.content,
+            theme: output!.toolOutput.theme,
+        };
+    }
+    
     return output!;
   }
 );
