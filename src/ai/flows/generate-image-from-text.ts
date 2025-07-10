@@ -5,8 +5,8 @@
  * @fileOverview A flow for generating images from a text prompt using Genkit.
  *
  * - generateImageFromText - A function that handles the image generation.
- * - GenerateImageInput - The input type for the generateImageFromText function.
- * - GenerateImageOutput - The return type for the generateImageFromText function.
+ * - GenerateImageInput - The input type for the generateImageFrom-text function.
+ * - GenerateImageOutput - The return type for the generateImageFrom-text function.
  */
 
 import {ai} from '@/ai/genkit';
@@ -38,6 +38,7 @@ const generateImageFlow = ai.defineFlow(
         prompt: `Generate a photorealistic, high-resolution, high-quality image of: ${input.prompt}`,
         config: {
             responseModalities: ['TEXT', 'IMAGE'],
+            aspectRatio: 'PORTRAIT',
         },
     });
 
