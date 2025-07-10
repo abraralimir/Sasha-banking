@@ -73,9 +73,9 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     pdfGenerationError: "Could not generate the PDF report.",
     maintenanceMessage: "Services are undergoing maintenance and major upgrades. Time remaining: {{time}}",
     
-    // Image Studio
-    imageStudioTitle: "Image Studio",
-    imageStudioDesc: "A creative space to generate and enhance images using AI.",
+    // Sasha Vision
+    sashaVisionTitle: "Sasha Vision",
+    sashaVisionDesc: "A creative space to generate and enhance images using AI.",
     textToImageTitle: "Text-to-Image",
     textToImageDesc: "Describe the image you want to create.",
     imageEnhancementTitle: "Image Enhancement",
@@ -151,7 +151,7 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     daAvailability: "5:30 AM - 10 AM, 12 PM - 3 PM, 7 PM - 10 PM",
     learnChatTitle: 'Institutional-Grade Financial Intelligence',
     learnChatDesc: "Engage with an AI that understands the nuances of finance. Upload complex financial statements, credit reports from bureaus like Oman's Mala'a, or internal loan data. Sasha doesn't just read; she comprehends, synthesizes, and critiques. Ask her to 'Identify key risks in this balance sheet,' 'Benchmark this company's P/E ratio against industry standards,' or 'Draft a summary for the credit committee.' Sasha provides instant, institutional-quality analysis in both English and Arabic, becoming an indispensable partner for credit officers, analysts, and decision-makers.",
-    learnImageStudioDesc: "Unleash your creativity in a dedicated space. Generate photorealistic images from text descriptions or upscale your existing images to stunning high-resolution quality. Sasha's Image Studio is your partner for creating compelling visual assets.",
+    learnSashaVisionDesc: "Unleash your creativity in a dedicated space. As a world-class creative director, Sasha can generate photorealistic images from text descriptions or upscale your existing images to stunning high-resolution quality. Sasha Vision is your partner for creating compelling visual assets.",
     learnSpreadsheetTitle: 'The Truly Agentic Spreadsheet',
     learnSpreadsheetDesc: "This is not just a spreadsheet; it's an intelligent workspace. Command Sasha with natural language to perform tasks that once took hours. Say 'Create a 5-year financial forecast based on this historical data,' 'Generate a Gantt chart for the Q4 product launch,' or 'Analyze these sales figures and highlight all regions that underperformed by 15%.' Sasha functions as a state-of-the-art AI architect, understanding your intent, structuring the data, applying formats, and executing complex operations instantly, transforming your productivity.",
     learnDATitle: 'Sasha Data Analytics: Your BI Co-Pilot',
@@ -403,9 +403,9 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     pdfGenerationError: "تعذر إنشاء تقرير PDF.",
     maintenanceMessage: "تخضع الخدمات للصيانة والتحديثات الرئيسية. الوقت المتبقي: {{time}}",
     
-    // Image Studio
-    imageStudioTitle: "استوديو الصور",
-    imageStudioDesc: "مساحة إبداعية لإنشاء الصور وتحسينها باستخدام الذكاء الاصطناعي.",
+    // Sasha Vision
+    sashaVisionTitle: "رؤية ساشا",
+    sashaVisionDesc: "مساحة إبداعية لإنشاء الصور وتحسينها باستخدام الذكاء الاصطناعي.",
     textToImageTitle: "نص إلى صورة",
     textToImageDesc: "صف الصورة التي تريد إنشاءها.",
     imageEnhancementTitle: "تحسين الصور",
@@ -480,7 +480,7 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     daAvailability: "5:30 ص - 10 ص، 12 م - 3 م، 7 م - 10 م",
     learnChatTitle: 'ذكاء مالي من الطراز المؤسسي',
     learnChatDesc: "تفاعل مع ذكاء اصطناعي يفهم دقائق الأمور المالية. قم بتحميل بيانات مالية معقدة، تقارير ائتمانية من مكاتب مثل 'ملاءة' في عُمان، أو بيانات قروض داخلية. ساشا لا تقرأ فقط؛ بل تفهم، وتحلل، وتنتقد. اطلب منها 'تحديد المخاطر الرئيسية في هذه الميزانية العمومية'، 'مقارنة نسبة السعر إلى الأرباح لهذه الشركة بمعايير الصناعة'، أو 'صياغة ملخص للجنة الائتمان'. تقدم ساشا تحليلاً فوريًا بجودة مؤسسية باللغتين الإنجليزية والعربية، لتصبح شريكًا لا غنى عنه لمسؤولي الائتمان والمحللين وصناع القرار.",
-    learnImageStudioDesc: "أطلق العنان لإبداعك في مساحة مخصصة. أنشئ صورًا واقعية من الأوصاف النصية أو قم بترقية صورك الحالية إلى جودة مذهلة عالية الدقة. استوديو الصور من ساشا هو شريكك لإنشاء أصول بصرية مقنعة.",
+    learnSashaVisionDesc: "أطلق العنان لإبداعك في مساحة مخصصة. بصفتها مديرة إبداعية عالمية، يمكن لساشا إنشاء صور واقعية من الأوصاف النصية أو ترقية صورك الحالية إلى جودة مذهلة عالية الدقة. رؤية ساشا هي شريكك لإنشاء أصول بصرية مقنعة.",
     learnSpreadsheetTitle: 'جدول البيانات الوكيلي الحقيقي',
     learnSpreadsheetDesc: "هذا ليس مجرد جدول بيانات؛ إنها مساحة عمل ذكية. أصدر أوامر لساشا بلغة طبيعية لأداء مهام كانت تستغرق ساعات. قل 'أنشئ توقعات مالية لمدة 5 سنوات بناءً على هذه البيانات التاريخية'، 'أنشئ مخطط جانت لإطلاق منتج الربع الرابع'، أو 'حلل أرقام المبيعات هذه وقم بتمييز جميع المناطق التي كان أداؤها أقل بنسبة 15%'. تعمل ساشا كمهندس معماري للذكاء الاصطناعي على أحدث طراز، حيث تفهم نيتك، وتنظم البيانات، وتطبق التنسيقات، وتنفذ العمليات المعقدة على الفور، مما يغير إنتاجيتك.",
     learnDATitle: 'تحليلات بيانات ساشا: مساعدك في ذكاء الأعمال',

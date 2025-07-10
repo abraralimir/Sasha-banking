@@ -4,7 +4,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { CornerDownLeft, Mic, FileUp, FileText, XCircle, Loader2, Wand2, RefreshCw } from 'lucide-react';
+import { CornerDownLeft, Mic, FileUp, FileText, XCircle, Loader2, Eye, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -657,13 +657,13 @@ export default function ChatPageClient() {
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                 <Button type="button" variant="ghost" size="icon" className="h-9 w-9" asChild>
-                                    <Link href="/image-studio">
-                                      <Wand2 className="w-5 h-5" />
-                                      <span className="sr-only">{t('imageStudioTitle')}</span>
+                                    <Link href="/sasha-vision">
+                                      <Eye className="w-5 h-5" />
+                                      <span className="sr-only">{t('sashaVisionTitle')}</span>
                                     </Link>
                                 </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>{t('imageStudioTitle')}</TooltipContent>
+                                <TooltipContent>{t('sashaVisionTitle')}</TooltipContent>
                             </Tooltip>
                             <Tooltip>
                                 <TooltipTrigger asChild>

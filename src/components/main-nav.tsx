@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { MessageCircle, Sheet as SheetIcon, BookOpen, BarChart3, GraduationCap, BrainCircuit, Wand2 } from 'lucide-react';
+import { MessageCircle, Sheet as SheetIcon, BookOpen, BarChart3, GraduationCap, BrainCircuit, Eye } from 'lucide-react';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from '@/components/ui/sidebar';
 import { useLanguage } from '@/context/language-context';
 
@@ -29,10 +29,10 @@ export function MainNav() {
         </SidebarMenuButton>
       </SidebarMenuItem>
        <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={pathname.startsWith('/image-studio')}>
-          <Link href="/image-studio" onClick={handleLinkClick}>
-            <Wand2 />
-            <span>{t('imageStudioTitle')}</span>
+        <SidebarMenuButton asChild isActive={pathname.startsWith('/sasha-vision')}>
+          <Link href="/sasha-vision" onClick={handleLinkClick}>
+            <Eye />
+            <span>{t('sashaVisionTitle')}</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
