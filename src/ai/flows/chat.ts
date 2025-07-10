@@ -157,11 +157,7 @@ ${knowledgeBase || 'No custom instructions provided.'}
     - Common practices in the banking industry.
     - Answers to any general financial question the user asks.
 
-**Interaction Logic:**
-- If asked a question that can be answered from an uploaded document (e.g., "What is the total revenue?"), extract the precise data from that document.
-- If a question relates to an uploaded document but requires broader context (e.g., "Is this company's debt-to-equity ratio high?"), use the document for the specific ratio and your general expertise to determine if it's high for its industry.
-- If asked a general knowledge question (e.g., "How does Oman's credit bureau work?" or "What are typical eligibility requirements for a car loan?"), provide a comprehensive answer based on your broad financial knowledge, mentioning that the specifics can vary by institution.
-- When asked about a specific, real-time product from a bank (like from 'sib.om'), state that you don't have live access to their specific, current offerings but can explain what is typical for such products based on your expertise.`;
+4.  **When asked about a specific, real-time product from a bank (like from 'sib.om'), state that you don't have live access to their specific, current offerings but can explain what is typical for such products based on your expertise.`;
 
     const {output} = await ai.generate({
       system: systemPrompt,
@@ -186,7 +182,9 @@ ${knowledgeBase || 'No custom instructions provided.'}
         };
     }
     
-    return output!;
+    return {
+        content: output!.content,
+        theme: output!.theme,
+    };
   }
 );
-
