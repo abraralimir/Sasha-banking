@@ -29,14 +29,6 @@ export type Message = {
   role: 'user' | 'assistant';
   content: string;
   imageUrl?: string;
-  theme?: {
-    primary: string;
-    background: string;
-    accent: string;
-    primaryForeground: string;
-    foreground: string;
-    card: string;
-  };
   analysisReport?: {
     summary: string;
     prediction: string;

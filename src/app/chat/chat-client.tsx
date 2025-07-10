@@ -174,28 +174,6 @@ export default function ChatPageClient() {
         setTimeout(performDownload, 500);
     }
   }, [pdfRenderContent, t, toast, downloadInfo]);
-
-  const applyTheme = (theme: Message['theme']) => {
-    if (!theme) return;
-    const root = document.documentElement;
-    root.style.setProperty('--primary', theme.primary);
-    root.style.setProperty('--background', theme.background);
-    root.style.setProperty('--foreground', theme.foreground);
-    root.style.setProperty('--primary-foreground', theme.primaryForeground);
-    root.style.setProperty('--card', theme.card);
-    root.style.setProperty('--popover', theme.card);
-    root.style.setProperty('--card-foreground', theme.foreground);
-    root.style.setProperty('--popover-foreground', theme.foreground);
-    root.style.setProperty('--muted', theme.accent);
-    root.style.setProperty('--accent', theme.accent);
-    root.style.setProperty('--accent-foreground', theme.foreground);
-    
-    // Also apply to sidebar
-    root.style.setProperty('--sidebar-background', `hsl(${theme.background})`);
-    root.style.setProperty('--sidebar-foreground', `hsl(${theme.foreground})`);
-    root.style.setProperty('--sidebar-accent', `hsl(${theme.accent})`);
-    root.style.setProperty('--sidebar-accent-foreground', `hsl(${theme.foreground})`);
-  };
   
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -232,19 +210,14 @@ export default function ChatPageClient() {
         setMessages(prev => [...prev, analysisMessage]);
 
       } else {
-        const historyForApi = newMessages.map(({ id, analysisReport, financialReport, imageUrl, theme, ...rest }) => rest);
+        const historyForApi = newMessages.map(({ id, analysisReport, financialReport, imageUrl, ...rest }) => rest);
         const response = await chat({ history: historyForApi, pdfDataUri: pdfData, csvData: csvData, language });
         const botResponse: Message = {
           id: Date.now().toString(),
           role: 'assistant',
-          content: response.content,
-          theme: response.theme
+          content: response.content
         };
         
-        if(response.theme){
-            applyTheme(response.theme);
-        }
-
         setMessages(prev => [...prev, botResponse]);
       }
     } catch (error) {
@@ -530,7 +503,7 @@ export default function ChatPageClient() {
           <h2 style={{ fontSize: '14px', fontWeight: 'bold', marginTop: '15px', marginBottom: '5px' }}>{selectedTitles.identifiedFlawsTitle}</h2>
           <ul style={{ padding: 0, margin: 0, listStyle: 'none' }}>
             {financialReport.identifiedFlaws.map((flaw, i) => (
-              <li key={i} style={{ position: 'relative', paddingLeft: '20px', paddingRight: '20px', marginBottom: '12px', display: 'flex', alignItems: 'flex-start' }}>
+              <li key={i} style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '12px' }}>
                   <span style={{ height: '8px', width: '8px', borderRadius: '50%', backgroundColor: '#ef4444', flexShrink: 0, marginTop: '5px', [isRtl ? 'marginLeft' : 'marginRight']: '12px' }}></span>
                   <p style={{ fontSize: '11px', lineHeight: 1.6, whiteSpace: 'pre-wrap', margin: 0 }}>{flaw}</p>
               </li>
