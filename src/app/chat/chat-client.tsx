@@ -3,6 +3,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { CornerDownLeft, Mic, FileUp, FileText, XCircle, Loader2, Wand2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -31,10 +32,6 @@ import { useSashaStatus } from '@/hooks/use-sasha-status';
 import { SashaStatus } from '@/components/sasha-status';
 import { SashaOffline } from '@/components/sasha-offline';
 
-const ImageGenerationDialog = dynamic(
-    () => import('@/components/chat/image-generation-dialog').then(mod => mod.ImageGenerationDialog), 
-    { ssr: false }
-);
 
 const generateAndDownloadPdf = async (element: HTMLElement, fileName: string) => {
     try {
@@ -105,7 +102,6 @@ export default function ChatPageClient() {
 
   const [pdfRenderContent, setPdfRenderContent] = useState<React.ReactNode | null>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
-  const [isImageGenOpen, setIsImageGenOpen] = useState(false);
   const [isNewSessionDialogOpen, setIsNewSessionDialogOpen] = useState(false);
 
   useEffect(() => {
@@ -436,16 +432,6 @@ export default function ChatPageClient() {
     return allTranslations[lang];
   };
 
-  const onImageGenerated = (imageUrl: string, prompt: string) => {
-    const imageMessage: Message = {
-      id: Date.now().toString(),
-      role: 'assistant',
-      content: t('imageGenSuccess', { prompt }),
-      imageUrl,
-    };
-    setMessages(prev => [...prev, imageMessage]);
-  };
-
   const handleNewSession = () => {
     setMessages([{ id: '1', role: 'assistant', content: t('initialMessage') }]);
     try {
@@ -575,26 +561,32 @@ export default function ChatPageClient() {
         </div>
       ) : (
         <>
-          {isOnline ? (
-             <TooltipProvider delayDuration={0}>
-              <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background/80 backdrop-blur-sm relative z-50">
+          <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background/80 backdrop-blur-sm relative z-50">
                 <div className="justify-self-start"><SidebarTrigger /></div>
                 <h1 className="text-xl font-semibold tracking-tight justify-self-center">{t('pageTitle')}</h1>
                 <div className="justify-self-end flex items-center gap-2">
                   <SashaStatus />
-                  <Tooltip>
-                      <TooltipTrigger asChild>
-                          <Button variant="ghost" size="icon" onClick={() => setIsNewSessionDialogOpen(true)}>
-                              <RefreshCw className="h-5 w-5" />
-                              <span className="sr-only">{t('newSessionButton')}</span>
-                          </Button>
-                      </TooltipTrigger>
-                      <TooltipContent><p>{t('newSessionButton')}</p></TooltipContent>
-                  </Tooltip>
+                  <TooltipProvider delayDuration={0}>
+                      <Tooltip>
+                          <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" onClick={() => setIsNewSessionDialogOpen(true)}>
+                                  <RefreshCw className="h-5 w-5" />
+                                  <span className="sr-only">{t('newSessionButton')}</span>
+                              </Button>
+                          </TooltipTrigger>
+                          <TooltipContent><p>{t('newSessionButton')}</p></TooltipContent>
+                      </Tooltip>
+                  </TooltipProvider>
                   <LanguageToggle />
                 </div>
               </header>
               <div className="relative flex-1 overflow-hidden">
+                {!isOnline ? (
+                    <SashaOffline 
+                      countdown={countdown} 
+                      hours={t('chatOfflineHours')}
+                    />
+                ) : (
                 <div className="h-full flex flex-col animate-in fade-in-50 duration-500">
                   <main className="flex-1 overflow-y-auto">
                       <MessageList 
@@ -612,6 +604,7 @@ export default function ChatPageClient() {
                               <FileUp className="w-4 h-4 shrink-0" />
                               <span className="font-medium truncate">{t('analyzingFile', { fileName: csvFileName })}</span>
                           </div>
+                          <TooltipProvider>
                           <Tooltip>
                               <TooltipTrigger asChild>
                               <Button type="button" variant="ghost" size="icon" onClick={handleClearCsv} className="w-6 h-6 shrink-0">
@@ -621,6 +614,7 @@ export default function ChatPageClient() {
                               </TooltipTrigger>
                               <TooltipContent>{t('clearCsvTooltip')}</TooltipContent>
                           </Tooltip>
+                          </TooltipProvider>
                           </div>
                       )}
                       {pdfFileName && (
@@ -629,6 +623,7 @@ export default function ChatPageClient() {
                               <FileText className="w-4 h-4 shrink-0" />
                               <span className="font-medium truncate">{t('analyzingFile', { fileName: pdfFileName })}</span>
                           </div>
+                          <TooltipProvider>
                           <Tooltip>
                               <TooltipTrigger asChild>
                               <Button type="button" variant="ghost" size="icon" onClick={handleClearPdf} className="w-6 h-6 shrink-0">
@@ -638,6 +633,7 @@ export default function ChatPageClient() {
                               </TooltipTrigger>
                               <TooltipContent>{t('clearPdfTooltip')}</TooltipContent>
                           </Tooltip>
+                          </TooltipProvider>
                           </div>
                       )}
                       <form onSubmit={handleSendMessage} className="relative">
@@ -657,14 +653,17 @@ export default function ChatPageClient() {
                           <div className="absolute top-1/2 right-2 sm:right-3 transform -translate-y-1/2 flex items-center space-x-0.5 sm:space-x-1">
                             <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".csv" className="hidden" />
                             <input type="file" ref={pdfInputRef} onChange={handlePdfUpload} accept="application/pdf" className="hidden" />
+                            <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                <Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={() => setIsImageGenOpen(true)}>
-                                    <Wand2 className="w-5 h-5" />
-                                    <span className="sr-only">{t('imageDialogTitle')}</span>
+                                <Button type="button" variant="ghost" size="icon" className="h-9 w-9" asChild>
+                                    <Link href="/image-studio">
+                                      <Wand2 className="w-5 h-5" />
+                                      <span className="sr-only">{t('imageStudioTitle')}</span>
+                                    </Link>
                                 </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>{t('imageDialogTitle')}</TooltipContent>
+                                <TooltipContent>{t('imageStudioTitle')}</TooltipContent>
                             </Tooltip>
                             <Tooltip>
                                 <TooltipTrigger asChild>
@@ -693,6 +692,7 @@ export default function ChatPageClient() {
                                 </TooltipTrigger>
                                 <TooltipContent>{t('micTooltip')}</TooltipContent>
                             </Tooltip>
+                            </TooltipProvider>
                             <Button type="submit" size="sm" className="h-9" disabled={isLoading || !input.trim()}>
                                 <CornerDownLeft className="w-5 h-5" />
                                 <span className="sr-only">{t('sendSr')}</span>
@@ -702,23 +702,9 @@ export default function ChatPageClient() {
                     </div>
                   </footer>
                 </div>
+                )}
               </div>
-            </TooltipProvider>
-          ) : (
-            <>
-              <header className="grid grid-cols-3 items-center p-4 border-b shrink-0 bg-background/80 backdrop-blur-sm relative z-50">
-                <div className="justify-self-start"><SidebarTrigger /></div>
-                <h1 className="text-xl font-semibold tracking-tight justify-self-center">{t('pageTitle')}</h1>
-                <div className="justify-self-end flex items-center gap-2">
-                  <SashaStatus />
-                  <LanguageToggle />
-                </div>
-              </header>
-              <main className="flex-1 relative">
-                <SashaOffline countdown={countdown} hours={t('chatOfflineHours')} />
-              </main>
-            </>
-          )}
+          
 
           <AlertDialog open={isNewSessionDialogOpen} onOpenChange={setIsNewSessionDialogOpen}>
               <AlertDialogContent dir={dir}>
@@ -753,11 +739,6 @@ export default function ChatPageClient() {
               </AlertDialogContent>
           </AlertDialog>
 
-          <ImageGenerationDialog
-            open={isImageGenOpen}
-            onOpenChange={setIsImageGenOpen}
-            onImageGenerated={onImageGenerated}
-          />
 
           {pdfRenderContent && (
             <div ref={pdfContainerRef} className="absolute -left-[9999px] -z-10">
