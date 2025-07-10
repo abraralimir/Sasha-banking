@@ -35,10 +35,9 @@ const generateImageFlow = ai.defineFlow(
   async (input) => {
     const { media } = await ai.generate({
         model: 'googleai/gemini-2.0-flash-preview-image-generation',
-        prompt: `Generate a photorealistic, high-resolution, high-quality image of: ${input.prompt}`,
+        prompt: `Generate a photorealistic, high-resolution, high-quality image in a 9:16 portrait aspect ratio, suitable for an Instagram story. The subject is: ${input.prompt}`,
         config: {
             responseModalities: ['TEXT', 'IMAGE'],
-            aspectRatio: 'PORTRAIT',
         },
     });
 
