@@ -1,3 +1,0 @@
-{
-  "notes": "Your custom notes, rules, and commands for Sasha will be stored here. Sasha will always read this file before responding to you in the main chat. \n\nFor example:\n- Never suggest investing in cryptocurrency.\n- When I ask for a market summary, always include the VIX index.\n- My company's fiscal year ends in June."
-}

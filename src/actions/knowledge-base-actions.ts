@@ -5,11 +5,8 @@ import { promises as fs } from 'fs';
 import path from 'path';
 
 // On Vercel, use the /tmp directory which is writable.
-// Otherwise, use the local project structure.
-const isVercel = !!process.env.VERCEL;
-const storagePath = isVercel
-  ? path.join('/tmp', 'knowledge-base.json')
-  : path.join(process.cwd(), 'src', 'data', 'knowledge-base.json');
+// In local development, we still use the /tmp directory to ensure consistent behavior.
+const storagePath = path.join('/tmp', 'knowledge-base.json');
 
 type KnowledgeBase = {
     notes: string;
@@ -28,12 +25,18 @@ async function ensureFileExists() {
     } catch {
         // The file or directory doesn't exist. Create it.
         const dir = path.dirname(storagePath);
-        await fs.mkdir(dir, { recursive: true });
-
-        // Seed the file with default content. This is more reliable than trying to read
-        // the source file, which can fail in some serverless environments.
-        const initialContent = JSON.stringify({ notes: defaultNotes }, null, 2);
         
+        try {
+            await fs.mkdir(dir, { recursive: true });
+        } catch (error) {
+            // Ignore error if directory already exists (race condition)
+            if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
+                throw error;
+            }
+        }
+
+        // Seed the file with default content.
+        const initialContent = JSON.stringify({ notes: defaultNotes }, null, 2);
         await fs.writeFile(storagePath, initialContent, 'utf-8');
     }
 }
@@ -43,10 +46,11 @@ export async function getKnowledge(): Promise<string> {
     try {
         const fileContent = await fs.readFile(storagePath, 'utf-8');
         const data: KnowledgeBase = JSON.parse(fileContent);
-        return data.notes;
+        // If for any reason the file is empty or corrupted, return default notes
+        return data.notes || defaultNotes;
     } catch (error) {
-        console.error('Failed to read knowledge base:', error);
-        // Return a default or empty string in case of an error.
+        console.error('Failed to read knowledge base, returning default:', error);
+        // Return a default string in case of a read error.
         return defaultNotes;
     }
 }
