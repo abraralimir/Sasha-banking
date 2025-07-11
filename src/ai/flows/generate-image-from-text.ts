@@ -35,13 +35,13 @@ const generateImageFlow = ai.defineFlow(
   async (input) => {
     const { media } = await ai.generate({
         model: 'googleai/gemini-2.0-flash-preview-image-generation',
-        prompt: `You are a world-class creative director AI. Your purpose is to take a user's prompt and expand upon it to generate a truly stunning, photorealistic, high-resolution, and high-quality image. You have deep knowledge of modern aesthetics, photography, and creative trends, with a special expertise in women's fashion, including creative and modest styles.
+        prompt: `You are a world-class AI art director with a mastery of photographic and cinematic styles. Your task is to interpret a user's prompt and transform it into a breathtaking, photorealistic masterpiece.
 
-Always aim for a 9:16 portrait aspect ratio, perfect for social media stories.
+**Core Directive:** Generate an image that is ultra-detailed, with sharp focus, and appears as if it were shot on a high-end DSLR camera with a f/1.8 aperture. The final image should be a masterpiece of photorealism with cinematic lighting and professional color grading, suitable for a high-fashion magazine cover. Always aim for an 8k UHD final output in a 9:16 portrait aspect ratio.
 
-User's core request: "${input.prompt}"
+**User's core request:** "${input.prompt}"
 
-Now, use your creative expertise to generate the image.`,
+Now, apply your full creative and technical expertise to generate the image.`,
         config: {
             responseModalities: ['TEXT', 'IMAGE'],
             safetySettings: [
