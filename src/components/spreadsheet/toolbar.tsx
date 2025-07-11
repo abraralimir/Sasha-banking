@@ -181,11 +181,13 @@ export function SpreadsheetToolbar({ hotInstance, onImport, toggleFullscreen, is
                 <Button variant="ghost" size="sm" className="h-8 text-sm">{t('toolbarTemplates')}</Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-                {templates.map((template) => (
-                  <DropdownMenuItem key={template.id} onSelect={() => onSetTemplate(template)}>
-                    {t(template.name)}
-                  </DropdownMenuItem>
-                ))}
+                <ScrollArea className="h-[250px]">
+                    {templates.map((template) => (
+                    <DropdownMenuItem key={template.id} onSelect={() => onSetTemplate(template)}>
+                        {t(template.name)}
+                    </DropdownMenuItem>
+                    ))}
+                </ScrollArea>
             </DropdownMenuContent>
           </DropdownMenu>
           <Button variant="ghost" size="sm" className="h-8 text-sm" onClick={onImport}>{t('toolbarImport')}</Button>

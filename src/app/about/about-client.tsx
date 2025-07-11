@@ -68,7 +68,7 @@ export default function AboutPageClient() {
   ];
   
   const sashaFeatures = Array.from({ length: 15 }, (_, i) => t(`csSashaFeature${i + 1}`));
-  const spreadsheetFeatures = Array.from({ length: 10 }, (_, i) => t(`csSpreadsheetFeature${i + 1}`));
+  const spreadsheetFeatures = Array.from({ length: 15 }, (_, i) => t(`csSpreadsheetFeature${i + 1}`));
   const dataAnalyticsFeatures = Array.from({ length: 10 }, (_, i) => t(`csDAFeature${i + 1}`));
 
   const whoBenefits = [
