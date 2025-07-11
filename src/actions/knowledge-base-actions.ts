@@ -1,3 +1,4 @@
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -14,6 +15,13 @@ type KnowledgeBase = {
     notes: string;
 };
 
+const defaultNotes = `Your custom notes, rules, and commands for Sasha will be stored here. Sasha will always read this file before responding to you in the main chat. 
+
+For example:
+- Never suggest investing in cryptocurrency.
+- When I ask for a market summary, always include the VIX index.
+- My company's fiscal year ends in June.`;
+
 async function ensureFileExists() {
     try {
         await fs.access(storagePath);
@@ -22,22 +30,10 @@ async function ensureFileExists() {
         const dir = path.dirname(storagePath);
         await fs.mkdir(dir, { recursive: true });
 
-        // If on Vercel, try to seed the file from the original source file.
-        // Otherwise, or if seeding fails, create a default empty file.
-        let initialContent = JSON.stringify({ notes: '' }, null, 2);
-        if (isVercel) {
-            try {
-                const sourceContent = await fs.readFile(
-                    path.join(process.cwd(), 'src', 'data', 'knowledge-base.json'),
-                    'utf-8'
-                );
-                // Only use source content if it's valid JSON.
-                JSON.parse(sourceContent);
-                initialContent = sourceContent;
-            } catch (readError) {
-                console.warn('Could not read seed knowledge base file, starting with empty.');
-            }
-        }
+        // Seed the file with default content. This is more reliable than trying to read
+        // the source file, which can fail in some serverless environments.
+        const initialContent = JSON.stringify({ notes: defaultNotes }, null, 2);
+        
         await fs.writeFile(storagePath, initialContent, 'utf-8');
     }
 }
@@ -51,7 +47,7 @@ export async function getKnowledge(): Promise<string> {
     } catch (error) {
         console.error('Failed to read knowledge base:', error);
         // Return a default or empty string in case of an error.
-        return '';
+        return defaultNotes;
     }
 }
 
