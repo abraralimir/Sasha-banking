@@ -632,7 +632,7 @@ export default function SpreadsheetClient() {
 
               <div className="flex flex-1 overflow-hidden">
                 <main className="flex-1 overflow-auto flex flex-col">
-                  <div className="flex-grow">
+                  <div className="flex-1 min-h-0">
                     <Spreadsheet data={sheetData} hotRef={hotRef} />
                   </div>
                   {charts.length > 0 && (
