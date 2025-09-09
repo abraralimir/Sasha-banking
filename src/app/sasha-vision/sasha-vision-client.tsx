@@ -20,8 +20,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Eye, Upload, Video, Image as ImageIcon, Sparkles, Loader2, Download, RefreshCw, XCircle } from 'lucide-react';
 import { generateImageFromText } from '@/ai/flows/generate-image-from-text';
 import { upscaleImage } from '@/ai/flows/upscale-image';
-import { useSashaStatus } from '@/hooks/use-sasha-status';
-import { SashaOffline } from '@/components/sasha-offline';
 import { SashaStatus } from '@/components/sasha-status';
 
 type Mode = 'generate' | 'upscale';
@@ -34,7 +32,6 @@ export default function SashaVisionClient() {
   const { t, dir } = useLanguage();
   const { toast } = useToast();
   const imageInputRef = useRef<HTMLInputElement>(null);
-  const { isOnline, countdown } = useSashaStatus();
   const [hasMounted, setHasMounted] = useState(false);
 
   const [mode, setMode] = useState<Mode>('generate');
@@ -155,128 +152,121 @@ export default function SashaVisionClient() {
         </div>
       </header>
 
-      <main className="relative flex-1 overflow-hidden">
-        {!isOnline ? (
-             <SashaOffline
-                countdown={countdown}
-                hours={t('chatOfflineHours')}
-            />
-        ) : (
-            <div className="h-full overflow-y-auto p-4 md:p-6 lg:p-8">
-                <div className="max-w-6xl mx-auto">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-                        
-                        {/* Left Panel: Controls */}
-                        <Card className="shadow-lg animate-in fade-in-50 duration-500">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                <Eye className="w-6 h-6 text-primary"/>
-                                {t('sashaVisionTitle')}
-                                </CardTitle>
-                                <CardDescription>{t('sashaVisionDesc')}</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <Tabs value={mode} onValueChange={(v) => { handleReset(); setMode(v as Mode) }} className="w-full">
-                                    <TabsList className="grid w-full grid-cols-2">
-                                        <TabsTrigger value="generate"><ImageIcon className="mr-2"/>{t('textToImageTitle')}</TabsTrigger>
-                                        <TabsTrigger value="upscale"><Sparkles className="mr-2"/>{t('imageEnhancementTitle')}</TabsTrigger>
-                                    </TabsList>
-                                    <TabsContent value="generate" className="pt-4">
-                                        <Form {...form}>
-                                        <form onSubmit={form.handleSubmit(handleTextToImage)} className="space-y-6">
-                                            <FormField
-                                            control={form.control}
-                                            name="prompt"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                <FormLabel>{t('promptLabel')}</FormLabel>
-                                                <FormControl>
-                                                    <Textarea placeholder={t('promptPlaceholder')} {...field} rows={4} className="text-base" />
-                                                </FormControl>
-                                                <FormMessage />
-                                                </FormItem>
-                                            )}
-                                            />
-                                            <Button type="submit" disabled={isLoading} className="w-full">
-                                                {isLoading ? <Loader2 className="mr-2 animate-spin" /> : <Sparkles className="mr-2" />}
-                                                {t('generateButton')}
-                                            </Button>
-                                        </form>
-                                        </Form>
-                                    </TabsContent>
-                                    <TabsContent value="upscale" className="pt-4">
-                                        <div className="space-y-4">
-                                            <input type="file" ref={imageInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
-                                            {!sourceImage ? (
-                                                <Button onClick={() => imageInputRef.current?.click()} className="w-full" variant="outline">
-                                                    <Upload className="mr-2"/>
-                                                    {t('uploadButton')}
-                                                </Button>
-                                            ) : (
-                                                <div className="space-y-4">
-                                                    <div className="relative aspect-video w-full border rounded-md overflow-hidden bg-muted">
-                                                        <NextImage src={sourceImage} alt="Uploaded image" layout="fill" objectFit="contain" />
-                                                        <Button variant="ghost" size="icon" className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full h-7 w-7" onClick={() => { setSourceImage(null); if(imageInputRef.current) imageInputRef.current.value = ''; }}>
-                                                            <XCircle className="h-5 w-5" />
-                                                        </Button>
-                                                    </div>
-                                                    <Button onClick={handleUpscaleImage} disabled={isLoading || !sourceImage} className="w-full">
-                                                        {isLoading ? <Loader2 className="mr-2 animate-spin" /> : <Sparkles className="mr-2" />}
-                                                        {t('upscaleButton')}
-                                                    </Button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </TabsContent>
-                                </Tabs>
-                            </CardContent>
-                        </Card>
+      <main className="relative flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+          <div className="max-w-6xl mx-auto">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                  
+                  {/* Left Panel: Controls */}
+                  <Card className="shadow-lg animate-in fade-in-50 duration-500">
+                      <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                          <Eye className="w-6 h-6 text-primary"/>
+                          {t('sashaVisionTitle')}
+                          </CardTitle>
+                          <CardDescription>{t('sashaVisionDesc')}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                          <Tabs value={mode} onValueChange={(v) => { handleReset(); setMode(v as Mode) }} className="w-full">
+                              <TabsList className="grid w-full grid-cols-2">
+                                  <TabsTrigger value="generate"><ImageIcon className="mr-2"/>{t('textToImageTitle')}</TabsTrigger>
+                                  <TabsTrigger value="upscale"><Sparkles className="mr-2"/>{t('imageEnhancementTitle')}</TabsTrigger>
+                              </TabsList>
+                              <TabsContent value="generate" className="pt-4">
+                                  <Form {...form}>
+                                  <form onSubmit={form.handleSubmit(handleTextToImage)} className="space-y-6">
+                                      <FormField
+                                      control={form.control}
+                                      name="prompt"
+                                      render={({ field }) => (
+                                          <FormItem>
+                                          <FormLabel>{t('promptLabel')}</FormLabel>
+                                          <FormControl>
+                                              <Textarea placeholder={t('promptPlaceholder')} {...field} rows={4} className="text-base" />
+                                          </FormControl>
+                                          <FormMessage />
+                                          </FormItem>
+                                      )}
+                                      />
+                                      <Button type="submit" disabled={isLoading} className="w-full">
+                                          {isLoading ? <Loader2 className="mr-2 animate-spin" /> : <Sparkles className="mr-2" />}
+                                          {t('generateButton')}
+                                      </Button>
+                                  </form>
+                                  </Form>
+                              </TabsContent>
+                              <TabsContent value="upscale" className="pt-4">
+                                  <div className="space-y-4">
+                                      <input type="file" ref={imageInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
+                                      {!sourceImage ? (
+                                          <Button onClick={() => imageInputRef.current?.click()} className="w-full" variant="outline">
+                                              <Upload className="mr-2"/>
+                                              {t('uploadButton')}
+                                          </Button>
+                                      ) : (
+                                          <div className="space-y-4">
+                                              <div className="relative aspect-video w-full border rounded-md overflow-hidden bg-muted">
+                                                  <NextImage src={sourceImage} alt="Uploaded image" layout="fill" objectFit="contain" />
+                                                  <Button variant="ghost" size="icon" className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full h-7 w-7" onClick={() => { setSourceImage(null); if(imageInputRef.current) imageInputRef.current.value = ''; }}>
+                                                      <XCircle className="h-5 w-5" />
+                                                  </Button>
+                                              </div>
+                                              <Button onClick={handleUpscaleImage} disabled={isLoading || !sourceImage} className="w-full">
+                                                  {isLoading ? <Loader2 className="mr-2 animate-spin" /> : <Sparkles className="mr-2" />}
+                                                  {t('upscaleButton')}
+                                              </Button>
+                                          </div>
+                                      )}
+                                  </div>
+                              </TabsContent>
+                          </Tabs>
+                      </CardContent>
+                  </Card>
 
-                        {/* Right Panel: Result */}
-                        <Card className="shadow-lg animate-in fade-in-50 duration-700">
-                            <CardHeader>
-                                <CardTitle className="flex items-center justify-between">
-                                    {t('resultTitle')}
-                                    {(resultImage || isLoading) && 
-                                        <Button variant="ghost" size="sm" onClick={handleReset}>
-                                            <RefreshCw className="mr-2 h-4 w-4"/>
-                                            {t('startOver')}
-                                        </Button>
-                                    }
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="relative aspect-square w-full bg-muted/50 rounded-lg flex items-center justify-center border-2 border-dashed">
-                                    {isLoading ? (
-                                        <div className="text-center text-muted-foreground space-y-2">
-                                            <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" />
-                                            <p>{mode === 'generate' ? t('generatingMessage') : t('upscalingMessage')}</p>
-                                        </div>
-                                    ) : resultImage ? (
-                                        <>
-                                            <NextImage src={resultImage} alt={prompt || "AI Generated Image"} layout="fill" objectFit="cover" className="rounded-lg" />
-                                            <div className="absolute bottom-4 right-4">
-                                                <Button onClick={handleDownload} size="lg" className="shadow-xl">
-                                                    <Download className="mr-2" />
-                                                    {t('downloadButton')}
-                                                </Button>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <div className="text-center text-muted-foreground p-8">
-                                            <ImageIcon className="mx-auto h-12 w-12 mb-2" />
-                                            <p>{t('noResult')}</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
+                  {/* Right Panel: Result */}
+                  <Card className="shadow-lg animate-in fade-in-50 duration-700">
+                      <CardHeader>
+                          <CardTitle className="flex items-center justify-between">
+                              {t('resultTitle')}
+                              {(resultImage || isLoading) && 
+                                  <Button variant="ghost" size="sm" onClick={handleReset}>
+                                      <RefreshCw className="mr-2 h-4 w-4"/>
+                                      {t('startOver')}
+                                  </Button>
+                              }
+                          </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                          <div className="relative aspect-square w-full bg-muted/50 rounded-lg flex items-center justify-center border-2 border-dashed">
+                              {isLoading ? (
+                                  <div className="text-center text-muted-foreground space-y-2">
+                                      <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" />
+                                      <p>{mode === 'generate' ? t('generatingMessage') : t('upscalingMessage')}</p>
+                                  </div>
+                              ) : resultImage ? (
+                                  <>
+                                      <NextImage src={resultImage} alt={prompt || "AI Generated Image"} layout="fill" objectFit="cover" className="rounded-lg" />
+                                      <div className="absolute bottom-4 right-4">
+                                          <Button onClick={handleDownload} size="lg" className="shadow-xl">
+                                              <Download className="mr-2" />
+                                              {t('downloadButton')}
+                                          </Button>
+                                      </div>
+                                  </>
+                              ) : (
+                                  <div className="text-center text-muted-foreground p-8">
+                                      <ImageIcon className="mx-auto h-12 w-12 mb-2" />
+                                      <p>{t('noResult')}</p>
+                                  </div>
+                              )}
+                          </div>
+                      </CardContent>
+                  </Card>
 
-                    </div>
-                </div>
-            </div>
-        )}
+              </div>
+          </div>
       </main>
     </div>
   );
 }
+
+    

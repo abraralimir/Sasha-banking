@@ -146,9 +146,9 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     learnIntro: 'Sasha is an advanced, AI-powered financial strategist and banking assistant designed to bring institutional-grade analysis and agentic task execution to your fingertips. Interact naturally, get deep insights, and automate complex tasks with ease.',
     learnCapabilitiesTitle: "Sasha's Core Capabilities",
     capabilityHours: "Availability:",
-    chatAvailability: "5:30 AM - 1 PM, 2 PM - 5 PM, 7 PM - 10 PM",
-    spreadsheetAvailability: "24/7 (Daily maintenance: 3 PM - 5 PM)",
-    daAvailability: "5:30 AM - 10 AM, 12 PM - 3 PM, 7 PM - 10 PM",
+    chatAvailability: "24/7",
+    spreadsheetAvailability: "24/7",
+    daAvailability: "24/7",
     learnChatTitle: 'Institutional-Grade Financial Intelligence',
     learnChatDesc: "Engage with an AI that understands the nuances of finance. Upload complex financial statements, credit reports from bureaus like Oman's Mala'a, or internal loan data. Sasha doesn't just read; she comprehends, synthesizes, and critiques. Ask her to 'Identify key risks in this balance sheet,' 'Benchmark this company's P/E ratio against industry standards,' or 'Draft a summary for the credit committee.' Sasha provides instant, institutional-quality analysis in both English and Arabic, becoming an indispensable partner for credit officers, analysts, and decision-makers.",
     learnSashaVisionDesc: "Unleash your creativity in a dedicated space. As a world-class creative director, Sasha can generate photorealistic images from text descriptions or upscale your existing images to stunning high-resolution quality. Sasha Vision is your partner for creating compelling visual assets.",
@@ -481,9 +481,9 @@ const translations: { [key in Language]: { [key: string]: string } } = {
     learnIntro: 'ساشا هي خبيرة استراتيجية مالية ومساعدة مصرفية متقدمة تعمل بالذكاء الاصطناعي، مصممة لتوفر لك تحليلات على مستوى المؤسسات وتنفيذ مهام وكيلية بكل سهولة. تفاعل بشكل طبيعي، واحصل على رؤى عميقة، وقم بأتمتة المهام المعقدة.',
     learnCapabilitiesTitle: "قدرات ساشا الأساسية",
     capabilityHours: "التوفر:",
-    chatAvailability: "5:30 ص - 1 م، 2 م - 5 م، 7 م - 10 م",
-    spreadsheetAvailability: "24/7 (صيانة يومية: 3 م - 5 م)",
-    daAvailability: "5:30 ص - 10 ص، 12 م - 3 م، 7 م - 10 م",
+    chatAvailability: "24/7",
+    spreadsheetAvailability: "24/7",
+    daAvailability: "24/7",
     learnChatTitle: 'ذكاء مالي من الطراز المؤسسي',
     learnChatDesc: "تفاعل مع ذكاء اصطناعي يفهم دقائق الأمور المالية. قم بتحميل بيانات مالية معقدة، تقارير ائتمانية من مكاتب مثل 'ملاءة' في عُمان، أو بيانات قروض داخلية. ساشا لا تقرأ فقط؛ بل تفهم، وتحلل، وتنتقد. اطلب منها 'تحديد المخاطر الرئيسية في هذه الميزانية العمومية'، 'مقارنة نسبة السعر إلى الأرباح لهذه الشركة بمعايير الصناعة'، أو 'صياغة ملخص للجنة الائتمان'. تقدم ساشا تحليلاً فوريًا بجودة مؤسسية باللغتين الإنجليزية والعربية، لتصبح شريكًا لا غنى عنه لمسؤولي الائتمان والمحللين وصناع القرار.",
     learnSashaVisionDesc: "أطلق العنان لإبداعك في مساحة مخصصة. بصفتها مديرة إبداعية عالمية، يمكن لساشا إنشاء صور واقعية من الأوصاف النصية أو ترقية صورك الحالية إلى جودة مذهلة عالية الدقة. رؤية ساشا هي شريكك لإنشاء أصول بصرية مقنعة.",
@@ -720,3 +720,5 @@ export function useLanguage() {
   }
   return context;
 }
+
+    

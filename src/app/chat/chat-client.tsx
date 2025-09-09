@@ -28,9 +28,7 @@ import { useToast } from '@/hooks/use-toast';
 import { LanguageToggle } from '@/components/language-toggle';
 import { useLanguage } from '@/context/language-context';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { useSashaStatus } from '@/hooks/use-sasha-status';
 import { SashaStatus } from '@/components/sasha-status';
-import { SashaOffline } from '@/components/sasha-offline';
 
 
 const generateAndDownloadPdf = async (element: HTMLElement, fileName: string) => {
@@ -75,7 +73,6 @@ type ReportType = 'loan' | 'financial';
 
 export default function ChatPageClient() {
   const { t, language, dir } = useLanguage();
-  const { isOnline, countdown } = useSashaStatus();
   const [hasMounted, setHasMounted] = useState(false);
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -581,12 +578,6 @@ export default function ChatPageClient() {
                 </div>
               </header>
               <div className="relative flex-1 overflow-hidden">
-                {!isOnline ? (
-                    <SashaOffline 
-                      countdown={countdown} 
-                      hours={t('chatOfflineHours')}
-                    />
-                ) : (
                 <div className="h-full flex flex-col animate-in fade-in-50 duration-500">
                   <main className="flex-1 overflow-y-auto">
                       <MessageList 
@@ -702,7 +693,6 @@ export default function ChatPageClient() {
                     </div>
                   </footer>
                 </div>
-                )}
               </div>
           
 
@@ -750,3 +740,5 @@ export default function ChatPageClient() {
     </div>
   );
 }
+
+    

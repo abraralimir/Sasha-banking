@@ -44,9 +44,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Tooltip as UiTooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useSpreadsheetStatus } from '@/hooks/use-spreadsheet-status';
 import { SashaStatus } from '@/components/sasha-status';
-import { SashaOffline } from '@/components/sasha-offline';
 
 ChartJS.register(
   CategoryScale,
@@ -95,7 +93,6 @@ type ChartData = {
 
 export default function SpreadsheetClient() {
   const { t, language, dir } = useLanguage();
-  const { isOnline, countdown } = useSpreadsheetStatus();
   const [hasMounted, setHasMounted] = useState(false);
 
   const [sheetData, setSheetData] = useState<any[][]>(initialData);
@@ -585,7 +582,7 @@ export default function SpreadsheetClient() {
           {t('spreadsheetTitle')}
         </h1>
         <div className="justify-self-end flex items-center gap-2">
-           <SashaStatus isOnline={isOnline} />
+           <SashaStatus />
            <TooltipProvider>
               <UiTooltip>
                   <TooltipTrigger asChild>
@@ -614,13 +611,6 @@ export default function SpreadsheetClient() {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {!isOnline ? (
-            <SashaOffline 
-                countdown={countdown} 
-                description={t('spreadsheetOfflineDesc')}
-                hours={t('spreadsheetOfflineHours')}
-            />
-        ) : (
           <>
               <SpreadsheetToolbar
                 hotInstance={hotInstance}
@@ -797,7 +787,6 @@ export default function SpreadsheetClient() {
                 )}
               </div>
           </>
-        )}
       </div>
 
 
@@ -816,3 +805,5 @@ export default function SpreadsheetClient() {
     </div>
   );
 }
+
+    

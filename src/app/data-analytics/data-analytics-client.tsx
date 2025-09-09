@@ -23,8 +23,6 @@ import { useLanguage } from '@/context/language-context';
 import { useToast } from '@/hooks/use-toast';
 import { generateDashboard, type GenerateDashboardOutput } from '@/ai/flows/generate-dashboard';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useDataAnalyticsStatus } from '@/hooks/use-data-analytics-status';
-import { SashaOffline } from '@/components/sasha-offline';
 import { SashaStatus } from '@/components/sasha-status';
 
 const Bar = dynamic(() => import('react-chartjs-2').then(mod => mod.Bar), { ssr: false });
@@ -98,7 +96,6 @@ export default function DataAnalyticsClient() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dashboardRef = useRef<HTMLDivElement>(null);
-  const { isOnline, countdown } = useDataAnalyticsStatus();
   const [hasMounted, setHasMounted] = useState(false);
 
 
@@ -256,114 +253,106 @@ export default function DataAnalyticsClient() {
         </div>
       </header>
 
-      <main className="relative flex-1 overflow-hidden">
-        {!isOnline ? (
-          <SashaOffline
-              countdown={countdown}
-              description={t('sashaOfflineDesc')}
-              hours={t('daOfflineHours')}
-          />
-        ) : (
-          <div className="h-full overflow-auto p-4 md:p-8">
-            <div className="max-w-7xl mx-auto space-y-6">
-              {!fileName ? (
-                    <div className="w-full pt-8 md:pt-16 flex justify-center animate-in fade-in-50 duration-500">
-                      <Card className="w-full max-w-lg text-center shadow-lg">
-                          <CardHeader>
-                              <div className="mx-auto bg-primary/10 text-primary p-3 rounded-full mb-4">
-                                  <Bot className="w-10 h-10" />
-                              </div>
-                              <CardTitle>{t('daUploadPromptTitle')}</CardTitle>
-                              <CardDescription>{t('daUploadPromptDesc')}</CardDescription>
+      <main className="relative flex-1 overflow-auto p-4 md:p-8">
+        <div className="max-w-7xl mx-auto space-y-6">
+          {!fileName ? (
+                <div className="w-full pt-8 md:pt-16 flex justify-center animate-in fade-in-50 duration-500">
+                  <Card className="w-full max-w-lg text-center shadow-lg">
+                      <CardHeader>
+                          <div className="mx-auto bg-primary/10 text-primary p-3 rounded-full mb-4">
+                              <Bot className="w-10 h-10" />
+                          </div>
+                          <CardTitle>{t('daUploadPromptTitle')}</CardTitle>
+                          <CardDescription>{t('daUploadPromptDesc')}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                          <Button onClick={() => fileInputRef.current?.click()} disabled={isLoading}>
+                              <FileUp className="mr-2 h-4 w-4" />
+                              {t('daUploadButton')}
+                          </Button>
+                      </CardContent>
+                  </Card>
+                </div>
+          ) : isLoading ? (
+              <div className="flex flex-col items-center justify-center h-full text-center pt-24">
+                  <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
+                  <h2 className="text-xl font-semibold">{t('daGeneratingDashboardTitle')}</h2>
+                  <p className="text-muted-foreground">{t('daGeneratingDashboardDesc')}</p>
+              </div>
+          ) : dashboardData && (
+            <>
+              <div ref={dashboardRef} className="animate-in fade-in-50 duration-500 space-y-6 bg-muted/40 p-4 md:p-6 rounded-lg">
+                  <Card>
+                      <CardHeader>
+                          <CardTitle>{dashboardData.title}</CardTitle>
+                          <CardDescription>{fileName}</CardDescription>
+                      </CardHeader>
+                  </Card>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      <Card className="lg:col-span-3">
+                          <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+                              <FileText className="w-6 h-6 text-primary"/>
+                              <CardTitle>{t('daSummaryTitle')}</CardTitle>
                           </CardHeader>
                           <CardContent>
-                              <Button onClick={() => fileInputRef.current?.click()} disabled={isLoading}>
-                                  <FileUp className="mr-2 h-4 w-4" />
-                                  {t('daUploadButton')}
-                              </Button>
+                              <p className="text-muted-foreground whitespace-pre-wrap">{dashboardData.summary}</p>
                           </CardContent>
                       </Card>
-                    </div>
-              ) : isLoading ? (
-                  <div className="flex flex-col items-center justify-center h-full text-center pt-24">
-                      <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
-                      <h2 className="text-xl font-semibold">{t('daGeneratingDashboardTitle')}</h2>
-                      <p className="text-muted-foreground">{t('daGeneratingDashboardDesc')}</p>
-                  </div>
-              ) : dashboardData && (
-                <>
-                  <div ref={dashboardRef} className="animate-in fade-in-50 duration-500 space-y-6 bg-muted/40 p-4 md:p-6 rounded-lg">
-                      <Card>
-                          <CardHeader>
-                              <CardTitle>{dashboardData.title}</CardTitle>
-                              <CardDescription>{fileName}</CardDescription>
+                      
+                      {dashboardData.charts.map((chart, index) => (
+                        <Card key={index} className={dashboardData.charts.length === 1 ? 'lg:col-span-3' : (chart.type === 'bar' ? 'lg:col-span-2' : 'lg:col-span-1') }>
+                            <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+                                {chart.type === 'bar' ? <BarChart3 className="w-6 h-6 text-primary"/> : <PieChart className="w-6 h-6 text-primary"/>}
+                                <CardTitle>{chart.title}</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="h-[300px] md:h-[400px]">
+                                    {chart.type === 'bar' ? (
+                                        <Bar data={{ ...chart.data, datasets: chart.data.datasets.map(ds => ({...ds, backgroundColor: getPieChartColors(chart.data.labels.length) })) }} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }} />
+                                    ) : (
+                                        <div className="h-full w-full flex items-center justify-center">
+                                          <Pie data={{ ...chart.data, datasets: chart.data.datasets.map(ds => ({...ds, backgroundColor: getPieChartColors(chart.data.labels.length) })) }} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }} />
+                                        </div>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                      ))}
+                      
+                        <Card className="lg:col-span-3">
+                          <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+                              <Lightbulb className="w-6 h-6 text-primary"/>
+                              <CardTitle>{t('daKeyInsightsTitle')}</CardTitle>
                           </CardHeader>
+                          <CardContent>
+                              <ul className="space-y-2 text-muted-foreground">
+                              {dashboardData.keyInsights.map((insight, i) => (
+                                  <li key={i} className="flex items-start gap-3">
+                                      <span className="mt-1.5 h-2 w-2 rounded-full bg-primary/70 shrink-0"/>
+                                      <span>{insight}</span>
+                                  </li>
+                              ))}
+                              </ul>
+                          </CardContent>
                       </Card>
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                          <Card className="lg:col-span-3">
-                              <CardHeader className="flex flex-row items-center gap-3 space-y-0">
-                                  <FileText className="w-6 h-6 text-primary"/>
-                                  <CardTitle>{t('daSummaryTitle')}</CardTitle>
-                              </CardHeader>
-                              <CardContent>
-                                  <p className="text-muted-foreground whitespace-pre-wrap">{dashboardData.summary}</p>
-                              </CardContent>
-                          </Card>
-                          
-                          {dashboardData.charts.map((chart, index) => (
-                            <Card key={index} className={dashboardData.charts.length === 1 ? 'lg:col-span-3' : (chart.type === 'bar' ? 'lg:col-span-2' : 'lg:col-span-1') }>
-                                <CardHeader className="flex flex-row items-center gap-3 space-y-0">
-                                    {chart.type === 'bar' ? <BarChart3 className="w-6 h-6 text-primary"/> : <PieChart className="w-6 h-6 text-primary"/>}
-                                    <CardTitle>{chart.title}</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="h-[300px] md:h-[400px]">
-                                        {chart.type === 'bar' ? (
-                                            <Bar data={{ ...chart.data, datasets: chart.data.datasets.map(ds => ({...ds, backgroundColor: getPieChartColors(chart.data.labels.length) })) }} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }} />
-                                        ) : (
-                                            <div className="h-full w-full flex items-center justify-center">
-                                              <Pie data={{ ...chart.data, datasets: chart.data.datasets.map(ds => ({...ds, backgroundColor: getPieChartColors(chart.data.labels.length) })) }} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }} />
-                                            </div>
-                                        )}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                          ))}
-                          
-                            <Card className="lg:col-span-3">
-                              <CardHeader className="flex flex-row items-center gap-3 space-y-0">
-                                  <Lightbulb className="w-6 h-6 text-primary"/>
-                                  <CardTitle>{t('daKeyInsightsTitle')}</CardTitle>
-                              </CardHeader>
-                              <CardContent>
-                                  <ul className="space-y-2 text-muted-foreground">
-                                  {dashboardData.keyInsights.map((insight, i) => (
-                                      <li key={i} className="flex items-start gap-3">
-                                          <span className="mt-1.5 h-2 w-2 rounded-full bg-primary/70 shrink-0"/>
-                                          <span>{insight}</span>
-                                      </li>
-                                  ))}
-                                  </ul>
-                              </CardContent>
-                          </Card>
-                      </div>
                   </div>
-                  <footer className="p-4 pt-6 mt-4 border-t shrink-0 bg-transparent">
-                    <div className="max-w-7xl mx-auto flex justify-end">
-                        <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={isDownloading}>
-                            {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-                            {t('daDownloadPdfButton')}
-                        </Button>
-                        </div>
+              </div>
+              <footer className="p-4 pt-6 mt-4 border-t shrink-0 bg-transparent">
+                <div className="max-w-7xl mx-auto flex justify-end">
+                    <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={isDownloading}>
+                        {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                        {t('daDownloadPdfButton')}
+                    </Button>
                     </div>
-                  </footer>
-                </>
-              )}
-            </div>
-          </div>
-        )}
+                </div>
+              </footer>
+            </>
+          )}
+        </div>
       </main>
     </div>
   );
 }
+
+    
